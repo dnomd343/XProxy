@@ -9,9 +9,8 @@ var logLevel = "warning"
 var v4TProxyPort = 7288
 var v6TProxyPort = 7289
 
-var enableSniff = false
-var enableRedirect = true
-
+var enableSniff bool
+var enableRedirect bool
 var httpInbounds map[string]int
 var socksInbounds map[string]int
 var addOnInbounds []interface{}
@@ -25,10 +24,5 @@ func main() {
         panic(err)
     }
     loadConfig(content)
-
-    //fmt.Println(httpInbounds)
-    //fmt.Println(socksInbounds)
-    //fmt.Println(addOnInbounds)
     loadProxy("/etc/xproxy/config", "/xproxy")
-
 }

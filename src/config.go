@@ -14,13 +14,10 @@ var dnsServer []string
 
 var v4Gateway string
 var v4Address string
-var v4Forward bool
-
 var v6Gateway string
 var v6Address string
-var v6Forward bool
 
-type netConfig struct {
+type NetConfig struct {
     Gateway string `yaml:"gateway"` // network gateway
     Address string `yaml:"address"` // network address
     Forward bool   `yaml:"forward"` // enabled net forward
@@ -37,8 +34,8 @@ type Config struct {
     Network struct {
         DNS    []string  `yaml:"dns"`    // system dns server
         ByPass []string  `yaml:"bypass"` // cidr bypass list
-        IPv4   netConfig `yaml:"ipv4"`   // ipv4 network configure
-        IPv6   netConfig `yaml:"ipv6"`   // ipv6 network configure
+        IPv4   NetConfig `yaml:"ipv4"`   // ipv4 network configure
+        IPv6   NetConfig `yaml:"ipv6"`   // ipv6 network configure
     }
 }
 
@@ -102,10 +99,6 @@ func loadConfig(rawConfig []byte) {
     log.Info("IPv4 bypass CIDR -> ", v4Bypass)
     log.Info("IPv6 bypass CIDR -> ", v6Bypass)
 
-    v4Forward = config.Network.IPv4.Forward
-    v6Forward = config.Network.IPv6.Forward
-    log.Infof("IP forward -> IPv4 = %v | IPv6 = %v", v4Forward, v6Forward)
-
     v4Address = config.Network.IPv4.Address
     v4Gateway = config.Network.IPv4.Gateway
     if v4Address != "" && !isIPv4(v4Address, true) {
@@ -126,10 +119,14 @@ func loadConfig(rawConfig []byte) {
     }
     log.Infof("IPv6 -> address = %s | gateway = %s", v6Address, v6Gateway)
 
+    enableSniff = config.Proxy.Sniff
+    log.Infof("Connection sniff -> %v", enableSniff)
+    enableRedirect = config.Proxy.Redirect
+    log.Infof("Connection redirect -> %v", enableRedirect)
     httpInbounds = config.Proxy.Http
     log.Infof("Http inbounds -> %v", httpInbounds)
     socksInbounds = config.Proxy.Socks
-    log.Infof("Socks inbounds -> %v", socksInbounds)
+    log.Infof("Socks5 inbounds -> %v", socksInbounds)
     addOnInbounds = config.Proxy.AddOn
     log.Infof("Add-on inbounds -> %v", addOnInbounds)
 }

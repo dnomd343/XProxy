@@ -214,7 +214,7 @@ func loadProxy(configDir string, exposeDir string) {
         inboundsObject.Inbounds = append(inboundsObject.Inbounds, addon)
     }
     inboundsConfig, _ := json.MarshalIndent(inboundsObject, "", "  ") // json encode
-    saveConfig(configDir, "inbounds", string(inboundsConfig), true)
+    saveConfig(configDir, "inbounds", string(inboundsConfig)+"\n", true)
 
     for _, configFile := range listFolder(exposeDir+"/config", ".json") {
         if configFile == "log.json" || configFile == "inbounds.json" {
