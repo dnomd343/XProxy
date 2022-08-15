@@ -22,7 +22,6 @@ network:
   ipv4:
     gateway: 192.168.2.1
     address: 192.168.2.2/24
-    forward: true
   ipv6: null
   bypass:
     - 169.254.0.0/16

@@ -20,7 +20,6 @@ var v6Address string
 type NetConfig struct {
     Gateway string `yaml:"gateway"` // network gateway
     Address string `yaml:"address"` // network address
-    Forward bool   `yaml:"forward"` // enabled net forward
 }
 
 type Config struct {

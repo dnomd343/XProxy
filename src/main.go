@@ -24,5 +24,6 @@ func main() {
         panic(err)
     }
     loadConfig(content)
-    loadProxy("/etc/xproxy/config", "/xproxy")
+    //loadProxy("/etc/xproxy/config", "/xproxy")
+    loadDns()
 }
