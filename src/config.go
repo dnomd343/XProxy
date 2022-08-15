@@ -1,6 +1,7 @@
 package main
 
 import (
+    log "github.com/sirupsen/logrus"
     "gopkg.in/yaml.v3"
     "net"
     "strconv"
@@ -66,10 +67,12 @@ func isIPv6(ipAddr string, isRange bool) bool {
 
 func loadConfig(rawConfig []byte) {
     config := Config{}
+    log.Debug("Decode yaml content -> \n", string(rawConfig))
     err := yaml.Unmarshal(rawConfig, &config) // yaml (or json) decode
     if err != nil {
         panic(err)
     }
+    log.Debug("Decoded config -> ", config)
 
     for _, address := range config.Network.DNS { // dns options
         if isIPv4(address, false) || isIPv6(address, false) {
@@ -78,6 +81,7 @@ func loadConfig(rawConfig []byte) {
             panic("Invalid DNS server -> " + address)
         }
     }
+    log.Info("DNS server -> ", dnsServer)
 
     for _, address := range config.Network.ByPass { // bypass options
         if isIPv4(address, true) {
@@ -88,24 +92,30 @@ func loadConfig(rawConfig []byte) {
             panic("Invalid bypass CIDR -> " + address)
         }
     }
+    log.Info("IPv4 bypass CIDR -> ", v4Bypass)
+    log.Info("IPv6 bypass CIDR -> ", v6Bypass)
 
-    v4Address = config.Network.IPv4.Address // ipv4 options
-    v4Gateway = config.Network.IPv4.Gateway
     v4Forward = config.Network.IPv4.Forward
+    v6Forward = config.Network.IPv6.Forward
+    log.Infof("IP forward -> IPv4 = %v | IPv6 = %v", v4Forward, v6Forward)
+
+    v4Address = config.Network.IPv4.Address
+    v4Gateway = config.Network.IPv4.Gateway
     if v4Address != "" && !isIPv4(v4Address, true) {
         panic("Invalid IPv4 address -> " + v4Address)
     }
     if v4Gateway != "" && !isIPv4(v4Gateway, false) {
         panic("Invalid IPv4 gateway -> " + v4Gateway)
     }
+    log.Infof("IPv4 -> address = %s | gateway = %s", v4Address, v4Gateway)
 
-    v6Address = config.Network.IPv6.Address // ipv6 options
+    v6Address = config.Network.IPv6.Address
     v6Gateway = config.Network.IPv6.Gateway
-    v6Forward = config.Network.IPv6.Forward
     if v6Address != "" && !isIPv6(v6Address, true) {
         panic("Invalid IPv6 address -> " + v6Address)
     }
     if v6Gateway != "" && !isIPv6(v6Gateway, false) {
         panic("Invalid IPv6 gateway -> " + v6Gateway)
     }
+    log.Infof("IPv6 -> address = %s | gateway = %s", v6Address, v6Gateway)
 }
