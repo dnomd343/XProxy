@@ -210,6 +210,9 @@ func loadProxy(configDir string, exposeDir string) {
     for tag, port := range socksInbounds {
         inboundsObject.Inbounds = append(inboundsObject.Inbounds, loadSocksProxy(tag, port, sniffObject))
     }
+    for _, addon := range addOnInbounds {
+        inboundsObject.Inbounds = append(inboundsObject.Inbounds, addon)
+    }
     inboundsConfig, _ := json.MarshalIndent(inboundsObject, "", "  ") // json encode
     saveConfig(configDir, "inbounds", string(inboundsConfig), true)
 

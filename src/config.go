@@ -27,6 +27,13 @@ type netConfig struct {
 }
 
 type Config struct {
+    Proxy struct {
+        Sniff    bool           `yaml:"sniff"`
+        Redirect bool           `yaml:"redirect"`
+        Http     map[string]int `yaml:"http"`
+        Socks    map[string]int `yaml:"socks"`
+        AddOn    []interface{}  `yaml:"addon"`
+    }
     Network struct {
         DNS    []string  `yaml:"dns"`    // system dns server
         ByPass []string  `yaml:"bypass"` // cidr bypass list
@@ -118,4 +125,11 @@ func loadConfig(rawConfig []byte) {
         panic("Invalid IPv6 gateway -> " + v6Gateway)
     }
     log.Infof("IPv6 -> address = %s | gateway = %s", v6Address, v6Gateway)
+
+    httpInbounds = config.Proxy.Http
+    log.Infof("Http inbounds -> %v", httpInbounds)
+    socksInbounds = config.Proxy.Socks
+    log.Infof("Socks inbounds -> %v", socksInbounds)
+    addOnInbounds = config.Proxy.AddOn
+    log.Infof("Add-on inbounds -> %v", addOnInbounds)
 }

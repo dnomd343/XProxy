@@ -2,12 +2,18 @@ proxy:
   sniff: true
   redirect: true
   http:
-    - ipv4: 1084
-    - ipv6: 1086
+    ipv4: 1084
+    ipv6: 1086
   socks:
-    - nodeA: 1681
-    - nodeB: 1682
-    - nodeC: 1683
+    nodeA: 1681
+    nodeB: 1682
+    nodeC: 1683
+  addon:
+    - tag: metrics
+      port: 9090
+      protocol: dokodemo-door
+      settings:
+        address: 127.0.0.1
 
 network:
   dns:
