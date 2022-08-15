@@ -34,11 +34,8 @@ type Config struct {
     }
 }
 
-func isIP(ipAddr string, isRange bool, allowEmpty bool, ipLength int, ipFlag string) bool {
+func isIP(ipAddr string, isRange bool, ipLength int, ipFlag string) bool {
     var address string
-    if allowEmpty && ipAddr == "" { // empty case
-        return true
-    }
     if isRange {
         temp := strings.Split(ipAddr, "/")
         if len(temp) != 2 { // not {IP_ADDRESS}/{LENGTH} format
@@ -59,12 +56,12 @@ func isIP(ipAddr string, isRange bool, allowEmpty bool, ipLength int, ipFlag str
     return ip != nil && strings.Contains(address, ipFlag)
 }
 
-func isIPv4(ipAddr string, isRange bool, allowEmpty bool) bool {
-    return isIP(ipAddr, isRange, allowEmpty, 32, ".")
+func isIPv4(ipAddr string, isRange bool) bool {
+    return isIP(ipAddr, isRange, 32, ".")
 }
 
-func isIPv6(ipAddr string, isRange bool, allowEmpty bool) bool {
-    return isIP(ipAddr, isRange, allowEmpty, 128, ":")
+func isIPv6(ipAddr string, isRange bool) bool {
+    return isIP(ipAddr, isRange, 128, ":")
 }
 
 func loadConfig(rawConfig []byte) {
@@ -73,38 +70,42 @@ func loadConfig(rawConfig []byte) {
     if err != nil {
         panic(err)
     }
-    for _, address := range config.Network.DNS { // load dns configure
-        if isIPv4(address, false, false) || isIPv6(address, false, false) {
+
+    for _, address := range config.Network.DNS { // dns options
+        if isIPv4(address, false) || isIPv6(address, false) {
             dnsServer = append(dnsServer, address)
         } else {
             panic("Invalid DNS server -> " + address)
         }
     }
-    for _, address := range config.Network.ByPass { // load bypass configure
-        if isIPv4(address, true, false) {
+
+    for _, address := range config.Network.ByPass { // bypass options
+        if isIPv4(address, true) {
             v4Bypass = append(v4Bypass, address)
-        } else if isIPv6(address, true, false) {
+        } else if isIPv6(address, true) {
             v6Bypass = append(v6Bypass, address)
         } else {
             panic("Invalid bypass CIDR -> " + address)
         }
     }
-    v4Address = config.Network.IPv4.Address // ipv4 address
-    if !isIPv4(v4Address, true, true) {
+
+    v4Address = config.Network.IPv4.Address // ipv4 options
+    v4Gateway = config.Network.IPv4.Gateway
+    v4Forward = config.Network.IPv4.Forward
+    if v4Address != "" && !isIPv4(v4Address, true) {
         panic("Invalid IPv4 address -> " + v4Address)
     }
-    v4Gateway = config.Network.IPv4.Gateway // ipv4 gateway
-    if !isIPv4(v4Gateway, false, true) {
+    if v4Gateway != "" && !isIPv4(v4Gateway, false) {
         panic("Invalid IPv4 gateway -> " + v4Gateway)
     }
-    v6Address = config.Network.IPv6.Address // ipv6 address
-    if !isIPv6(v6Address, true, true) {
+
+    v6Address = config.Network.IPv6.Address // ipv6 options
+    v6Gateway = config.Network.IPv6.Gateway
+    v6Forward = config.Network.IPv6.Forward
+    if v6Address != "" && !isIPv6(v6Address, true) {
         panic("Invalid IPv6 address -> " + v6Address)
     }
-    v6Gateway = config.Network.IPv6.Gateway // ipv6 gateway
-    if !isIPv6(v6Gateway, false, true) {
+    if v6Gateway != "" && !isIPv6(v6Gateway, false) {
         panic("Invalid IPv6 gateway -> " + v6Gateway)
     }
-    v4Forward = config.Network.IPv4.Forward // forward options
-    v6Forward = config.Network.IPv6.Forward
 }
