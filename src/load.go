@@ -6,7 +6,9 @@ import (
     "io"
     "io/ioutil"
     "os"
+    "os/exec"
     "strings"
+    "syscall"
 )
 
 var logConfig = `{
@@ -67,10 +69,16 @@ type inboundsSettings struct {
     Inbounds []interface{} `json:"inbounds"`
 }
 
-func runCommand(command []string) bool {
+func runCommand(command []string) (int, string) {
     log.Debugf("Running system command -> %v", command)
-    // TODO: run system command
-    return true
+    process := exec.Command(command[0], command[1:]...)
+    output, _ := process.CombinedOutput()
+    log.Debugf("Command %v -> \n%s", command, string(output))
+    code := process.ProcessState.Sys().(syscall.WaitStatus).ExitStatus()
+    if code != 0 {
+        log.Warningf("Command %v return code %d", command, code)
+    }
+    return code, string(output)
 }
 
 func isFileExist(filePath string) bool {

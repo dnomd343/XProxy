@@ -3,6 +3,7 @@ package main
 import (
     log "github.com/sirupsen/logrus"
     "os"
+    "regexp"
     "strconv"
 )
 
@@ -49,12 +50,28 @@ func loadNetwork() {
     }
 }
 
+func v4SysBypass() {
+    _, output := runCommand([]string{"ip", "-4", "addr"})
+    for _, temp := range regexp.MustCompile(`inet (\S+)`).FindAllStringSubmatch(output, -1) {
+        v4Bypass = append(v4Bypass, temp[1])
+    }
+}
+
+func v6SysBypass() {
+    _, output := runCommand([]string{"ip", "-6", "addr"})
+    for _, temp := range regexp.MustCompile(`inet6 (\S+)`).FindAllStringSubmatch(output, -1) {
+        v6Bypass = append(v6Bypass, temp[1])
+    }
+}
+
 func loadTProxy() {
     log.Info("Setting up TProxy of IPv4")
     v4TableNum := strconv.Itoa(v4RouteTable)
     runCommand([]string{"ip", "-4", "rule", "add", "fwmark", "1", "table", v4TableNum})
     runCommand([]string{"ip", "-4", "route", "add", "local", "0.0.0.0/0", "dev", "lo", "table", v4TableNum})
     runCommand([]string{"iptables", "-t", "mangle", "-N", "XPROXY"})
+    v4SysBypass()
+    log.Infof("Setting up IPv4 bypass CIDR -> %v", v4Bypass)
     for _, cidr := range v4Bypass {
         runCommand([]string{"iptables", "-t", "mangle", "-A", "XPROXY", "-d", cidr, "-j", "RETURN"})
     }
@@ -69,6 +86,8 @@ func loadTProxy() {
     runCommand([]string{"ip", "-6", "rule", "add", "fwmark", "1", "table", v6TableNum})
     runCommand([]string{"ip", "-6", "route", "add", "local", "::/0", "dev", "lo", "table", v6TableNum})
     runCommand([]string{"ip6tables", "-t", "mangle", "-N", "XPROXY6"})
+    v6SysBypass()
+    log.Infof("Setting up IPv6 bypass CIDR -> %v", v6Bypass)
     for _, cidr := range v6Bypass {
         runCommand([]string{"ip6tables", "-t", "mangle", "-A", "XPROXY6", "-d", cidr, "-j", "RETURN"})
     }
