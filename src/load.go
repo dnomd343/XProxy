@@ -67,6 +67,12 @@ type inboundsSettings struct {
     Inbounds []interface{} `json:"inbounds"`
 }
 
+func runCommand(command []string) bool {
+    log.Debugf("Running system command -> %v", command)
+    // TODO: run system command
+    return true
+}
+
 func isFileExist(filePath string) bool {
     s, err := os.Stat(filePath)
     if err != nil { // file or folder not exist

@@ -21,3 +21,29 @@ func loadDns() {
         panic("Setting up DNS failed")
     }
 }
+
+func loadNetwork() {
+    log.Info("Enabled IP forward")
+    runCommand([]string{"sysctl", "-w", "net.ipv4.ip_forward=1"})
+    runCommand([]string{"sysctl", "-w", "net.ipv6.conf.all.forwarding=1"})
+
+    log.Info("Flush system IP configure")
+    runCommand([]string{"ip", "link", "set", "eth0", "down"})
+    runCommand([]string{"ip", "-4", "addr", "flush", "dev", "eth0"})
+    runCommand([]string{"ip", "-6", "addr", "flush", "dev", "eth0"})
+    runCommand([]string{"ip", "link", "set", "eth0", "down"})
+
+    log.Info("Setting up system IP configure")
+    if v4Address != "" {
+        runCommand([]string{"ip", "-4", "addr", "add", v4Address, "dev", "eth0"})
+    }
+    if v4Gateway != "" {
+        runCommand([]string{"ip", "-4", "route", "add", "default", "via", v4Gateway})
+    }
+    if v6Address != "" {
+        runCommand([]string{"ip", "-6", "addr", "add", v6Address, "dev", "eth0"})
+    }
+    if v6Gateway != "" {
+        runCommand([]string{"ip", "-6", "route", "add", "default", "via", v6Gateway})
+    }
+}

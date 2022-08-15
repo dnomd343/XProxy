@@ -25,5 +25,9 @@ func main() {
     }
     loadConfig(content)
     //loadProxy("/etc/xproxy/config", "/xproxy")
-    loadDns()
+
+    // TODO: load geo assets
+
+    //loadDns()
+    loadNetwork()
 }
