@@ -6,6 +6,9 @@ import (
 )
 
 var logLevel = "warning"
+
+var v4RouteTable = 100
+var v6RouteTable = 106
 var v4TProxyPort = 7288
 var v6TProxyPort = 7289
 
@@ -29,5 +32,6 @@ func main() {
     // TODO: load geo assets
 
     //loadDns()
-    loadNetwork()
+    //loadNetwork()
+    loadTProxy()
 }

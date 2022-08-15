@@ -138,7 +138,7 @@ func saveConfig(configDir string, caption string, content string, overwrite bool
     }
 }
 
-func loadHttpProxy(tag string, port int, sniffObject sniffSettings) interface{} {
+func loadHttpConfig(tag string, port int, sniffObject sniffSettings) interface{} {
     type empty struct{}
     return inboundSettings{
         Tag:            tag,
@@ -150,7 +150,7 @@ func loadHttpProxy(tag string, port int, sniffObject sniffSettings) interface{} 
     }
 }
 
-func loadSocksProxy(tag string, port int, sniffObject sniffSettings) interface{} {
+func loadSocksConfig(tag string, port int, sniffObject sniffSettings) interface{} {
     type empty struct{}
     type socksSettings struct {
         UDP bool `json:"udp"`
@@ -165,7 +165,7 @@ func loadSocksProxy(tag string, port int, sniffObject sniffSettings) interface{}
     }
 }
 
-func loadTProxy(tag string, port int, sniffObject sniffSettings) interface{} {
+func loadTProxyConfig(tag string, port int, sniffObject sniffSettings) interface{} {
     type tproxySettings struct {
         Network        string `json:"network"`
         FollowRedirect bool   `json:"followRedirect"`
@@ -208,13 +208,13 @@ func loadProxy(configDir string, exposeDir string) {
         RouteOnly:    !enableRedirect,
         DestOverride: []string{"http", "tls"},
     }
-    inboundsObject.Inbounds = append(inboundsObject.Inbounds, loadTProxy("tproxy", v4TProxyPort, sniffObject))
-    inboundsObject.Inbounds = append(inboundsObject.Inbounds, loadTProxy("tproxy6", v6TProxyPort, sniffObject))
+    inboundsObject.Inbounds = append(inboundsObject.Inbounds, loadTProxyConfig("tproxy", v4TProxyPort, sniffObject))
+    inboundsObject.Inbounds = append(inboundsObject.Inbounds, loadTProxyConfig("tproxy6", v6TProxyPort, sniffObject))
     for tag, port := range httpInbounds {
-        inboundsObject.Inbounds = append(inboundsObject.Inbounds, loadHttpProxy(tag, port, sniffObject))
+        inboundsObject.Inbounds = append(inboundsObject.Inbounds, loadHttpConfig(tag, port, sniffObject))
     }
     for tag, port := range socksInbounds {
-        inboundsObject.Inbounds = append(inboundsObject.Inbounds, loadSocksProxy(tag, port, sniffObject))
+        inboundsObject.Inbounds = append(inboundsObject.Inbounds, loadSocksConfig(tag, port, sniffObject))
     }
     for _, addon := range addOnInbounds {
         inboundsObject.Inbounds = append(inboundsObject.Inbounds, addon)

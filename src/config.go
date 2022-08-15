@@ -86,6 +86,7 @@ func loadConfig(rawConfig []byte) {
     }
     log.Info("DNS server -> ", dnsServer)
 
+    // TODO: load basic bypass -> ip -4/6 addr | grep -w "inet(6)" | awk '{print $2}'
     for _, address := range config.Network.ByPass { // bypass options
         if isIPv4(address, true) {
             v4Bypass = append(v4Bypass, address)
