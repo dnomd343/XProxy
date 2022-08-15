@@ -1,6 +1,8 @@
 package main
 
 import (
+    "encoding/json"
+    "fmt"
     log "github.com/sirupsen/logrus"
     "io"
     "io/ioutil"
@@ -46,6 +48,38 @@ var outboundsConfig = `{
     }
   ]
 }`
+
+type emptySettings struct{}
+
+type socksSettings struct {
+    UDP bool `json:"udp"`
+}
+
+type tproxySettings struct {
+    Network        string `json:"network"`
+    FollowRedirect bool   `json:"followRedirect"`
+}
+
+type tproxyStreamSettings struct {
+    Sockopt struct {
+        Tproxy string `json:"tproxy"`
+    } `json:"sockopt"`
+}
+
+type sniffSettings struct {
+    Enabled      bool     `json:"enabled"`
+    RouteOnly    bool     `json:"routeOnly"`
+    DestOverride []string `json:"destOverride"`
+}
+
+type inboundSettings struct {
+    Tag            string        `json:"tag"`
+    Port           int           `json:"port"`
+    Protocol       string        `json:"protocol"`
+    Settings       interface{}   `json:"settings"`
+    StreamSettings interface{}   `json:"streamSettings"`
+    Sniffing       sniffSettings `json:"sniffing"`
+}
 
 func isFileExist(filePath string) bool {
     s, err := os.Stat(filePath)
@@ -125,6 +159,53 @@ func loadProxy(configDir string, exposeDir string) {
     saveConfig(configDir, "log", logConfig+"\n", true)
 
     // TODO: load inbounds config
+
+    sniffObject := sniffSettings{
+        Enabled:      enableSniff,
+        RouteOnly:    !enableRedirect,
+        DestOverride: []string{"http", "tls"},
+    }
+
+    httpObject := inboundSettings{
+        Tag:            "123",
+        Port:           1234,
+        Protocol:       "http",
+        Settings:       emptySettings{},
+        StreamSettings: emptySettings{},
+        Sniffing:       sniffObject,
+    }
+
+    b, _ := json.Marshal(httpObject)
+    fmt.Println(string(b))
+
+    socksObject := inboundSettings{
+        Tag:      "123",
+        Port:     2345,
+        Protocol: "socks",
+        Settings: socksSettings{
+            UDP: true,
+        },
+        StreamSettings: emptySettings{},
+        Sniffing:       sniffObject,
+    }
+
+    b, _ = json.Marshal(socksObject)
+    fmt.Println(string(b))
+
+    tproxyObject := inboundSettings{
+        Tag:      "123",
+        Port:     7288,
+        Protocol: "dokodemo-door",
+        Settings: tproxySettings{
+            Network:        "tcp,udp",
+            FollowRedirect: true,
+        },
+        StreamSettings: emptySettings{},
+        Sniffing:       sniffObject,
+    }
+
+    b, _ = json.Marshal(tproxyObject)
+    fmt.Println(string(b))
 
     for _, configFile := range listFolder(exposeDir+"/config", ".json") {
         if configFile == "log.json" || configFile == "inbounds.json" {

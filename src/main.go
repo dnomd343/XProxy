@@ -4,7 +4,12 @@ import (
     log "github.com/sirupsen/logrus"
 )
 
-var logLevel = "debug"
+var logLevel = "warning"
+var v4TProxyPort = 7288
+var v6TProxyPort = 7289
+
+var enableSniff = false
+var enableRedirect = true
 
 func main() {
     log.SetLevel(log.DebugLevel)
