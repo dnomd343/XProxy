@@ -1,12 +1,15 @@
 package main
 
 import (
-    "fmt"
     "gopkg.in/yaml.v3"
     "net"
     "strconv"
     "strings"
 )
+
+var v4Bypass []string
+var v6Bypass []string
+var dnsServer []string
 
 type netConfig struct {
     Gateway string `yaml:"gateway"` // network gateway
@@ -62,5 +65,21 @@ func loadConfig(rawConfig []byte) {
     if err != nil {
         panic(err)
     }
-    fmt.Println(config)
+    for _, address := range config.Network.DNS { // load dns configure
+        if isIPv4(address, false, false) || isIPv6(address, false, false) {
+            dnsServer = append(dnsServer, address)
+        } else {
+            panic("Invalid DNS server -> " + address)
+        }
+    }
+    for _, address := range config.Network.ByPass { // load bypass configure
+        if isIPv4(address, true, false) {
+            v4Bypass = append(v4Bypass, address)
+        } else if isIPv6(address, true, false) {
+            v6Bypass = append(v6Bypass, address)
+        } else {
+            panic("Invalid bypass CIDR -> " + address)
+        }
+    }
+    //fmt.Println(config)
 }
