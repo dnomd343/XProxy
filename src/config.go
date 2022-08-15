@@ -11,6 +11,14 @@ var v4Bypass []string
 var v6Bypass []string
 var dnsServer []string
 
+var v4Gateway string
+var v4Address string
+var v4Forward bool
+
+var v6Gateway string
+var v6Address string
+var v6Forward bool
+
 type netConfig struct {
     Gateway string `yaml:"gateway"` // network gateway
     Address string `yaml:"address"` // network address
@@ -81,5 +89,22 @@ func loadConfig(rawConfig []byte) {
             panic("Invalid bypass CIDR -> " + address)
         }
     }
-    //fmt.Println(config)
+    v4Address = config.Network.IPv4.Address // ipv4 address
+    if !isIPv4(v4Address, true, true) {
+        panic("Invalid IPv4 address -> " + v4Address)
+    }
+    v4Gateway = config.Network.IPv4.Gateway // ipv4 gateway
+    if !isIPv4(v4Gateway, false, true) {
+        panic("Invalid IPv4 gateway -> " + v4Gateway)
+    }
+    v6Address = config.Network.IPv6.Address // ipv6 address
+    if !isIPv6(v6Address, true, true) {
+        panic("Invalid IPv6 address -> " + v6Address)
+    }
+    v6Gateway = config.Network.IPv6.Gateway // ipv6 gateway
+    if !isIPv6(v6Gateway, false, true) {
+        panic("Invalid IPv6 gateway -> " + v6Gateway)
+    }
+    v4Forward = config.Network.IPv4.Forward // forward options
+    v6Forward = config.Network.IPv6.Forward
 }
