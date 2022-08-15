@@ -53,6 +53,15 @@ func isFileExist(filePath string) bool {
     return !s.IsDir()
 }
 
+func createFolder(folderPath string) {
+    log.Debugf("Loading folder -> %s", folderPath)
+    err := os.MkdirAll(folderPath, 0755)
+    if err != nil {
+        log.Errorf("Create folder `%s` failed", folderPath)
+        panic("Create folder failed")
+    }
+}
+
 func saveConfig(configDir string, caption string, content string, overwrite bool) {
     filePath := configDir + "/" + caption + ".json"
     if !overwrite && isFileExist(filePath) { // file exist and don't overwrite
@@ -67,16 +76,20 @@ func saveConfig(configDir string, caption string, content string, overwrite bool
     }
 }
 
-func proxyConfig(configDir string, logLevel string, logDir string) {
-    // TODO: mkdir -p configDir and exposeDir
+func loadProxy(configDir string, exposeDir string) {
+    createFolder(exposeDir + "/log")
+    createFolder(exposeDir + "/config")
+    createFolder(configDir)
+    saveConfig(exposeDir+"/config", "dns", dnsConfig+"\n", false)
+    saveConfig(exposeDir+"/config", "route", routeConfig+"\n", false)
+    saveConfig(exposeDir+"/config", "outbounds", outboundsConfig+"\n", false)
 
     logConfig = strings.ReplaceAll(logConfig, "${LEVEL}", logLevel)
-    logConfig = strings.ReplaceAll(logConfig, "${DIR}", logDir)
+    logConfig = strings.ReplaceAll(logConfig, "${DIR}", exposeDir+"/log")
+    saveConfig(configDir, "log", logConfig+"\n", true)
+
     // TODO: load inbounds config
 
-    saveConfig(configDir, "log", logConfig+"\n", true)
-    saveConfig(configDir, "dns", dnsConfig+"\n", false)
-    saveConfig(configDir, "route", routeConfig+"\n", false)
-    saveConfig(configDir, "outbounds", outboundsConfig+"\n", false)
+    // TODO: copy exposeDir/config/*.json -> configDir (exclude log and inbounds)
 
 }

@@ -4,11 +4,13 @@ import (
     log "github.com/sirupsen/logrus"
 )
 
+var logLevel = "debug"
+
 func main() {
     log.SetLevel(log.DebugLevel)
     log.Warning("XProxy start")
 
-    proxyConfig("/etc/xproxy/config", "debug", "/xproxy/log")
+    loadProxy("/etc/xproxy/config", "/xproxy")
 
     //content, err := os.ReadFile("test.yml")
     //if err != nil {
