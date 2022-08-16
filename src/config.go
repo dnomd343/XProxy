@@ -4,7 +4,6 @@ import (
     log "github.com/sirupsen/logrus"
     "gopkg.in/yaml.v3"
     "net"
-    "strconv"
     "strings"
 )
 
@@ -38,53 +37,39 @@ type Config struct {
     }
 }
 
-func isIP(ipAddr string, isRange bool, ipLength int, ipFlag string) bool {
-    var address string
-    if isRange {
-        temp := strings.Split(ipAddr, "/")
-        if len(temp) != 2 { // not {IP_ADDRESS}/{LENGTH} format
-            return false
-        }
-        length, err := strconv.Atoi(temp[1])
-        if err != nil { // range length not a integer
-            return false
-        }
-        if length < 0 || length > ipLength { // length should between 0 ~ ipLength
-            return false
-        }
-        address = temp[0]
-    } else {
-        address = ipAddr
+func isIP(ipAddr string, isCidr bool) bool {
+    if !isCidr {
+        return net.ParseIP(ipAddr) != nil
     }
-    ip := net.ParseIP(address) // try to convert ip
-    return ip != nil && strings.Contains(address, ipFlag)
+    _, _, err := net.ParseCIDR(ipAddr)
+    return err == nil
 }
 
-func isIPv4(ipAddr string, isRange bool) bool {
-    return isIP(ipAddr, isRange, 32, ".")
+func isIPv4(ipAddr string, isCidr bool) bool {
+    return isIP(ipAddr, isCidr) && strings.Contains(ipAddr, ".")
 }
 
-func isIPv6(ipAddr string, isRange bool) bool {
-    return isIP(ipAddr, isRange, 128, ":")
+func isIPv6(ipAddr string, isCidr bool) bool {
+    return isIP(ipAddr, isCidr) && strings.Contains(ipAddr, ":")
 }
 
 func loadConfig(rawConfig []byte) {
     config := Config{}
-    log.Debug("Decode yaml content -> \n", string(rawConfig))
+    log.Debugf("Decode yaml content -> \n%s", string(rawConfig))
     err := yaml.Unmarshal(rawConfig, &config) // yaml (or json) decode
     if err != nil {
-        panic(err)
+        log.Panicf("Decode config file error -> %v", err)
     }
-    log.Debug("Decoded config -> ", config)
+    log.Debugf("Decoded config -> %v", config)
 
     for _, address := range config.Network.DNS { // dns options
         if isIPv4(address, false) || isIPv6(address, false) {
             dnsServer = append(dnsServer, address)
         } else {
-            panic("Invalid DNS server -> " + address)
+            log.Panicf("Invalid DNS server -> %s", address)
         }
     }
-    log.Info("DNS server -> ", dnsServer)
+    log.Infof("DNS server -> %v", dnsServer)
 
     for _, address := range config.Network.ByPass { // bypass options
         if isIPv4(address, true) {
@@ -92,29 +77,29 @@ func loadConfig(rawConfig []byte) {
         } else if isIPv6(address, true) {
             v6Bypass = append(v6Bypass, address)
         } else {
-            panic("Invalid bypass CIDR -> " + address)
+            log.Panicf("Invalid bypass CIDR -> %s", address)
         }
     }
-    log.Info("IPv4 bypass CIDR -> ", v4Bypass)
-    log.Info("IPv6 bypass CIDR -> ", v6Bypass)
+    log.Infof("IPv4 bypass CIDR -> %s", v4Bypass)
+    log.Infof("IPv6 bypass CIDR -> %s", v6Bypass)
 
     v4Address = config.Network.IPv4.Address
     v4Gateway = config.Network.IPv4.Gateway
     if v4Address != "" && !isIPv4(v4Address, true) {
-        panic("Invalid IPv4 address -> " + v4Address)
+        log.Panicf("Invalid IPv4 address -> %s", v4Address)
     }
     if v4Gateway != "" && !isIPv4(v4Gateway, false) {
-        panic("Invalid IPv4 gateway -> " + v4Gateway)
+        log.Panicf("Invalid IPv4 gateway -> %s", v4Gateway)
     }
     log.Infof("IPv4 -> address = %s | gateway = %s", v4Address, v4Gateway)
 
     v6Address = config.Network.IPv6.Address
     v6Gateway = config.Network.IPv6.Gateway
     if v6Address != "" && !isIPv6(v6Address, true) {
-        panic("Invalid IPv6 address -> " + v6Address)
+        log.Panicf("Invalid IPv6 address -> %s", v6Address)
     }
     if v6Gateway != "" && !isIPv6(v6Gateway, false) {
-        panic("Invalid IPv6 gateway -> " + v6Gateway)
+        log.Panicf("Invalid IPv6 gateway -> %s", v6Gateway)
     }
     log.Infof("IPv6 -> address = %s | gateway = %s", v6Address, v6Gateway)
 

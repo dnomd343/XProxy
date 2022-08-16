@@ -50,6 +50,10 @@ var outboundsConfig = `{
   ]
 }`
 
+type inboundsSettings struct {
+    Inbounds []interface{} `json:"inbounds"`
+}
+
 type sniffSettings struct {
     Enabled      bool     `json:"enabled"`
     RouteOnly    bool     `json:"routeOnly"`
@@ -65,11 +69,7 @@ type inboundSettings struct {
     Sniffing       sniffSettings `json:"sniffing"`
 }
 
-type inboundsSettings struct {
-    Inbounds []interface{} `json:"inbounds"`
-}
-
-func runCommand(command []string) (int, string) {
+func runCommand(command ...string) (int, string) {
     log.Debugf("Running system command -> %v", command)
     process := exec.Command(command[0], command[1:]...)
     output, _ := process.CombinedOutput()
@@ -93,8 +93,7 @@ func createFolder(folderPath string) {
     log.Debugf("Loading folder -> %s", folderPath)
     err := os.MkdirAll(folderPath, 0755)
     if err != nil {
-        log.Errorf("Failed to create folder -> %s", folderPath)
-        panic("Create folder failed")
+        log.Panicf("Failed to create folder -> %s", folderPath)
     }
 }
 
@@ -102,8 +101,7 @@ func listFolder(folderPath string, suffix string) []string {
     var fileList []string
     files, err := ioutil.ReadDir(folderPath)
     if err != nil {
-        log.Errorf("Failed to list folder -> %s", folderPath)
-        panic("List folder failed")
+        log.Panicf("Failed to list folder -> %s", folderPath)
     }
     for _, file := range files {
         if strings.HasSuffix(file.Name(), suffix) {
@@ -117,18 +115,15 @@ func copyFile(source string, target string) {
     log.Infof("Copy file `%s` => `%s`", source, target)
     srcFile, err := os.Open(source)
     if err != nil {
-        log.Errorf("Failed to open file -> %s", source)
-        panic("Open file failed")
+        log.Panicf("Failed to open file -> %s", source)
     }
     dstFile, err := os.OpenFile(target, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
     if err != nil {
-        log.Errorf("Failed to open file -> %s", target)
-        panic("Open file failed")
+        log.Panicf("Failed to open file -> %s", target)
     }
     _, err = io.Copy(dstFile, srcFile)
     if err != nil {
-        log.Errorf("Failed to copy from `%s` to `%s`", source, target)
-        panic("Copy file failed")
+        log.Panicf("Failed to copy from `%s` to `%s`", source, target)
     }
 }
 
@@ -141,8 +136,7 @@ func saveConfig(configDir string, caption string, content string, overwrite bool
     log.Debugf("Loading %s -> \n%s", filePath, content)
     err := os.WriteFile(filePath, []byte(content), 0644)
     if err != nil {
-        log.Errorf("File %s -> %v", caption, err)
-        panic("File save error")
+        log.Panicf("File %s -> %v", caption, err)
     }
 }
 
@@ -210,24 +204,24 @@ func loadProxy(configDir string, exposeDir string) {
     logConfig = strings.ReplaceAll(logConfig, "${DIR}", exposeDir+"/log")
     saveConfig(configDir, "log", logConfig+"\n", true)
 
-    inboundsObject := inboundsSettings{}
-    sniffObject := sniffSettings{
+    inbounds := inboundsSettings{}
+    sniff := sniffSettings{
         Enabled:      enableSniff,
         RouteOnly:    !enableRedirect,
         DestOverride: []string{"http", "tls"},
     }
-    inboundsObject.Inbounds = append(inboundsObject.Inbounds, loadTProxyConfig("tproxy", v4TProxyPort, sniffObject))
-    inboundsObject.Inbounds = append(inboundsObject.Inbounds, loadTProxyConfig("tproxy6", v6TProxyPort, sniffObject))
+    inbounds.Inbounds = append(inbounds.Inbounds, loadTProxyConfig("tproxy", v4TProxyPort, sniff))
+    inbounds.Inbounds = append(inbounds.Inbounds, loadTProxyConfig("tproxy6", v6TProxyPort, sniff))
     for tag, port := range httpInbounds {
-        inboundsObject.Inbounds = append(inboundsObject.Inbounds, loadHttpConfig(tag, port, sniffObject))
+        inbounds.Inbounds = append(inbounds.Inbounds, loadHttpConfig(tag, port, sniff))
     }
     for tag, port := range socksInbounds {
-        inboundsObject.Inbounds = append(inboundsObject.Inbounds, loadSocksConfig(tag, port, sniffObject))
+        inbounds.Inbounds = append(inbounds.Inbounds, loadSocksConfig(tag, port, sniff))
     }
     for _, addon := range addOnInbounds {
-        inboundsObject.Inbounds = append(inboundsObject.Inbounds, addon)
+        inbounds.Inbounds = append(inbounds.Inbounds, addon)
     }
-    inboundsConfig, _ := json.MarshalIndent(inboundsObject, "", "  ") // json encode
+    inboundsConfig, _ := json.MarshalIndent(inbounds, "", "  ") // json encode
     saveConfig(configDir, "inbounds", string(inboundsConfig)+"\n", true)
 
     for _, configFile := range listFolder(exposeDir+"/config", ".json") {
