@@ -17,38 +17,10 @@ var v4Address string
 var v6Gateway string
 var v6Address string
 
-type NetConfig struct {
-    Gateway string `yaml:"gateway"` // network gateway
-    Address string `yaml:"address"` // network address
-}
-
-type Config struct {
-    Update struct {
-        Cron string            `yaml:"cron"`
-        Url  map[string]string `yaml:"url"`
-    } `yaml:"update"`
-    Proxy struct {
-        Sniff    bool           `yaml:"sniff"`
-        Redirect bool           `yaml:"redirect"`
-        Http     map[string]int `yaml:"http"`
-        Socks    map[string]int `yaml:"socks"`
-        AddOn    []interface{}  `yaml:"addon"`
-    } `yaml:"proxy"`
-    Network struct {
-        DNS    []string  `yaml:"dns"`    // system dns server
-        ByPass []string  `yaml:"bypass"` // cidr bypass list
-        IPv4   NetConfig `yaml:"ipv4"`   // ipv4 network configure
-        IPv6   NetConfig `yaml:"ipv6"`   // ipv6 network configure
-    } `yaml:"network"`
-}
-
 var defaultConfig = `# default configure file for xproxy
 proxy:
   sniff: true
   redirect: true
-  http: null
-  socks: null
-  addon: null
 
 network:
   dns: null
@@ -67,6 +39,32 @@ update:
     geoip.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
     geosite.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
 `
+
+type NetConfig struct {
+    Gateway string `yaml:"gateway"` // network gateway
+    Address string `yaml:"address"` // network address
+}
+
+type Config struct {
+    Script []string `yaml:"script"`
+    Update struct {
+        Cron string            `yaml:"cron"`
+        Url  map[string]string `yaml:"url"`
+    } `yaml:"update"`
+    Proxy struct {
+        Sniff    bool           `yaml:"sniff"`
+        Redirect bool           `yaml:"redirect"`
+        Http     map[string]int `yaml:"http"`
+        Socks    map[string]int `yaml:"socks"`
+        AddOn    []interface{}  `yaml:"addon"`
+    } `yaml:"proxy"`
+    Network struct {
+        DNS    []string  `yaml:"dns"`    // system dns server
+        ByPass []string  `yaml:"bypass"` // cidr bypass list
+        IPv4   NetConfig `yaml:"ipv4"`   // ipv4 network configure
+        IPv6   NetConfig `yaml:"ipv6"`   // ipv6 network configure
+    } `yaml:"network"`
+}
 
 func isIP(ipAddr string, isCidr bool) bool {
     if !isCidr {
@@ -161,4 +159,7 @@ func loadConfig(configFile string) {
     log.Infof("Update cron -> %s", updateCron)
     updateUrls = config.Update.Url
     log.Infof("Update url -> %v", updateUrls)
+
+    preScript = config.Script
+    log.Infof("Pre-script -> %v", preScript)
 }

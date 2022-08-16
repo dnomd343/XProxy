@@ -15,6 +15,7 @@ var v6RouteTable = 106
 var v4TProxyPort = 7288
 var v6TProxyPort = 7289
 
+var preScript []string
 var updateCron string
 var updateUrls map[string]string
 
@@ -35,9 +36,7 @@ func main() {
 
     log.SetLevel(log.DebugLevel)
     log.Warning("XProxy start")
-
     loadConfig("/xproxy/config.yml")
-
     loadProxy("/etc/xproxy/config", "/xproxy")
     loadGeoSite("/xproxy/assets")
     loadGeoIp("/xproxy/assets")
@@ -50,8 +49,10 @@ func main() {
     loadDns()
     loadNetwork()
     loadTProxy()
-
-    // TODO: running custom script
+    for _, script := range preScript {
+        log.Infof("Run script command -> %s", script)
+        runCommand("sh", "-c", script)
+    }
 
     xray := newProcess("xray", "-confdir", "/etc/xproxy/config")
     xray.startProcess(true, true)
