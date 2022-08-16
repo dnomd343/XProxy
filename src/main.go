@@ -1,15 +1,11 @@
 package main
 
 import (
-    "fmt"
     log "github.com/sirupsen/logrus"
+    "os"
+    "os/signal"
     "syscall"
-    "time"
 )
-
-var xray *Process
-var sleep *Process
-var empty *Process
 
 var logLevel = "warning"
 
@@ -26,43 +22,35 @@ var addOnInbounds []interface{}
 
 var assetFile = "/etc/xproxy/assets.tar.xz"
 
-func exit() {
-    log.Warningf("Start exit process")
-    xray.disableProcess()
-    xray.sendSignal(syscall.SIGTERM)
-    //log.Infof("Send kill signal to process %s", xray.caption)
-    sleep.disableProcess()
-    sleep.sendSignal(syscall.SIGTERM)
-    empty.disableProcess()
-    empty.sendSignal(syscall.SIGTERM)
-    log.Info("Wait sub process exit")
-    for !(xray.done && sleep.done) {
-    }
-    log.Infof("Exit complete")
-}
-
 func main() {
+    defer func() {
+        if err := recover(); err != nil {
+            log.Errorf("Unknown error -> %v", err)
+        }
+    }()
     log.SetLevel(log.DebugLevel)
     log.Warning("XProxy start")
 
-    xray = newProcess("xray", "-confdir", "/etc/xproxy/config")
+    xray := newProcess("xray", "-confdir", "/etc/xproxy/config")
     xray.startProcess(true, true)
 
-    sleep = newProcess("sleep", "1000")
+    sleep := newProcess("sleep", "1000")
     sleep.startProcess(true, true)
 
-    //done := make(chan bool, 1)
+    empty := newProcess("empty")
 
-    daemon(xray)
-    daemon(sleep)
-    daemon(empty)
+    subProcess = append(subProcess, xray)
+    subProcess = append(subProcess, sleep)
+    subProcess = append(subProcess, empty)
 
-    fmt.Println("start sleep...")
-    time.Sleep(10 * time.Second)
-    fmt.Println("wake up")
+    for _, sub := range subProcess {
+        daemon(sub)
+    }
+
+    sigs := make(chan os.Signal, 1)
+    signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+    <-sigs
     exit()
-    
-    //<-done
 
     //content, err := os.ReadFile("test.yml")
     //if err != nil {
