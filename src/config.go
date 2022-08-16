@@ -4,6 +4,7 @@ import (
     log "github.com/sirupsen/logrus"
     "gopkg.in/yaml.v3"
     "net"
+    "os"
     "strings"
 )
 
@@ -41,6 +42,32 @@ type Config struct {
     } `yaml:"network"`
 }
 
+var defaultConfig = `# default configure file for xproxy
+proxy:
+  sniff: true
+  redirect: true
+  http: null
+  socks: null
+  addon: null
+
+network:
+  dns: null
+  ipv4: null
+  ipv6: null
+  bypass:
+    - 169.254.0.0/16
+    - 224.0.0.0/3
+    - fc00::/7
+    - fe80::/10
+    - ff00::/8
+
+update:
+  cron: "0 0 4 * * *"
+  url:
+    geoip.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
+    geosite.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
+`
+
 func isIP(ipAddr string, isCidr bool) bool {
     if !isCidr {
         return net.ParseIP(ipAddr) != nil
@@ -57,10 +84,22 @@ func isIPv6(ipAddr string, isCidr bool) bool {
     return isIP(ipAddr, isCidr) && strings.Contains(ipAddr, ":")
 }
 
-func loadConfig(rawConfig []byte) {
+func loadConfig(configFile string) {
+    if !isFileExist(configFile) { // load default configure
+        log.Infof("Load default configure -> %s", configFile)
+        err := os.WriteFile(configFile, []byte(defaultConfig), 0644)
+        if err != nil {
+            log.Panicf("File %s save error -> %v", configFile, err)
+        }
+    }
+
     config := Config{}
+    rawConfig, err := os.ReadFile(configFile)
+    if err != nil {
+        log.Panicf("Failed to open %s -> %v", configFile, err)
+    }
     log.Debugf("Decode yaml content -> \n%s", string(rawConfig))
-    err := yaml.Unmarshal(rawConfig, &config) // yaml (or json) decode
+    err = yaml.Unmarshal(rawConfig, &config) // yaml (or json) decode
     if err != nil {
         log.Panicf("Decode config file error -> %v", err)
     }
