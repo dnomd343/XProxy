@@ -1,6 +1,7 @@
 package main
 
 import (
+    "github.com/robfig/cron"
     log "github.com/sirupsen/logrus"
     "os"
     "os/signal"
@@ -13,6 +14,9 @@ var v4RouteTable = 100
 var v6RouteTable = 106
 var v4TProxyPort = 7288
 var v6TProxyPort = 7289
+
+var updateCron string
+var updateUrls map[string]string
 
 var enableSniff bool
 var enableRedirect bool
@@ -37,11 +41,15 @@ func main() {
         panic(err)
     }
     loadConfig(content)
-    loadProxy("/etc/xproxy/config", "/xproxy")
 
-    loadGeoIp("/xproxy/assets")
+    loadProxy("/etc/xproxy/config", "/xproxy")
     loadGeoSite("/xproxy/assets")
-    // TODO: auto-update assets file (by cron command)
+    loadGeoIp("/xproxy/assets")
+    autoUpdate := cron.New()
+    _ = autoUpdate.AddFunc(updateCron, func() {
+        updateAssets("/xproxy/assets")
+    })
+    autoUpdate.Start()
 
     loadDns()
     loadNetwork()
@@ -52,14 +60,6 @@ func main() {
     xray := newProcess("xray", "-confdir", "/etc/xproxy/config")
     xray.startProcess(true, true)
     subProcess = append(subProcess, xray)
-
-    //sleep := newProcess("sleep", "1000")
-    //sleep.startProcess(true, true)
-    //subProcess = append(subProcess, sleep)
-    //
-    //empty := newProcess("empty")
-    //subProcess = append(subProcess, empty)
-
     daemon()
 
     sigExit := make(chan os.Signal, 1)

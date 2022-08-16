@@ -22,19 +22,23 @@ type NetConfig struct {
 }
 
 type Config struct {
+    Update struct {
+        Cron string            `yaml:"cron"`
+        Url  map[string]string `yaml:"url"`
+    } `yaml:"update"`
     Proxy struct {
         Sniff    bool           `yaml:"sniff"`
         Redirect bool           `yaml:"redirect"`
         Http     map[string]int `yaml:"http"`
         Socks    map[string]int `yaml:"socks"`
         AddOn    []interface{}  `yaml:"addon"`
-    }
+    } `yaml:"proxy"`
     Network struct {
         DNS    []string  `yaml:"dns"`    // system dns server
         ByPass []string  `yaml:"bypass"` // cidr bypass list
         IPv4   NetConfig `yaml:"ipv4"`   // ipv4 network configure
         IPv6   NetConfig `yaml:"ipv6"`   // ipv6 network configure
-    }
+    } `yaml:"network"`
 }
 
 func isIP(ipAddr string, isCidr bool) bool {
@@ -113,4 +117,9 @@ func loadConfig(rawConfig []byte) {
     log.Infof("Socks5 inbounds -> %v", socksInbounds)
     addOnInbounds = config.Proxy.AddOn
     log.Infof("Add-on inbounds -> %v", addOnInbounds)
+
+    updateCron = config.Update.Cron
+    log.Infof("Update cron -> %s", updateCron)
+    updateUrls = config.Update.Url
+    log.Infof("Update url -> %v", updateUrls)
 }

@@ -5,6 +5,7 @@ import (
     log "github.com/sirupsen/logrus"
     "io"
     "io/ioutil"
+    "net/http"
     "os"
     "os/exec"
     "strings"
@@ -125,6 +126,30 @@ func copyFile(source string, target string) {
     if err != nil {
         log.Panicf("Failed to copy from `%s` to `%s`", source, target)
     }
+}
+
+func downloadFile(url string, file string) bool {
+    log.Debugf("File download %s => %s", url, file)
+    resp, err := http.Get(url)
+    if err != nil {
+        log.Errorf("Download %s error -> %v", url, err)
+        return false
+    }
+    defer func(Body io.ReadCloser) {
+        _ = Body.Close()
+    }(resp.Body)
+    out, err := os.OpenFile(file, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
+    if err != nil {
+        _ = resp.Body.Close()
+        log.Panicf("Open %s error -> %v", file, err)
+    }
+    _, err = io.Copy(out, resp.Body)
+    _ = resp.Body.Close()
+    if err != nil {
+        log.Panicf("File %s save error -> %v", file, err)
+    }
+    log.Infof("Download success `%s` => `%s`", url, file)
+    return true
 }
 
 func saveConfig(configDir string, caption string, content string, overwrite bool) {
@@ -249,4 +274,13 @@ func loadGeoIp(assetDir string) {
 func loadGeoSite(assetDir string) {
     createFolder(assetDir)
     extractGeoFile(assetFile, "geosite.dat", assetDir)
+}
+
+func updateAssets(assetDir string) {
+    if len(updateUrls) != 0 {
+        log.Info("Start update assets")
+        for file, url := range updateUrls {
+            downloadFile(url, assetDir+"/"+file)
+        }
+    }
 }
