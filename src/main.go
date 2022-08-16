@@ -1,11 +1,15 @@
 package main
 
 import (
+    "fmt"
     log "github.com/sirupsen/logrus"
+    "syscall"
+    "time"
 )
 
 var xray *Process
 var sleep *Process
+var empty *Process
 
 var logLevel = "warning"
 
@@ -22,6 +26,21 @@ var addOnInbounds []interface{}
 
 var assetFile = "/etc/xproxy/assets.tar.xz"
 
+func exit() {
+    log.Warningf("Start exit process")
+    xray.disableProcess()
+    xray.sendSignal(syscall.SIGTERM)
+    //log.Infof("Send kill signal to process %s", xray.caption)
+    sleep.disableProcess()
+    sleep.sendSignal(syscall.SIGTERM)
+    empty.disableProcess()
+    empty.sendSignal(syscall.SIGTERM)
+    log.Info("Wait sub process exit")
+    for !(xray.done && sleep.done) {
+    }
+    log.Infof("Exit complete")
+}
+
 func main() {
     log.SetLevel(log.DebugLevel)
     log.Warning("XProxy start")
@@ -32,12 +51,18 @@ func main() {
     sleep = newProcess("sleep", "1000")
     sleep.startProcess(true, true)
 
-    done := make(chan bool, 1)
+    //done := make(chan bool, 1)
 
     daemon(xray)
     daemon(sleep)
+    daemon(empty)
 
-    <-done
+    fmt.Println("start sleep...")
+    time.Sleep(10 * time.Second)
+    fmt.Println("wake up")
+    exit()
+    
+    //<-done
 
     //content, err := os.ReadFile("test.yml")
     //if err != nil {

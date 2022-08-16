@@ -8,6 +8,7 @@ import (
 )
 
 type Process struct {
+    done    bool
     enable  bool
     caption string
     command []string
@@ -43,9 +44,11 @@ func (p *Process) isProcessAlive() bool {
 }
 
 func (p *Process) sendSignal(signal syscall.Signal) {
-    err := p.process.Process.Signal(signal)
-    if err != nil {
-        log.Errorf("Send signal %v to process %s error -> %v", signal, p.caption, err)
+    if p != nil {
+        err := p.process.Process.Signal(signal)
+        if err != nil {
+            log.Errorf("Send signal %v to process %s error -> %v", signal, p.caption, err)
+        }
     }
 }
 
@@ -53,6 +56,12 @@ func (p *Process) waitProcess() {
     err := p.process.Wait()
     if err != nil {
         log.Warningf("Wait process %s -> %v", p.caption, err)
+    }
+}
+
+func (p *Process) disableProcess() {
+    if p != nil {
+        p.enable = false
     }
 }
 
@@ -69,7 +78,11 @@ func daemonSub(sub *Process) {
 }
 
 func daemon(sub *Process) {
-    go func() {
-        daemonSub(sub)
-    }()
+    if sub != nil && sub.enable {
+        log.Infof("Start daemon of process %s", sub.caption)
+        go func() {
+            daemonSub(sub)
+            sub.done = true
+        }()
+    }
 }
