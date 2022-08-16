@@ -1,6 +1,7 @@
 package main
 
 import (
+    "fmt"
     log "github.com/sirupsen/logrus"
 )
 
@@ -23,6 +24,13 @@ func main() {
     log.SetLevel(log.DebugLevel)
     log.Warning("XProxy start")
 
+    ls := newProcess("ls", "-al")
+    ls.startProcess(true, true)
+
+    fmt.Println(ls.isProcessAlive())
+    ls.waitProcess()
+    fmt.Println(ls.isProcessAlive())
+
     //content, err := os.ReadFile("test.yml")
     //if err != nil {
     //    panic(err)
@@ -30,8 +38,8 @@ func main() {
     //loadConfig(content)
     //loadProxy("/etc/xproxy/config", "/xproxy")
 
-    loadGeoIp("/xproxy/assets")
-    loadGeoSite("/xproxy/assets")
+    //loadGeoIp("/xproxy/assets")
+    //loadGeoSite("/xproxy/assets")
     // TODO: auto-update assets file (by cron command)
 
     //loadDns()
