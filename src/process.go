@@ -8,14 +8,13 @@ import (
     "time"
 )
 
+var exitFlag bool
 var subProcess []*Process
 
 type Process struct {
-    enable  bool
     name    string
     command []string
     process *exec.Cmd
-    exit    bool
 }
 
 func newProcess(command ...string) *Process {
@@ -34,7 +33,6 @@ func (p *Process) startProcess(isStdout bool, isStderr bool) {
     if isStderr {
         p.process.Stderr = os.Stderr
     }
-    p.enable = true
     err := p.process.Start()
     if err != nil {
         log.Errorf("Failed to start %s -> %v", p.name, err)
@@ -43,10 +41,7 @@ func (p *Process) startProcess(isStdout bool, isStderr bool) {
 }
 
 func (p *Process) sendSignal(signal syscall.Signal) {
-    //defer func() {
-    //    _ = recover()
-    //}()
-    if p.process != nil && p.process.ProcessState == nil {
+    if p.process != nil {
         log.Debugf("Send signal %v to %s", signal, p.name)
         _ = p.process.Process.Signal(signal)
     }
@@ -66,46 +61,55 @@ func daemonSub(sub *Process) {
         sub.waitProcess()
     }
     log.Warningf("Catch process %s exit", sub.name)
-    if !sub.enable {
-        log.Debugf("Process %s disabled -> stop daemon", sub.name)
-        return
+    time.Sleep(10 * time.Millisecond) // delay 10ms
+    if !exitFlag {
+        sub.startProcess(true, true)
+        log.Infof("Process %s restart success", sub.name)
+        daemonSub(sub)
     }
-    sub.startProcess(true, true)
-    log.Infof("Process %s restart success", sub.name)
-    daemonSub(sub)
 }
 
-func daemon(sub *Process) {
-    if !sub.enable {
-        log.Infof("Process %s disabled -> skip daemon", sub.name)
-        sub.exit = true
-        return
+func daemon() {
+    for _, sub := range subProcess {
+        if sub.process == nil {
+            log.Infof("Process %s disabled -> skip daemon", sub.name)
+            return
+        }
+        log.Infof("Start daemon of process %s", sub.name)
+        sub := sub
+        go func() {
+            daemonSub(sub)
+            log.Infof("Process %s daemon exit", sub.name)
+        }()
     }
-    log.Infof("Start daemon of process %s", sub.name)
-    go func() {
-        daemonSub(sub)
-        log.Infof("Process %s daemon exit", sub.name)
-        sub.exit = true
+}
+
+func killSub(sub *Process) {
+    defer func() {
+        recover()
     }()
+    log.Infof("Send kill signal to process %s", sub.name)
+    sub.sendSignal(syscall.SIGTERM)
+}
+
+func waitSub(sub *exec.Cmd) {
+    defer func() {
+        recover()
+    }()
+    _ = sub.Wait()
 }
 
 func exit() {
+    exitFlag = true
     log.Warningf("Start exit process")
     for _, sub := range subProcess {
-        sub.enable = false
         if sub.process != nil {
-            sub.sendSignal(syscall.SIGTERM)
-            log.Infof("Send kill signal to process %s", sub.name)
+            killSub(sub)
         }
     }
-    var allExit bool
     log.Info("Wait all sub process exit")
-    for !allExit {
-        time.Sleep(10 * time.Millisecond) // delay 10ms
-        allExit = true
-        for _, sub := range subProcess {
-            allExit = allExit && sub.exit //(sub.process.ProcessState != nil)
-        }
+    for _, sub := range subProcess {
+        waitSub(sub.process)
     }
     log.Infof("Exit complete")
 }

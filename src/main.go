@@ -28,45 +28,42 @@ func main() {
             log.Errorf("Unknown error -> %v", err)
         }
     }()
+
     log.SetLevel(log.DebugLevel)
     log.Warning("XProxy start")
 
-    xray := newProcess("xray", "-confdir", "/etc/xproxy/config")
-    xray.startProcess(true, true)
-
-    sleep := newProcess("sleep", "1000")
-    sleep.startProcess(true, true)
-
-    empty := newProcess("empty")
-
-    subProcess = append(subProcess, xray)
-    subProcess = append(subProcess, sleep)
-    subProcess = append(subProcess, empty)
-
-    for _, sub := range subProcess {
-        daemon(sub)
+    content, err := os.ReadFile("test.yml")
+    if err != nil {
+        panic(err)
     }
+    loadConfig(content)
+    loadProxy("/etc/xproxy/config", "/xproxy")
 
-    sigs := make(chan os.Signal, 1)
-    signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-    <-sigs
-    exit()
-
-    //content, err := os.ReadFile("test.yml")
-    //if err != nil {
-    //    panic(err)
-    //}
-    //loadConfig(content)
-    //loadProxy("/etc/xproxy/config", "/xproxy")
-
-    //loadGeoIp("/xproxy/assets")
-    //loadGeoSite("/xproxy/assets")
+    loadGeoIp("/xproxy/assets")
+    loadGeoSite("/xproxy/assets")
     // TODO: auto-update assets file (by cron command)
 
-    //loadDns()
-    //loadNetwork()
-    //loadTProxy()
+    loadDns()
+    loadNetwork()
+    loadTProxy()
 
     // TODO: running custom script
-    // TODO: start xray service
+
+    xray := newProcess("xray", "-confdir", "/etc/xproxy/config")
+    xray.startProcess(true, true)
+    subProcess = append(subProcess, xray)
+
+    //sleep := newProcess("sleep", "1000")
+    //sleep.startProcess(true, true)
+    //subProcess = append(subProcess, sleep)
+    //
+    //empty := newProcess("empty")
+    //subProcess = append(subProcess, empty)
+
+    daemon()
+
+    sigExit := make(chan os.Signal, 1)
+    signal.Notify(sigExit, syscall.SIGINT, syscall.SIGTERM)
+    <-sigExit
+    exit()
 }
