@@ -2,7 +2,6 @@ package main
 
 import (
     log "github.com/sirupsen/logrus"
-    "os"
 )
 
 var logLevel = "warning"
@@ -18,22 +17,26 @@ var httpInbounds map[string]int
 var socksInbounds map[string]int
 var addOnInbounds []interface{}
 
+var assetFile = "/etc/xproxy/assets.tar.xz"
+
 func main() {
     log.SetLevel(log.DebugLevel)
     log.Warning("XProxy start")
 
-    content, err := os.ReadFile("test.yml")
-    if err != nil {
-        panic(err)
-    }
-    loadConfig(content)
-    loadProxy("/etc/xproxy/config", "/xproxy")
+    //content, err := os.ReadFile("test.yml")
+    //if err != nil {
+    //    panic(err)
+    //}
+    //loadConfig(content)
+    //loadProxy("/etc/xproxy/config", "/xproxy")
 
-    // TODO: load geo assets
+    loadGeoIp("/xproxy/assets")
+    loadGeoSite("/xproxy/assets")
+    // TODO: auto-update assets file (by cron command)
 
-    loadDns()
-    loadNetwork()
-    loadTProxy()
+    //loadDns()
+    //loadNetwork()
+    //loadTProxy()
 
     // TODO: running custom script
     // TODO: start xray service

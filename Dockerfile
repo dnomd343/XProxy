@@ -29,5 +29,5 @@ COPY --from=xray /tmp/xray /asset/usr/bin/
 
 FROM alpine:3.16
 COPY --from=asset /asset/ /
-ENV XRAY_LOCATION_ASSET=/etc/xproxy/assets
+ENV XRAY_LOCATION_ASSET=/xproxy/assets
 RUN apk add --no-cache iptables ip6tables

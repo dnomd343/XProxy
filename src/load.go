@@ -90,7 +90,7 @@ func isFileExist(filePath string) bool {
 }
 
 func createFolder(folderPath string) {
-    log.Debugf("Loading folder -> %s", folderPath)
+    log.Debugf("Create folder -> %s", folderPath)
     err := os.MkdirAll(folderPath, 0755)
     if err != nil {
         log.Panicf("Failed to create folder -> %s", folderPath)
@@ -230,4 +230,23 @@ func loadProxy(configDir string, exposeDir string) {
         }
         copyFile(exposeDir+"/config/"+configFile, configDir+"/"+configFile)
     }
+}
+
+func extractGeoFile(archivePath string, geoFile string, targetDir string) {
+    if isFileExist(targetDir + "/" + geoFile) {
+        log.Debugf("Asset %s exist -> skip extract", geoFile)
+        return
+    }
+    log.Infof("Extract asset file -> %s", targetDir+"/"+geoFile)
+    runCommand("tar", "xvf", archivePath, "./"+geoFile, "-C", targetDir)
+}
+
+func loadGeoIp(assetDir string) {
+    createFolder(assetDir)
+    extractGeoFile(assetFile, "geoip.dat", assetDir)
+}
+
+func loadGeoSite(assetDir string) {
+    createFolder(assetDir)
+    extractGeoFile(assetFile, "geosite.dat", assetDir)
 }
