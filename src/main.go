@@ -1,9 +1,11 @@
 package main
 
 import (
-    "fmt"
     log "github.com/sirupsen/logrus"
 )
+
+var xray *Process
+var sleep *Process
 
 var logLevel = "warning"
 
@@ -24,12 +26,18 @@ func main() {
     log.SetLevel(log.DebugLevel)
     log.Warning("XProxy start")
 
-    ls := newProcess("ls", "-al")
-    ls.startProcess(true, true)
+    xray = newProcess("xray", "-confdir", "/etc/xproxy/config")
+    xray.startProcess(true, true)
 
-    fmt.Println(ls.isProcessAlive())
-    ls.waitProcess()
-    fmt.Println(ls.isProcessAlive())
+    sleep = newProcess("sleep", "1000")
+    sleep.startProcess(true, true)
+
+    done := make(chan bool, 1)
+
+    daemon(xray)
+    daemon(sleep)
+
+    <-done
 
     //content, err := os.ReadFile("test.yml")
     //if err != nil {

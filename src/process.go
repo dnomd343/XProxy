@@ -8,14 +8,18 @@ import (
 )
 
 type Process struct {
+    enable  bool
+    caption string
     command []string
     process *exec.Cmd
 }
 
 func newProcess(command ...string) *Process {
     process := new(Process)
+    process.enable = true
     process.command = command
-    log.Debugf("New process -> %v", command)
+    process.caption = command[0]
+    log.Debugf("New process %s -> %v", process.caption, process.command)
     return process
 }
 
@@ -29,9 +33,9 @@ func (p *Process) startProcess(isStdout bool, isStderr bool) {
     }
     err := p.process.Start()
     if err != nil {
-        log.Errorf("Failed to start %v -> %v", p.command, err)
+        log.Errorf("Failed to start %s -> %v", p.caption, err)
     }
-    log.Infof("Start process %v -> PID = %d", p.command, p.process.Process.Pid)
+    log.Infof("Start process %s -> PID = %d", p.caption, p.process.Process.Pid)
 }
 
 func (p *Process) isProcessAlive() bool {
@@ -41,13 +45,31 @@ func (p *Process) isProcessAlive() bool {
 func (p *Process) sendSignal(signal syscall.Signal) {
     err := p.process.Process.Signal(signal)
     if err != nil {
-        log.Errorf("Send signal %v error -> %v", signal, p.command)
+        log.Errorf("Send signal %v to process %s error -> %v", signal, p.caption, err)
     }
 }
 
 func (p *Process) waitProcess() {
     err := p.process.Wait()
     if err != nil {
-        log.Errorf("Wait process error -> %v", p.command)
+        log.Warningf("Wait process %s -> %v", p.caption, err)
     }
+}
+
+func daemonSub(sub *Process) {
+    for sub.isProcessAlive() {
+        sub.waitProcess()
+    }
+    log.Warningf("Catch process %s exit", sub.caption)
+    if sub.enable {
+        sub.startProcess(true, true)
+        log.Infof("Process %s restart success", xray.caption)
+        daemonSub(sub)
+    }
+}
+
+func daemon(sub *Process) {
+    go func() {
+        daemonSub(sub)
+    }()
 }
