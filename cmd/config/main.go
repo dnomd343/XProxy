@@ -7,22 +7,23 @@ import (
 )
 
 type Config struct {
-    // asset update
-
-    DNS []string
-
+    DNS       []string
+    V4Bypass  []string
+    V6Bypass  []string
     V4Address string
     V4Gateway string
-    V4Bypass  []string
-
     V6Address string
     V6Gateway string
-    V6Bypass  []string
 
-    // httpInbounds
-    // socksInbounds
-    // addOnInbounds
+    Script     []string
+    UpdateCron string
+    UpdateUrls map[string]string
 
+    EnableSniff    bool
+    EnableRedirect bool
+    HttpInbounds   map[string]int
+    SocksInbounds  map[string]int
+    AddOnInbounds  []interface{}
 }
 
 func Load(configFile string) Config {

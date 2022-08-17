@@ -10,11 +10,6 @@ import (
 
 var logLevel = "warning"
 
-var v4RouteTable = 100
-var v6RouteTable = 106
-var v4TProxyPort = 7288
-var v6TProxyPort = 7289
-
 var preScript []string
 var updateCron string
 var updateUrls map[string]string

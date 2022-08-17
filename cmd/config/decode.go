@@ -80,7 +80,7 @@ func decodeIPv4(rawConfig *yamlConfig) (string, string) {
     if v4Gateway != "" && !common.IsIPv4(v4Gateway, false) {
         log.Panicf("Invalid IPv4 gateway -> %s", v4Gateway)
     }
-    log.Infof("IPv4 -> address = %s | gateway = %s", v4Address, v4Gateway)
+    log.Debugf("IPv4 -> address = %s | gateway = %s", v4Address, v4Gateway)
     return v4Address, v4Gateway
 }
 
@@ -93,17 +93,45 @@ func decodeIPv6(rawConfig *yamlConfig) (string, string) {
     if v6Gateway != "" && !common.IsIPv6(v6Gateway, false) {
         log.Panicf("Invalid IPv6 gateway -> %s", v6Gateway)
     }
-    log.Infof("IPv6 -> address = %s | gateway = %s", v6Address, v6Gateway)
+    log.Debugf("IPv6 -> address = %s | gateway = %s", v6Address, v6Gateway)
     return v6Address, v6Gateway
+}
+
+func decodeProxy(rawConfig *yamlConfig, config *Config) {
+    config.EnableSniff = rawConfig.Proxy.Sniff
+    log.Debugf("Connection sniff -> %v", config.EnableSniff)
+    config.EnableRedirect = rawConfig.Proxy.Redirect
+    log.Debugf("Connection redirect -> %v", config.EnableRedirect)
+    config.HttpInbounds = rawConfig.Proxy.Http
+    log.Debugf("Http inbounds -> %v", config.HttpInbounds)
+    config.SocksInbounds = rawConfig.Proxy.Socks
+    log.Debugf("Socks5 inbounds -> %v", config.SocksInbounds)
+    config.AddOnInbounds = rawConfig.Proxy.AddOn
+    log.Debugf("Add-on inbounds -> %v", config.AddOnInbounds)
+}
+
+func decodeUpdate(rawConfig *yamlConfig) (string, map[string]string) {
+    updateCron := rawConfig.Update.Cron
+    log.Debugf("Update cron -> %s", updateCron)
+    updateUrls := rawConfig.Update.Url
+    log.Debugf("Update urls -> %v", updateUrls)
+    return updateCron, updateUrls
+}
+
+func decodeCustom(rawConfig *yamlConfig) []string {
+    customScript := rawConfig.Custom
+    log.Debugf("Custom script -> %v", customScript)
+    return customScript
 }
 
 func decode(rawConfig yamlConfig) Config {
     var config Config
-
     config.DNS = decodeDns(&rawConfig)
     config.V4Bypass, config.V6Bypass = decodeBypass(&rawConfig)
     config.V4Address, config.V4Gateway = decodeIPv4(&rawConfig)
     config.V6Address, config.V6Gateway = decodeIPv6(&rawConfig)
-
+    decodeProxy(&rawConfig, &config)
+    config.UpdateCron, config.UpdateUrls = decodeUpdate(&rawConfig)
+    config.Script = decodeCustom(&rawConfig)
     return config
 }
