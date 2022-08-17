@@ -13,7 +13,7 @@ ENV XRAY_VERSION="1.5.9"
 RUN wget https://github.com/XTLS/Xray-core/archive/refs/tags/v${XRAY_VERSION}.tar.gz && tar xf v${XRAY_VERSION}.tar.gz
 WORKDIR ./Xray-core-${XRAY_VERSION}/
 RUN go mod download -x
-RUN env CGO_ENABLED=0 go build -v -o xray -trimpath -ldflags "-s -w" ./main && mv ./xray /tmp/
+RUN env CGO_ENABLED=0 go build -v -o xray -trimpath -ldflags "-s -w" ./main/ && mv ./xray /tmp/
 COPY --from=upx /upx/ /usr/
 RUN upx -9 /tmp/xray
 
@@ -24,12 +24,20 @@ RUN wget https://radvd.litech.org/dist/radvd-${RADVD_VERSION}.tar.xz && tar xf r
 WORKDIR ./radvd-${RADVD_VERSION}/
 RUN ./configure && make && mv ./radvd ./radvdump /tmp/ && strip /tmp/radvd*
 
+FROM golang:1.18-alpine3.16 AS xproxy
+COPY . /XProxy
+WORKDIR /XProxy
+RUN env CGO_ENABLED=0 go build -v -o xproxy -trimpath -ldflags "-s -w" ./cmd/ && mv ./xproxy /tmp/
+COPY --from=upx /upx/ /usr/
+RUN upx -9 /tmp/xproxy
+
 FROM alpine:3.16 AS asset
 RUN apk add xz
 WORKDIR /tmp/
 RUN wget "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
 RUN wget "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
 RUN mkdir -p /asset/ && tar cJf /asset/assets.tar.xz ./*.dat
+COPY --from=xproxy /tmp/xproxy /asset/usr/bin/
 COPY --from=radvd /tmp/radvd* /asset/usr/sbin/
 COPY --from=xray /tmp/xray /asset/usr/bin/
 
