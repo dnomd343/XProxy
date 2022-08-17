@@ -1,9 +1,10 @@
 package main
 
 import (
-    "XProxy/cmd/config"
+    "XProxy/cmd/process"
     "fmt"
     log "github.com/sirupsen/logrus"
+    "time"
 )
 
 var version = "dev"
@@ -23,11 +24,25 @@ func main() {
     log.SetLevel(log.DebugLevel)
     fmt.Println("XProxy start -> version =", version)
 
-    settings := config.Load(configFile)
-    loadNetwork(&settings)
-    loadProxy(&settings)
-    loadAsset(&settings)
-    runScript(&settings)
+    //settings := config.Load(configFile)
+    //loadNetwork(&settings)
+    //loadProxy(&settings)
+    //loadAsset(&settings)
+    //runScript(&settings)
 
-    // TODO: start xray service
+    xray := process.New("xray", "-confdir", configDir)
+    xray.Run(true)
+    xray.Daemon()
+
+    sleep := process.New("sleep", "1001")
+    sleep.Run(true)
+    sleep.Daemon()
+
+    empty := process.New("empty")
+    empty.Daemon()
+
+    time.Sleep(5 * time.Second)
+
+    process.Exit(xray, sleep, empty)
+
 }

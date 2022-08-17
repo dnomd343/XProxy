@@ -14,11 +14,6 @@ func main() {
         }
     }()
 
-    xray := newProcess("xray", "-confdir", "/etc/xproxy/config")
-    xray.startProcess(true, true)
-    subProcess = append(subProcess, xray)
-    daemon()
-
     sigExit := make(chan os.Signal, 1)
     signal.Notify(sigExit, syscall.SIGINT, syscall.SIGTERM)
     <-sigExit
