@@ -10,7 +10,7 @@ import (
 func main() {
     log.SetLevel(log.DebugLevel)
 
-    fmt.Println("xproxy start")
+    fmt.Println("XProxy start")
 
     network.Load(nil, network.Config{
         RouteTable: 100,
