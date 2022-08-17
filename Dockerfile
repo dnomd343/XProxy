@@ -14,8 +14,7 @@ RUN wget https://github.com/XTLS/Xray-core/archive/refs/tags/v${XRAY_VERSION}.ta
     tar xf v${XRAY_VERSION}.tar.gz
 WORKDIR ./Xray-core-${XRAY_VERSION}/
 RUN go mod download -x
-RUN env CGO_ENABLED=0 go build -v -o xray -trimpath -ldflags "-s -w" ./main && \
-    mv ./xray /tmp/
+RUN env CGO_ENABLED=0 go build -v -o xray -trimpath -ldflags "-s -w" ./main && mv ./xray /tmp/
 COPY --from=upx /upx/ /usr/
 RUN upx -9 /tmp/xray
 
@@ -24,7 +23,7 @@ RUN apk add xz
 WORKDIR /tmp/
 RUN wget "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
 RUN wget "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
-RUN mkdir -p /asset/etc/xproxy/ && tar cJf /asset/etc/xproxy/assets.tar.xz ./geo*.dat
+RUN mkdir -p /asset/ && tar cJf /asset/assets.tar.xz ./*.dat
 COPY --from=xray /tmp/xray /asset/usr/bin/
 
 FROM alpine:3.16
