@@ -24,28 +24,34 @@ func getV6Cidr() []string {
     return v6Cidr
 }
 
-func loadNetwork(v4Address string, v4Gateway string, v6Address string, v6Gateway string) {
-    log.Info("Enabled IP forward")
-    common.RunCommand("sysctl", "-w", "net.ipv4.ip_forward=1")
-    common.RunCommand("sysctl", "-w", "net.ipv6.conf.all.forwarding=1")
-
+func flushNetwork() {
     log.Info("Flush system IP configure")
     common.RunCommand("ip", "link", "set", "eth0", "down")
     common.RunCommand("ip", "-4", "addr", "flush", "dev", "eth0")
     common.RunCommand("ip", "-6", "addr", "flush", "dev", "eth0")
     common.RunCommand("ip", "link", "set", "eth0", "down")
+}
 
-    log.Info("Setting up system IP configure")
-    if v4Address != "" {
-        common.RunCommand("ip", "-4", "addr", "add", v4Address, "dev", "eth0")
+func loadV4Network(v4 Config) {
+    log.Info("Enabled IPv4 forward")
+    common.RunCommand("sysctl", "-w", "net.ipv4.ip_forward=1")
+    log.Info("Setting up system IPv4 configure")
+    if v4.Address != "" {
+        common.RunCommand("ip", "-4", "addr", "add", v4.Address, "dev", "eth0")
     }
-    if v4Gateway != "" {
-        common.RunCommand("ip", "-4", "route", "add", "default", "via", v4Gateway)
+    if v4.Gateway != "" {
+        common.RunCommand("ip", "-4", "route", "add", "default", "via", v4.Gateway)
     }
-    if v6Address != "" {
-        common.RunCommand("ip", "-6", "addr", "add", v6Address, "dev", "eth0")
+}
+
+func loadV6Network(v6 Config) {
+    log.Info("Enabled IPv6 forward")
+    common.RunCommand("sysctl", "-w", "net.ipv6.conf.all.forwarding=1")
+    log.Info("Setting up system IPv6 configure")
+    if v6.Address != "" {
+        common.RunCommand("ip", "-6", "addr", "add", v6.Address, "dev", "eth0")
     }
-    if v6Gateway != "" {
-        common.RunCommand("ip", "-6", "route", "add", "default", "via", v6Gateway)
+    if v6.Gateway != "" {
+        common.RunCommand("ip", "-6", "route", "add", "default", "via", v6.Gateway)
     }
 }
