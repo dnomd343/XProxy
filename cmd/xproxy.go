@@ -1,10 +1,13 @@
 package main
 
 import (
+    "XProxy/cmd/config"
     "XProxy/cmd/process"
     "fmt"
     log "github.com/sirupsen/logrus"
-    "time"
+    "os"
+    "os/signal"
+    "syscall"
 )
 
 var version = "dev"
@@ -20,29 +23,38 @@ var assetFile = "/assets.tar.xz"
 var assetDir = exposeDir + "/assets"
 var configFile = exposeDir + "/config.yml"
 
+var subProcess []*process.Process
+
+func runProxy() {
+    proxy := process.New("xray", "-confdir", configDir)
+    proxy.Run(true)
+    proxy.Daemon()
+    subProcess = append(subProcess, proxy)
+}
+
+func blockWait() {
+    sigExit := make(chan os.Signal, 1)
+    signal.Notify(sigExit, syscall.SIGINT, syscall.SIGTERM) // wait until get exit signal
+    <-sigExit
+}
+
 func main() {
+    defer func() {
+        if err := recover(); err != nil {
+            log.Errorf("Unknown error -> %v", err)
+        }
+    }()
+
     log.SetLevel(log.DebugLevel)
     fmt.Println("XProxy start -> version =", version)
 
-    //settings := config.Load(configFile)
-    //loadNetwork(&settings)
-    //loadProxy(&settings)
-    //loadAsset(&settings)
-    //runScript(&settings)
+    settings := config.Load(configFile)
+    loadNetwork(&settings)
+    loadProxy(&settings)
+    loadAsset(&settings)
+    runScript(&settings)
+    runProxy()
 
-    xray := process.New("xray", "-confdir", configDir)
-    xray.Run(true)
-    xray.Daemon()
-
-    sleep := process.New("sleep", "1001")
-    sleep.Run(true)
-    sleep.Daemon()
-
-    empty := process.New("empty")
-    empty.Daemon()
-
-    time.Sleep(5 * time.Second)
-
-    process.Exit(xray, sleep, empty)
-
+    blockWait()
+    process.Exit(subProcess...)
 }
