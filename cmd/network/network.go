@@ -28,7 +28,7 @@ func flushNetwork() {
     run("ip", "link", "set", "eth0", "down")
     run("ip", "-4", "addr", "flush", "dev", "eth0")
     run("ip", "-6", "addr", "flush", "dev", "eth0")
-    run("ip", "link", "set", "eth0", "down")
+    run("ip", "link", "set", "eth0", "up")
 }
 
 func loadV4Network(v4 Config) {
