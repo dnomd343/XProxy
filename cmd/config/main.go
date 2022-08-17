@@ -16,6 +16,7 @@ type Config struct {
     V6Gateway string
 
     Script     []string
+    LogLevel   string
     UpdateCron string
     UpdateUrls map[string]string
 

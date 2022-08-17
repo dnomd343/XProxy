@@ -1,6 +1,9 @@
 package network
 
-import "time"
+import (
+    "XProxy/cmd/common"
+    "time"
+)
 
 type Config struct {
     RouteTable int
@@ -9,6 +12,8 @@ type Config struct {
     Gateway    string
     Bypass     []string
 }
+
+var run = common.RunCommand
 
 func Load(dns []string, ipv4 Config, ipv6 Config) {
     loadDns(dns)   // init dns server

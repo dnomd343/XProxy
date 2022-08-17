@@ -12,6 +12,7 @@ type yamlNetConfig struct {
 }
 
 type yamlConfig struct {
+    Log    string   `yaml:"log"`
     Custom []string `yaml:"custom"`
     Update struct {
         Cron string            `yaml:"cron"`
@@ -126,6 +127,7 @@ func decodeCustom(rawConfig *yamlConfig) []string {
 
 func decode(rawConfig yamlConfig) Config {
     var config Config
+    config.LogLevel = rawConfig.Log
     config.DNS = decodeDns(&rawConfig)
     config.V4Bypass, config.V6Bypass = decodeBypass(&rawConfig)
     config.V4Address, config.V4Gateway = decodeIPv4(&rawConfig)

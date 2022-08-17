@@ -27,6 +27,7 @@ func main() {
     loadNetwork(&settings)
     loadProxy(&settings)
     loadAsset(&settings)
+    runScript(&settings)
 
     // TODO: start xray service
 }

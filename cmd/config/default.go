@@ -1,6 +1,8 @@
 package config
 
 var defaultConfig = `# default configure file for xproxy
+log: debug
+
 proxy:
   sniff: true
   redirect: true

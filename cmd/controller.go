@@ -2,10 +2,31 @@ package main
 
 import (
     "XProxy/cmd/asset"
+    "XProxy/cmd/common"
     "XProxy/cmd/config"
     "XProxy/cmd/network"
     "XProxy/cmd/proxy"
+    log "github.com/sirupsen/logrus"
 )
+
+func loadAsset(settings *config.Config) {
+    asset.LoadGeoSite(assetFile, assetDir)
+    asset.LoadGeoIp(assetFile, assetDir)
+    asset.AutoUpdate(settings.UpdateCron, settings.UpdateUrls, assetDir)
+}
+
+func loadProxy(settings *config.Config) {
+    proxy.Load(configDir, exposeDir, proxy.Config{
+        Sniff:         settings.EnableSniff,
+        Redirect:      settings.EnableRedirect,
+        V4TProxyPort:  v4TProxyPort,
+        V6TProxyPort:  v6TProxyPort,
+        LogLevel:      settings.LogLevel,
+        HttpInbounds:  settings.HttpInbounds,
+        SocksInbounds: settings.SocksInbounds,
+        AddOnInbounds: settings.AddOnInbounds,
+    })
+}
 
 func loadNetwork(settings *config.Config) {
     v4Settings := network.Config{
@@ -25,21 +46,9 @@ func loadNetwork(settings *config.Config) {
     network.Load(settings.DNS, v4Settings, v6Settings)
 }
 
-func loadProxy(settings *config.Config) {
-    proxy.Load(configDir, exposeDir, proxy.Config{
-        Sniff:         settings.EnableSniff,
-        Redirect:      settings.EnableRedirect,
-        V4TProxyPort:  v4TProxyPort,
-        V6TProxyPort:  v6TProxyPort,
-        LogLevel:      "warning",
-        HttpInbounds:  settings.HttpInbounds,
-        SocksInbounds: settings.SocksInbounds,
-        AddOnInbounds: settings.AddOnInbounds,
-    })
-}
-
-func loadAsset(settings *config.Config) {
-    asset.LoadGeoSite(assetFile, assetDir)
-    asset.LoadGeoIp(assetFile, assetDir)
-    asset.AutoUpdate(settings.UpdateCron, settings.UpdateUrls, assetDir)
+func runScript(settings *config.Config) {
+    for _, script := range settings.Script {
+        log.Infof("Run script command -> %s", script)
+        common.RunCommand("sh", "-c", script)
+    }
 }
