@@ -3,9 +3,7 @@ package main
 import (
     log "github.com/sirupsen/logrus"
     "gopkg.in/yaml.v3"
-    "net"
     "os"
-    "strings"
 )
 
 var v4Bypass []string
@@ -64,22 +62,6 @@ type Config struct {
         IPv4   NetConfig `yaml:"ipv4"`   // ipv4 network configure
         IPv6   NetConfig `yaml:"ipv6"`   // ipv6 network configure
     } `yaml:"network"`
-}
-
-func isIP(ipAddr string, isCidr bool) bool {
-    if !isCidr {
-        return net.ParseIP(ipAddr) != nil
-    }
-    _, _, err := net.ParseCIDR(ipAddr)
-    return err == nil
-}
-
-func isIPv4(ipAddr string, isCidr bool) bool {
-    return isIP(ipAddr, isCidr) && strings.Contains(ipAddr, ".")
-}
-
-func isIPv6(ipAddr string, isCidr bool) bool {
-    return isIP(ipAddr, isCidr) && strings.Contains(ipAddr, ":")
 }
 
 func loadConfig(configFile string) {
