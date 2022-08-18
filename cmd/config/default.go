@@ -1,16 +1,10 @@
 package config
 
 var defaultConfig = `# default configure file for xproxy
-log: debug
-
 proxy:
-  sniff: true
-  redirect: true
+  log: warning
 
 network:
-  dns: null
-  ipv4: null
-  ipv6: null
   bypass:
     - 169.254.0.0/16
     - 224.0.0.0/3

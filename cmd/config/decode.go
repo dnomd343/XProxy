@@ -12,18 +12,21 @@ type yamlNetConfig struct {
 }
 
 type yamlConfig struct {
-    Log    string   `yaml:"log"`
     Custom []string `yaml:"custom"`
     Update struct {
         Cron string            `yaml:"cron"`
         Url  map[string]string `yaml:"url"`
     } `yaml:"update"`
     Proxy struct {
-        Sniff    bool           `yaml:"sniff"`
-        Redirect bool           `yaml:"redirect"`
-        Http     map[string]int `yaml:"http"`
-        Socks    map[string]int `yaml:"socks"`
-        AddOn    []interface{}  `yaml:"addon"`
+        Log   string `yaml:"log"`
+        Sniff struct {
+            Enable   bool     `yaml:"enable"`
+            Redirect bool     `yaml:"redirect"`
+            Exclude  []string `yaml:"exclude"`
+        } `yaml:"sniff"`
+        Http  map[string]int `yaml:"http"`
+        Socks map[string]int `yaml:"socks"`
+        AddOn []interface{}  `yaml:"addon"`
     } `yaml:"proxy"`
     Network struct {
         DNS    []string      `yaml:"dns"`    // system dns server
@@ -99,10 +102,12 @@ func decodeIPv6(rawConfig *yamlConfig) (string, string) {
 }
 
 func decodeProxy(rawConfig *yamlConfig, config *Config) {
-    config.EnableSniff = rawConfig.Proxy.Sniff
-    log.Debugf("Connection sniff -> %v", config.EnableSniff)
-    config.EnableRedirect = rawConfig.Proxy.Redirect
-    log.Debugf("Connection redirect -> %v", config.EnableRedirect)
+    config.EnableSniff = rawConfig.Proxy.Sniff.Enable
+    log.Debugf("Connection sniff -> %t", config.EnableSniff)
+    config.EnableRedirect = rawConfig.Proxy.Sniff.Redirect
+    log.Debugf("Connection redirect -> %t", config.EnableRedirect)
+    config.SniffExclude = rawConfig.Proxy.Sniff.Exclude
+    log.Debugf("Connection sniff exlcude -> %v", config.SniffExclude)
     config.HttpInbounds = rawConfig.Proxy.Http
     log.Debugf("Http inbounds -> %v", config.HttpInbounds)
     config.SocksInbounds = rawConfig.Proxy.Socks
@@ -127,7 +132,7 @@ func decodeCustom(rawConfig *yamlConfig) []string {
 
 func decode(rawConfig yamlConfig) Config {
     var config Config
-    config.LogLevel = rawConfig.Log
+    config.LogLevel = rawConfig.Proxy.Log
     config.DNS = decodeDns(&rawConfig)
     config.V4Bypass, config.V6Bypass = decodeBypass(&rawConfig)
     config.V4Address, config.V4Gateway = decodeIPv4(&rawConfig)

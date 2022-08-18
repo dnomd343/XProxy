@@ -22,6 +22,7 @@ type Config struct {
 
     EnableSniff    bool
     EnableRedirect bool
+    SniffExclude   []string
     HttpInbounds   map[string]int
     SocksInbounds  map[string]int
     AddOnInbounds  []interface{}

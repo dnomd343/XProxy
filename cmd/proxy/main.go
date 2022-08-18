@@ -10,6 +10,7 @@ type Config struct {
     V4TProxyPort  int
     V6TProxyPort  int
     LogLevel      string
+    SniffExclude  []string
     HttpInbounds  map[string]int
     SocksInbounds map[string]int
     AddOnInbounds []interface{}
@@ -22,9 +23,10 @@ func saveConfig(configDir string, caption string, content string, overwrite bool
 
 func loadInbounds(config Config) string {
     sniff := sniffObject{
-        Enabled:      config.Sniff,
-        RouteOnly:    !config.Redirect,
-        DestOverride: []string{"http", "tls"},
+        Enabled:         config.Sniff,
+        RouteOnly:       !config.Redirect,
+        DestOverride:    []string{"http", "tls", "quic"},
+        DomainsExcluded: config.SniffExclude,
     }
     var inbounds []interface{}
     inbounds = append(inbounds, loadTProxyConfig("tproxy", config.V4TProxyPort, sniff))

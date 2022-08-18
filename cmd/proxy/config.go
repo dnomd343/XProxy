@@ -49,9 +49,10 @@ type inboundsObject struct {
 }
 
 type sniffObject struct {
-    Enabled      bool     `json:"enabled"`
-    RouteOnly    bool     `json:"routeOnly"`
-    DestOverride []string `json:"destOverride"`
+    Enabled         bool     `json:"enabled"`
+    RouteOnly       bool     `json:"routeOnly"`
+    DestOverride    []string `json:"destOverride"`
+    DomainsExcluded []string `json:"domainsExcluded"`
 }
 
 type inboundObject struct {

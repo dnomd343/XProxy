@@ -45,4 +45,5 @@ FROM alpine:3.16
 ENV XRAY_LOCATION_ASSET=/xproxy/assets
 RUN apk add --no-cache iptables ip6tables
 COPY --from=asset /asset/ /
+WORKDIR /xproxy
 CMD ["xproxy"]
