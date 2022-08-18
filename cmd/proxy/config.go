@@ -37,9 +37,11 @@ var outboundsConfig = `{
 }`
 
 type logObject struct {
-    Loglevel string `json:"loglevel"`
-    Access   string `json:"access"`
-    Error    string `json:"error"`
+    Log struct {
+        Loglevel string `json:"loglevel"`
+        Access   string `json:"access"`
+        Error    string `json:"error"`
+    } `json:"log"`
 }
 
 type inboundsObject struct {
@@ -67,11 +69,11 @@ func loadLogConfig(logLevel string, logDir string) string {
         log.Warningf("Unknown log level -> %s", logLevel)
         logLevel = "warning" // using `warning` as default
     }
-    return common.JsonEncode(logObject{
-        Loglevel: logLevel,
-        Access:   logDir + "/access.log",
-        Error:    logDir + "/error.log",
-    })
+    logConfig := logObject{}
+    logConfig.Log.Loglevel = logLevel
+    logConfig.Log.Access = logDir + "/access.log"
+    logConfig.Log.Error = logDir + "/error.log"
+    return common.JsonEncode(logConfig)
 }
 
 func loadHttpConfig(tag string, port int, sniff sniffObject) interface{} {
