@@ -3,6 +3,7 @@ package main
 import (
     "XProxy/cmd/config"
     "XProxy/cmd/process"
+    "XProxy/cmd/radvd"
     log "github.com/sirupsen/logrus"
     "os"
     "os/signal"
@@ -24,18 +25,11 @@ var configFile = exposeDir + "/config.yml"
 
 var subProcess []*process.Process
 
-func runProxy() {
-    proxy := process.New("xray", "-confdir", configDir)
-    proxy.Run(true)
-    proxy.Daemon()
-    subProcess = append(subProcess, proxy)
-}
-
-func runRadvd() {
-    radvd := process.New("radvd", "-n", "-m", "logfile", "-l", exposeDir+"/log/radvd.log")
-    radvd.Run(true)
-    radvd.Daemon()
-    subProcess = append(subProcess, radvd)
+func runProcess(command ...string) {
+    sub := process.New(command...)
+    sub.Run(true)
+    sub.Daemon()
+    subProcess = append(subProcess, sub)
 }
 
 func blockWait() {
@@ -58,12 +52,12 @@ func main() {
     loadNetwork(&settings)
     loadProxy(&settings)
     loadAsset(&settings)
-    loadRadvd(&settings)
+    radvd.Load(&settings.Radvd)
 
     runScript(&settings)
-    runProxy()
-    if settings.RadvdEnable {
-        runRadvd()
+    runProcess("xray", "-confdir", configDir)
+    if settings.Radvd.Enable {
+        runProcess("radvd", "-n", "-m", "logfile", "-l", exposeDir+"/log/radvd.log")
     }
     blockWait()
     process.Exit(subProcess...)

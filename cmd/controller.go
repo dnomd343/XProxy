@@ -6,7 +6,6 @@ import (
     "XProxy/cmd/config"
     "XProxy/cmd/network"
     "XProxy/cmd/proxy"
-    "XProxy/cmd/radvd"
     log "github.com/sirupsen/logrus"
 )
 
@@ -45,10 +44,6 @@ func loadNetwork(settings *config.Config) {
         Bypass:     settings.V6Bypass,
     }
     network.Load(settings.DNS, v4Settings, v6Settings)
-}
-
-func loadRadvd(settings *config.Config) {
-    radvd.Load(settings.RadvdOptions, settings.RadvdPrefix)
 }
 
 func runScript(settings *config.Config) {

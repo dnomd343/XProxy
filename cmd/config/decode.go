@@ -2,6 +2,7 @@ package config
 
 import (
     "XProxy/cmd/common"
+    "XProxy/cmd/radvd"
     log "github.com/sirupsen/logrus"
     "gopkg.in/yaml.v3"
 )
@@ -34,11 +35,7 @@ type yamlConfig struct {
         IPv4   yamlNetConfig `yaml:"ipv4"`   // ipv4 network configure
         IPv6   yamlNetConfig `yaml:"ipv6"`   // ipv6 network configure
     } `yaml:"network"`
-    Radvd struct {
-        Enable  bool                         `yaml:"enable"`
-        Options map[string]string            `yaml:"options"`
-        Prefix  map[string]map[string]string `yaml:"prefix"`
-    } `yaml:"radvd"`
+    Radvd radvd.Config `yaml:"radvd"`
 }
 
 func yamlDecode(raw []byte) yamlConfig {
@@ -122,12 +119,14 @@ func decodeProxy(rawConfig *yamlConfig, config *Config) {
 }
 
 func decodeRadvd(rawConfig *yamlConfig, config *Config) {
-    config.RadvdEnable = rawConfig.Radvd.Enable
-    log.Debugf("Radvd enable -> %t", config.RadvdEnable)
-    config.RadvdOptions = rawConfig.Radvd.Options
-    log.Debugf("Radvd options -> %v", config.RadvdOptions)
-    config.RadvdPrefix = rawConfig.Radvd.Prefix
-    log.Debugf("Radvd prefix -> %v", config.RadvdPrefix)
+    config.Radvd = rawConfig.Radvd
+    log.Debugf("Radvd enable -> %t", config.Radvd.Enable)
+    log.Debugf("Radvd options -> %v", config.Radvd.Option)
+    log.Debugf("Radvd prefix -> %v", config.Radvd.Prefix)
+    log.Debugf("Radvd route -> %v", config.Radvd.Route)
+    log.Debugf("Radvd clients -> %v", config.Radvd.Client)
+    log.Debugf("Radvd RDNSS -> %v", config.Radvd.RDNSS)
+    log.Debugf("Radvd DNSSL -> %v", config.Radvd.DNSSL)
 }
 
 func decodeUpdate(rawConfig *yamlConfig) (string, map[string]string) {

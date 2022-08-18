@@ -2,6 +2,7 @@ package config
 
 import (
     "XProxy/cmd/common"
+    "XProxy/cmd/radvd"
     log "github.com/sirupsen/logrus"
     "os"
 )
@@ -27,9 +28,10 @@ type Config struct {
     SocksInbounds  map[string]int
     AddOnInbounds  []interface{}
 
-    RadvdEnable  bool
-    RadvdOptions map[string]string
-    RadvdPrefix  map[string]map[string]string
+    Radvd radvd.Config
+    //RadvdEnable  bool
+    //RadvdOptions map[string]string
+    //RadvdPrefix  map[string]map[string]string
 }
 
 func Load(configFile string) Config {
