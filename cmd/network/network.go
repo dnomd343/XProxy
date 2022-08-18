@@ -31,7 +31,7 @@ func flushNetwork() {
     run("ip", "link", "set", "eth0", "up")
 }
 
-func loadV4Network(v4 Config) {
+func loadV4Network(v4 *Config) {
     log.Info("Enabled IPv4 forward")
     run("sysctl", "-w", "net.ipv4.ip_forward=1")
     log.Info("Setting up system IPv4 configure")
@@ -43,7 +43,7 @@ func loadV4Network(v4 Config) {
     }
 }
 
-func loadV6Network(v6 Config) {
+func loadV6Network(v6 *Config) {
     log.Info("Enabled IPv6 forward")
     run("sysctl", "-w", "net.ipv6.conf.all.forwarding=1")
     log.Info("Setting up system IPv6 configure")

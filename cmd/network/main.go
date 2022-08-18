@@ -16,7 +16,7 @@ type Config struct {
 
 var run = common.RunCommand
 
-func Load(dns []string, ipv4 Config, ipv6 Config) {
+func Load(dns []string, ipv4 *Config, ipv6 *Config) {
     loadDns(dns)   // init dns server
     flushNetwork() // clear network settings
     loadV4Network(ipv4)

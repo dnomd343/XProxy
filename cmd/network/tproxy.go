@@ -5,7 +5,7 @@ import (
     "strconv"
 )
 
-func loadV4TProxy(v4 Config, v4SysCidr []string) {
+func loadV4TProxy(v4 *Config, v4SysCidr []string) {
     log.Info("Setting up TProxy of IPv4")
     tableNum := strconv.Itoa(v4.RouteTable)
     v4Bypass := append(v4SysCidr, v4.Bypass...)
@@ -23,7 +23,7 @@ func loadV4TProxy(v4 Config, v4SysCidr []string) {
     run("iptables", "-t", "mangle", "-A", "PREROUTING", "-j", "XPROXY")
 }
 
-func loadV6TProxy(v6 Config, v6SysCidr []string) {
+func loadV6TProxy(v6 *Config, v6SysCidr []string) {
     log.Info("Setting up TProxy of IPv6")
     tableNum := strconv.Itoa(v6.RouteTable)
     v6Bypass := append(v6SysCidr, v6.Bypass...)

@@ -3,11 +3,7 @@ package main
 import (
     "XProxy/cmd/config"
     "XProxy/cmd/process"
-    "XProxy/cmd/radvd"
     log "github.com/sirupsen/logrus"
-    "os"
-    "os/signal"
-    "syscall"
 )
 
 var version = "0.0.9"
@@ -25,19 +21,6 @@ var configFile = exposeDir + "/config.yml"
 
 var subProcess []*process.Process
 
-func runProcess(command ...string) {
-    sub := process.New(command...)
-    sub.Run(true)
-    sub.Daemon()
-    subProcess = append(subProcess, sub)
-}
-
-func blockWait() {
-    sigExit := make(chan os.Signal, 1)
-    signal.Notify(sigExit, syscall.SIGINT, syscall.SIGTERM) // wait until get exit signal
-    <-sigExit
-}
-
 func main() {
     defer func() {
         if err := recover(); err != nil {
@@ -52,7 +35,7 @@ func main() {
     loadNetwork(&settings)
     loadProxy(&settings)
     loadAsset(&settings)
-    radvd.Load(&settings.Radvd)
+    loadRadvd(&settings)
 
     runScript(&settings)
     runProcess("xray", "-confdir", configDir)

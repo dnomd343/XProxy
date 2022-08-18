@@ -5,15 +5,17 @@ import (
 )
 
 type Config struct {
-    Sniff         bool
-    Redirect      bool
-    V4TProxyPort  int
-    V6TProxyPort  int
-    LogLevel      string
-    SniffExclude  []string
-    HttpInbounds  map[string]int
-    SocksInbounds map[string]int
-    AddOnInbounds []interface{}
+    Log   string         `yaml:"log" json:"json"`
+    Http  map[string]int `yaml:"http" json:"http"`
+    Socks map[string]int `yaml:"socks" json:"socks"`
+    AddOn []interface{}  `yaml:"addon" json:"addon"`
+    Sniff struct {
+        Enable   bool     `yaml:"enable" json:"enable"`
+        Redirect bool     `yaml:"redirect" json:"redirect"`
+        Exclude  []string `yaml:"exclude" json:"exclude"`
+    } `yaml:"sniff" json:"sniff"`
+    V4TProxyPort int
+    V6TProxyPort int
 }
 
 func saveConfig(configDir string, caption string, content string, overwrite bool) {
@@ -21,23 +23,23 @@ func saveConfig(configDir string, caption string, content string, overwrite bool
     common.WriteFile(filePath, content+"\n", overwrite)
 }
 
-func loadInbounds(config Config) string {
+func loadInbounds(config *Config) string {
     sniff := sniffObject{
-        Enabled:         config.Sniff,
-        RouteOnly:       !config.Redirect,
+        Enabled:         config.Sniff.Enable,
+        RouteOnly:       !config.Sniff.Redirect,
         DestOverride:    []string{"http", "tls", "quic"},
-        DomainsExcluded: config.SniffExclude,
+        DomainsExcluded: config.Sniff.Exclude,
     }
     var inbounds []interface{}
     inbounds = append(inbounds, loadTProxyConfig("tproxy", config.V4TProxyPort, sniff))
     inbounds = append(inbounds, loadTProxyConfig("tproxy6", config.V6TProxyPort, sniff))
-    for tag, port := range config.HttpInbounds {
+    for tag, port := range config.Http {
         inbounds = append(inbounds, loadHttpConfig(tag, port, sniff))
     }
-    for tag, port := range config.SocksInbounds {
+    for tag, port := range config.Socks {
         inbounds = append(inbounds, loadSocksConfig(tag, port, sniff))
     }
-    for _, addon := range config.AddOnInbounds {
+    for _, addon := range config.AddOn {
         inbounds = append(inbounds, addon)
     }
     return common.JsonEncode(inboundsObject{
@@ -45,7 +47,7 @@ func loadInbounds(config Config) string {
     })
 }
 
-func Load(configDir string, exposeDir string, config Config) {
+func Load(configDir string, exposeDir string, config *Config) {
     common.CreateFolder(exposeDir + "/log")
     common.CreateFolder(exposeDir + "/config")
     common.CreateFolder(configDir)
@@ -53,7 +55,7 @@ func Load(configDir string, exposeDir string, config Config) {
     saveConfig(exposeDir+"/config", "route", routeConfig, false)
     saveConfig(exposeDir+"/config", "outbounds", outboundsConfig, false)
     saveConfig(configDir, "inbounds", loadInbounds(config), true)
-    saveConfig(configDir, "log", loadLogConfig(config.LogLevel, exposeDir+"/log"), true)
+    saveConfig(configDir, "log", loadLogConfig(config.Log, exposeDir+"/log"), true)
     for _, configFile := range common.ListFiles(exposeDir+"/config", ".json") {
         common.CopyFile(exposeDir+"/config/"+configFile, configDir+"/"+configFile)
     }

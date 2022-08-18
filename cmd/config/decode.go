@@ -3,6 +3,7 @@ package config
 import (
     "XProxy/cmd/asset"
     "XProxy/cmd/common"
+    "XProxy/cmd/proxy"
     "XProxy/cmd/radvd"
     log "github.com/sirupsen/logrus"
     "gopkg.in/yaml.v3"
@@ -14,26 +15,16 @@ type yamlNetConfig struct {
 }
 
 type yamlConfig struct {
-    Custom []string     `yaml:"custom"`
-    Update asset.Config `yaml:"update"`
-    Proxy  struct {
-        Log   string `yaml:"log"`
-        Sniff struct {
-            Enable   bool     `yaml:"enable"`
-            Redirect bool     `yaml:"redirect"`
-            Exclude  []string `yaml:"exclude"`
-        } `yaml:"sniff"`
-        Http  map[string]int `yaml:"http"`
-        Socks map[string]int `yaml:"socks"`
-        AddOn []interface{}  `yaml:"addon"`
-    } `yaml:"proxy"`
+    Custom  []string     `yaml:"custom" json:"custom"`
+    Update  asset.Config `yaml:"update" json:"update"`
+    Radvd   radvd.Config `yaml:"radvd" json:"radvd"`
+    Proxy   proxy.Config `yaml:"proxy" json:"proxy"`
     Network struct {
         DNS    []string      `yaml:"dns" json:"dns"`
         ByPass []string      `yaml:"bypass" json:"bypass"`
         IPv4   yamlNetConfig `yaml:"ipv4" json:"ipv4"`
         IPv6   yamlNetConfig `yaml:"ipv6" json:"ipv6"`
     } `yaml:"network" json:"network"`
-    Radvd radvd.Config `yaml:"radvd" json:"radvd"`
 }
 
 func yamlDecode(raw []byte) yamlConfig {
@@ -96,18 +87,14 @@ func decodeIPv6(rawConfig *yamlConfig, config *Config) {
 }
 
 func decodeProxy(rawConfig *yamlConfig, config *Config) {
-    config.EnableSniff = rawConfig.Proxy.Sniff.Enable
-    log.Debugf("Connection sniff -> %t", config.EnableSniff)
-    config.EnableRedirect = rawConfig.Proxy.Sniff.Redirect
-    log.Debugf("Connection redirect -> %t", config.EnableRedirect)
-    config.SniffExclude = rawConfig.Proxy.Sniff.Exclude
-    log.Debugf("Connection sniff exlcude -> %v", config.SniffExclude)
-    config.HttpInbounds = rawConfig.Proxy.Http
-    log.Debugf("Http inbounds -> %v", config.HttpInbounds)
-    config.SocksInbounds = rawConfig.Proxy.Socks
-    log.Debugf("Socks5 inbounds -> %v", config.SocksInbounds)
-    config.AddOnInbounds = rawConfig.Proxy.AddOn
-    log.Debugf("Add-on inbounds -> %v", config.AddOnInbounds)
+    config.Proxy = rawConfig.Proxy
+    log.Debugf("Proxy log level -> %s", config.Proxy.Log)
+    log.Debugf("Http inbounds -> %v", config.Proxy.Http)
+    log.Debugf("Socks5 inbounds -> %v", config.Proxy.Socks)
+    log.Debugf("Add-on inbounds -> %v", config.Proxy.AddOn)
+    log.Debugf("Connection sniff -> %t", config.Proxy.Sniff.Enable)
+    log.Debugf("Connection redirect -> %t", config.Proxy.Sniff.Redirect)
+    log.Debugf("Connection sniff exlcude -> %v", config.Proxy.Sniff.Exclude)
 }
 
 func decodeRadvd(rawConfig *yamlConfig, config *Config) {
@@ -135,7 +122,6 @@ func decodeCustom(rawConfig *yamlConfig) []string {
 
 func decode(rawConfig yamlConfig) Config {
     var config Config
-    config.LogLevel = rawConfig.Proxy.Log
     decodeDns(&rawConfig, &config)
     decodeBypass(&rawConfig, &config)
     decodeIPv4(&rawConfig, &config)

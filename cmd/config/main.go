@@ -4,6 +4,7 @@ import (
     "XProxy/cmd/asset"
     "XProxy/cmd/common"
     "XProxy/cmd/network"
+    "XProxy/cmd/proxy"
     "XProxy/cmd/radvd"
     log "github.com/sirupsen/logrus"
     "os"
@@ -14,16 +15,9 @@ type Config struct {
     IPv4 network.Config
     IPv6 network.Config
 
-    Script   []string
-    LogLevel string
+    Script []string
 
-    EnableSniff    bool
-    EnableRedirect bool
-    SniffExclude   []string
-    HttpInbounds   map[string]int
-    SocksInbounds  map[string]int
-    AddOnInbounds  []interface{}
-
+    Proxy  proxy.Config
     Update asset.Config
     Radvd  radvd.Config
 }
