@@ -114,21 +114,7 @@ func decodeUpdate(rawConfig *yamlConfig, config *Config) {
     log.Debugf("Update urls -> %v", config.Update.Url)
 }
 
-func decodeCustom(rawConfig *yamlConfig) []string {
-    customScript := rawConfig.Custom
-    log.Debugf("Custom script -> %v", customScript)
-    return customScript
-}
-
-func decode(rawConfig yamlConfig) Config {
-    var config Config
-    decodeDns(&rawConfig, &config)
-    decodeBypass(&rawConfig, &config)
-    decodeIPv4(&rawConfig, &config)
-    decodeIPv6(&rawConfig, &config)
-    decodeProxy(&rawConfig, &config)
-    decodeUpdate(&rawConfig, &config)
-    config.Script = decodeCustom(&rawConfig)
-    decodeRadvd(&rawConfig, &config)
-    return config
+func decodeCustom(rawConfig *yamlConfig, config *Config) {
+    config.Script = rawConfig.Custom
+    log.Debugf("Custom script -> %v", config.Script)
 }

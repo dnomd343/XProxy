@@ -11,18 +11,16 @@ import (
 )
 
 type Config struct {
-    DNS  []string
-    IPv4 network.Config
-    IPv6 network.Config
-
+    DNS    []string
+    IPv4   network.Config
+    IPv6   network.Config
     Script []string
-
     Proxy  proxy.Config
     Update asset.Config
     Radvd  radvd.Config
 }
 
-func Load(configFile string) Config {
+func Load(configFile string, config *Config) {
     if !common.IsFileExist(configFile) { // configure not exist -> load default
         log.Infof("Load default configure -> %s", configFile)
         common.WriteFile(configFile, defaultConfig, false)
@@ -32,5 +30,12 @@ func Load(configFile string) Config {
         log.Panicf("Failed to open %s -> %v", configFile, err)
     }
     rawConfig := yamlDecode(raw) // decode yaml content
-    return decode(rawConfig)
+    decodeDns(&rawConfig, config)
+    decodeBypass(&rawConfig, config)
+    decodeIPv4(&rawConfig, config)
+    decodeIPv6(&rawConfig, config)
+    decodeProxy(&rawConfig, config)
+    decodeUpdate(&rawConfig, config)
+    decodeCustom(&rawConfig, config)
+    decodeRadvd(&rawConfig, config)
 }

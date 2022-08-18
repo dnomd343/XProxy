@@ -14,6 +14,19 @@ import (
     "syscall"
 )
 
+func runProcess(command ...string) {
+    sub := process.New(command...)
+    sub.Run(true)
+    sub.Daemon()
+    subProcess = append(subProcess, sub)
+}
+
+func blockWait() {
+    sigExit := make(chan os.Signal, 1)
+    signal.Notify(sigExit, syscall.SIGINT, syscall.SIGTERM) // wait until get exit signal
+    <-sigExit
+}
+
 func loadRadvd(settings *config.Config) {
     radvd.Load(&settings.Radvd)
 }
@@ -44,15 +57,12 @@ func runScript(settings *config.Config) {
     }
 }
 
-func runProcess(command ...string) {
-    sub := process.New(command...)
-    sub.Run(true)
-    sub.Daemon()
-    subProcess = append(subProcess, sub)
+func runProxy(settings *config.Config) {
+    runProcess("xray", "-confdir", configDir)
 }
 
-func blockWait() {
-    sigExit := make(chan os.Signal, 1)
-    signal.Notify(sigExit, syscall.SIGINT, syscall.SIGTERM) // wait until get exit signal
-    <-sigExit
+func runRadvd(settings *config.Config) {
+    if settings.Radvd.Enable {
+        runProcess("radvd", "-n", "-m", "logfile", "-l", exposeDir+"/log/radvd.log")
+    }
 }

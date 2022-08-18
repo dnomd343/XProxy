@@ -6,7 +6,7 @@ import (
     log "github.com/sirupsen/logrus"
 )
 
-var version = "0.0.9"
+var version = "0.1.0"
 
 var v4RouteTable = 100
 var v6RouteTable = 106
@@ -21,27 +21,32 @@ var configFile = exposeDir + "/config.yml"
 
 var subProcess []*process.Process
 
+func xproxyInit() {
+    // log format
+    // TODO: set log level
+    log.SetLevel(log.DebugLevel)
+    // read tproxy port / route table num from env
+}
+
 func main() {
     defer func() {
         if err := recover(); err != nil {
             log.Errorf("Panic exit -> %v", err)
         }
     }()
+    xproxyInit()
 
-    log.SetLevel(log.DebugLevel)
+    var settings config.Config
     log.Infof("XProxy %s start", version)
-
-    settings := config.Load(configFile)
+    config.Load(configFile, &settings)
     loadNetwork(&settings)
     loadProxy(&settings)
     loadAsset(&settings)
     loadRadvd(&settings)
 
     runScript(&settings)
-    runProcess("xray", "-confdir", configDir)
-    if settings.Radvd.Enable {
-        runProcess("radvd", "-n", "-m", "logfile", "-l", exposeDir+"/log/radvd.log")
-    }
+    runProxy(&settings)
+    runRadvd(&settings)
     blockWait()
     process.Exit(subProcess...)
 }
