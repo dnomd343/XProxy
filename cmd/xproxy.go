@@ -3,14 +3,13 @@ package main
 import (
     "XProxy/cmd/config"
     "XProxy/cmd/process"
-    "fmt"
     log "github.com/sirupsen/logrus"
     "os"
     "os/signal"
     "syscall"
 )
 
-var version = "dev"
+var version = "0.0.9"
 
 var v4RouteTable = 100
 var v6RouteTable = 106
@@ -53,12 +52,12 @@ func main() {
     }()
 
     log.SetLevel(log.DebugLevel)
-    fmt.Println("XProxy start -> version =", version)
+    log.Infof("XProxy %s start", version)
 
     settings := config.Load(configFile)
-    //loadNetwork(&settings)
-    //loadProxy(&settings)
-    //loadAsset(&settings)
+    loadNetwork(&settings)
+    loadProxy(&settings)
+    loadAsset(&settings)
     loadRadvd(&settings)
 
     runScript(&settings)
