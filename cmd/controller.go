@@ -14,6 +14,14 @@ func loadAsset(settings *config.Config) {
     asset.AutoUpdate(&settings.Update, assetDir)
 }
 
+func loadNetwork(settings *config.Config) {
+    settings.IPv4.RouteTable = v4RouteTable
+    settings.IPv4.TProxyPort = v4TProxyPort
+    settings.IPv6.RouteTable = v6RouteTable
+    settings.IPv6.TProxyPort = v6TProxyPort
+    network.Load(settings.DNS, settings.IPv4, settings.IPv6)
+}
+
 func loadProxy(settings *config.Config) {
     proxy.Load(configDir, exposeDir, proxy.Config{
         Sniff:         settings.EnableSniff,
@@ -25,24 +33,6 @@ func loadProxy(settings *config.Config) {
         SocksInbounds: settings.SocksInbounds,
         AddOnInbounds: settings.AddOnInbounds,
     })
-}
-
-func loadNetwork(settings *config.Config) {
-    v4Settings := network.Config{
-        RouteTable: v4RouteTable,
-        TProxyPort: v4TProxyPort,
-        Address:    settings.V4Address,
-        Gateway:    settings.V4Gateway,
-        Bypass:     settings.V4Bypass,
-    }
-    v6Settings := network.Config{
-        RouteTable: v6RouteTable,
-        TProxyPort: v6TProxyPort,
-        Address:    settings.V6Address,
-        Gateway:    settings.V6Gateway,
-        Bypass:     settings.V6Bypass,
-    }
-    network.Load(settings.DNS, v4Settings, v6Settings)
 }
 
 func runScript(settings *config.Config) {

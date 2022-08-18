@@ -3,19 +3,16 @@ package config
 import (
     "XProxy/cmd/asset"
     "XProxy/cmd/common"
+    "XProxy/cmd/network"
     "XProxy/cmd/radvd"
     log "github.com/sirupsen/logrus"
     "os"
 )
 
 type Config struct {
-    DNS       []string
-    V4Bypass  []string
-    V6Bypass  []string
-    V4Address string
-    V4Gateway string
-    V6Address string
-    V6Gateway string
+    DNS  []string
+    IPv4 network.Config
+    IPv6 network.Config
 
     Script   []string
     LogLevel string

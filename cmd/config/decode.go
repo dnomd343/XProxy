@@ -28,12 +28,12 @@ type yamlConfig struct {
         AddOn []interface{}  `yaml:"addon"`
     } `yaml:"proxy"`
     Network struct {
-        DNS    []string      `yaml:"dns"`    // system dns server
-        ByPass []string      `yaml:"bypass"` // cidr bypass list
-        IPv4   yamlNetConfig `yaml:"ipv4"`   // ipv4 network configure
-        IPv6   yamlNetConfig `yaml:"ipv6"`   // ipv6 network configure
-    } `yaml:"network"`
-    Radvd radvd.Config `yaml:"radvd"`
+        DNS    []string      `yaml:"dns" json:"dns"`
+        ByPass []string      `yaml:"bypass" json:"bypass"`
+        IPv4   yamlNetConfig `yaml:"ipv4" json:"ipv4"`
+        IPv6   yamlNetConfig `yaml:"ipv6" json:"ipv6"`
+    } `yaml:"network" json:"network"`
+    Radvd radvd.Config `yaml:"radvd" json:"radvd"`
 }
 
 func yamlDecode(raw []byte) yamlConfig {
@@ -46,59 +46,53 @@ func yamlDecode(raw []byte) yamlConfig {
     return config
 }
 
-func decodeDns(rawConfig *yamlConfig) []string {
-    var dns []string
+func decodeDns(rawConfig *yamlConfig, config *Config) {
     for _, address := range rawConfig.Network.DNS { // dns options
         if common.IsIPv4(address, false) || common.IsIPv6(address, false) {
-            dns = append(dns, address)
+            config.DNS = append(config.DNS, address)
         } else {
             log.Panicf("Invalid DNS server -> %s", address)
         }
     }
-    log.Debugf("DNS server -> %v", dns)
-    return dns
+    log.Debugf("DNS server -> %v", config.DNS)
 }
 
-func decodeBypass(rawConfig *yamlConfig) ([]string, []string) {
-    var v4Bypass, v6Bypass []string
+func decodeBypass(rawConfig *yamlConfig, config *Config) {
     for _, address := range rawConfig.Network.ByPass { // bypass options
         if common.IsIPv4(address, true) {
-            v4Bypass = append(v4Bypass, address)
+            config.IPv4.Bypass = append(config.IPv4.Bypass, address)
         } else if common.IsIPv6(address, true) {
-            v6Bypass = append(v6Bypass, address)
+            config.IPv6.Bypass = append(config.IPv6.Bypass, address)
         } else {
             log.Panicf("Invalid bypass CIDR -> %s", address)
         }
     }
-    log.Debugf("IPv4 bypass CIDR -> %s", v4Bypass)
-    log.Debugf("IPv6 bypass CIDR -> %s", v6Bypass)
-    return v4Bypass, v6Bypass
+    log.Debugf("IPv4 bypass CIDR -> %s", config.IPv4.Bypass)
+    log.Debugf("IPv6 bypass CIDR -> %s", config.IPv6.Bypass)
 }
 
-func decodeIPv4(rawConfig *yamlConfig) (string, string) {
-    v4Address := rawConfig.Network.IPv4.Address
-    v4Gateway := rawConfig.Network.IPv4.Gateway
-    if v4Address != "" && !common.IsIPv4(v4Address, true) {
-        log.Panicf("Invalid IPv4 address -> %s", v4Address)
+func decodeIPv4(rawConfig *yamlConfig, config *Config) {
+    config.IPv4.Address = rawConfig.Network.IPv4.Address
+    config.IPv4.Gateway = rawConfig.Network.IPv4.Gateway
+    if config.IPv4.Address != "" && !common.IsIPv4(config.IPv4.Address, true) {
+        log.Panicf("Invalid IPv4 address (CIDR) -> %s", config.IPv4.Address)
     }
-    if v4Gateway != "" && !common.IsIPv4(v4Gateway, false) {
-        log.Panicf("Invalid IPv4 gateway -> %s", v4Gateway)
+    if config.IPv4.Gateway != "" && !common.IsIPv4(config.IPv4.Gateway, false) {
+        log.Panicf("Invalid IPv4 gateway -> %s", config.IPv4.Gateway)
     }
-    log.Debugf("IPv4 -> address = %s | gateway = %s", v4Address, v4Gateway)
-    return v4Address, v4Gateway
+    log.Debugf("IPv4 -> address = %s | gateway = %s", config.IPv4.Address, config.IPv4.Gateway)
 }
 
-func decodeIPv6(rawConfig *yamlConfig) (string, string) {
-    v6Address := rawConfig.Network.IPv6.Address
-    v6Gateway := rawConfig.Network.IPv6.Gateway
-    if v6Address != "" && !common.IsIPv6(v6Address, true) {
-        log.Panicf("Invalid IPv6 address -> %s", v6Address)
+func decodeIPv6(rawConfig *yamlConfig, config *Config) {
+    config.IPv6.Address = rawConfig.Network.IPv6.Address
+    config.IPv6.Gateway = rawConfig.Network.IPv6.Gateway
+    if config.IPv6.Address != "" && !common.IsIPv6(config.IPv6.Address, true) {
+        log.Panicf("Invalid IPv6 address (CIDR) -> %s", config.IPv6.Address)
     }
-    if v6Gateway != "" && !common.IsIPv6(v6Gateway, false) {
-        log.Panicf("Invalid IPv6 gateway -> %s", v6Gateway)
+    if config.IPv6.Gateway != "" && !common.IsIPv6(config.IPv6.Gateway, false) {
+        log.Panicf("Invalid IPv6 gateway -> %s", config.IPv6.Gateway)
     }
-    log.Debugf("IPv6 -> address = %s | gateway = %s", v6Address, v6Gateway)
-    return v6Address, v6Gateway
+    log.Debugf("IPv6 -> address = %s | gateway = %s", config.IPv6.Address, config.IPv6.Gateway)
 }
 
 func decodeProxy(rawConfig *yamlConfig, config *Config) {
@@ -142,10 +136,10 @@ func decodeCustom(rawConfig *yamlConfig) []string {
 func decode(rawConfig yamlConfig) Config {
     var config Config
     config.LogLevel = rawConfig.Proxy.Log
-    config.DNS = decodeDns(&rawConfig)
-    config.V4Bypass, config.V6Bypass = decodeBypass(&rawConfig)
-    config.V4Address, config.V4Gateway = decodeIPv4(&rawConfig)
-    config.V6Address, config.V6Gateway = decodeIPv6(&rawConfig)
+    decodeDns(&rawConfig, &config)
+    decodeBypass(&rawConfig, &config)
+    decodeIPv4(&rawConfig, &config)
+    decodeIPv6(&rawConfig, &config)
     decodeProxy(&rawConfig, &config)
     decodeUpdate(&rawConfig, &config)
     config.Script = decodeCustom(&rawConfig)
