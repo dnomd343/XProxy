@@ -10,9 +10,8 @@ import (
 )
 
 func loadAsset(settings *config.Config) {
-    asset.LoadGeoSite(assetFile, assetDir)
-    asset.LoadGeoIp(assetFile, assetDir)
-    asset.AutoUpdate(settings.UpdateCron, settings.UpdateUrls, assetDir)
+    asset.Load(assetFile, assetDir)
+    asset.AutoUpdate(&settings.Update, assetDir)
 }
 
 func loadProxy(settings *config.Config) {

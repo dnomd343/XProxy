@@ -1,6 +1,7 @@
 package config
 
 import (
+    "XProxy/cmd/asset"
     "XProxy/cmd/common"
     "XProxy/cmd/radvd"
     log "github.com/sirupsen/logrus"
@@ -16,10 +17,8 @@ type Config struct {
     V6Address string
     V6Gateway string
 
-    Script     []string
-    LogLevel   string
-    UpdateCron string
-    UpdateUrls map[string]string
+    Script   []string
+    LogLevel string
 
     EnableSniff    bool
     EnableRedirect bool
@@ -28,10 +27,8 @@ type Config struct {
     SocksInbounds  map[string]int
     AddOnInbounds  []interface{}
 
-    Radvd radvd.Config
-    //RadvdEnable  bool
-    //RadvdOptions map[string]string
-    //RadvdPrefix  map[string]map[string]string
+    Update asset.Config
+    Radvd  radvd.Config
 }
 
 func Load(configFile string) Config {

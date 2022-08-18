@@ -1,6 +1,7 @@
 package config
 
 import (
+    "XProxy/cmd/asset"
     "XProxy/cmd/common"
     "XProxy/cmd/radvd"
     log "github.com/sirupsen/logrus"
@@ -13,12 +14,9 @@ type yamlNetConfig struct {
 }
 
 type yamlConfig struct {
-    Custom []string `yaml:"custom"`
-    Update struct {
-        Cron string            `yaml:"cron"`
-        Url  map[string]string `yaml:"url"`
-    } `yaml:"update"`
-    Proxy struct {
+    Custom []string     `yaml:"custom"`
+    Update asset.Config `yaml:"update"`
+    Proxy  struct {
         Log   string `yaml:"log"`
         Sniff struct {
             Enable   bool     `yaml:"enable"`
@@ -129,12 +127,10 @@ func decodeRadvd(rawConfig *yamlConfig, config *Config) {
     log.Debugf("Radvd DNSSL -> %v", config.Radvd.DNSSL)
 }
 
-func decodeUpdate(rawConfig *yamlConfig) (string, map[string]string) {
-    updateCron := rawConfig.Update.Cron
-    log.Debugf("Update cron -> %s", updateCron)
-    updateUrls := rawConfig.Update.Url
-    log.Debugf("Update urls -> %v", updateUrls)
-    return updateCron, updateUrls
+func decodeUpdate(rawConfig *yamlConfig, config *Config) {
+    config.Update = rawConfig.Update
+    log.Debugf("Update cron -> %s", config.Update.Cron)
+    log.Debugf("Update urls -> %v", config.Update.Url)
 }
 
 func decodeCustom(rawConfig *yamlConfig) []string {
@@ -151,7 +147,7 @@ func decode(rawConfig yamlConfig) Config {
     config.V4Address, config.V4Gateway = decodeIPv4(&rawConfig)
     config.V6Address, config.V6Gateway = decodeIPv6(&rawConfig)
     decodeProxy(&rawConfig, &config)
-    config.UpdateCron, config.UpdateUrls = decodeUpdate(&rawConfig)
+    decodeUpdate(&rawConfig, &config)
     config.Script = decodeCustom(&rawConfig)
     decodeRadvd(&rawConfig, &config)
     return config
