@@ -34,6 +34,11 @@ type yamlConfig struct {
         IPv4   yamlNetConfig `yaml:"ipv4"`   // ipv4 network configure
         IPv6   yamlNetConfig `yaml:"ipv6"`   // ipv6 network configure
     } `yaml:"network"`
+    Radvd struct {
+        Enable  bool                         `yaml:"enable"`
+        Options map[string]string            `yaml:"options"`
+        Prefix  map[string]map[string]string `yaml:"prefix"`
+    } `yaml:"radvd"`
 }
 
 func yamlDecode(raw []byte) yamlConfig {
@@ -116,6 +121,15 @@ func decodeProxy(rawConfig *yamlConfig, config *Config) {
     log.Debugf("Add-on inbounds -> %v", config.AddOnInbounds)
 }
 
+func decodeRadvd(rawConfig *yamlConfig, config *Config) {
+    config.RadvdEnable = rawConfig.Radvd.Enable
+    log.Debugf("Radvd enable -> %t", config.RadvdEnable)
+    config.RadvdOptions = rawConfig.Radvd.Options
+    log.Debugf("Radvd options -> %v", config.RadvdOptions)
+    config.RadvdPrefix = rawConfig.Radvd.Prefix
+    log.Debugf("Radvd prefix -> %v", config.RadvdPrefix)
+}
+
 func decodeUpdate(rawConfig *yamlConfig) (string, map[string]string) {
     updateCron := rawConfig.Update.Cron
     log.Debugf("Update cron -> %s", updateCron)
@@ -140,5 +154,6 @@ func decode(rawConfig yamlConfig) Config {
     decodeProxy(&rawConfig, &config)
     config.UpdateCron, config.UpdateUrls = decodeUpdate(&rawConfig)
     config.Script = decodeCustom(&rawConfig)
+    decodeRadvd(&rawConfig, &config)
     return config
 }

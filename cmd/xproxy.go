@@ -32,6 +32,13 @@ func runProxy() {
     subProcess = append(subProcess, proxy)
 }
 
+func runRadvd() {
+    radvd := process.New("radvd", "-n", "-m", "logfile", "-l", exposeDir+"/log/radvd.log")
+    radvd.Run(true)
+    radvd.Daemon()
+    subProcess = append(subProcess, radvd)
+}
+
 func blockWait() {
     sigExit := make(chan os.Signal, 1)
     signal.Notify(sigExit, syscall.SIGINT, syscall.SIGTERM) // wait until get exit signal
@@ -49,12 +56,16 @@ func main() {
     fmt.Println("XProxy start -> version =", version)
 
     settings := config.Load(configFile)
-    loadNetwork(&settings)
-    loadProxy(&settings)
-    loadAsset(&settings)
+    //loadNetwork(&settings)
+    //loadProxy(&settings)
+    //loadAsset(&settings)
+    loadRadvd(&settings)
+
     runScript(&settings)
     runProxy()
-
+    if settings.RadvdEnable {
+        runRadvd()
+    }
     blockWait()
     process.Exit(subProcess...)
 }

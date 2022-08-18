@@ -26,6 +26,10 @@ type Config struct {
     HttpInbounds   map[string]int
     SocksInbounds  map[string]int
     AddOnInbounds  []interface{}
+
+    RadvdEnable  bool
+    RadvdOptions map[string]string
+    RadvdPrefix  map[string]map[string]string
 }
 
 func Load(configFile string) Config {
