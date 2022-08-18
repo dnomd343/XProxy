@@ -10,10 +10,20 @@ RUN make -C ./src/ && mkdir -p /upx/bin/ && mv ./src/upx.out /upx/bin/upx && \
 
 FROM golang:1.18-alpine3.16 AS proxy
 ENV XRAY_VERSION="1.5.9"
+ENV V2FLY_VERSION="4.45.2"
+ENV SAGER_VERSION="5.0.16"
 RUN wget https://github.com/XTLS/Xray-core/archive/refs/tags/v${XRAY_VERSION}.tar.gz && tar xf v${XRAY_VERSION}.tar.gz
+RUN wget https://github.com/v2fly/v2ray-core/archive/refs/tags/v${V2FLY_VERSION}.tar.gz && tar xf v${V2FLY_VERSION}.tar.gz
+RUN wget https://github.com/SagerNet/v2ray-core/archive/refs/tags/v${SAGER_VERSION}.tar.gz && tar xf v${SAGER_VERSION}.tar.gz
 WORKDIR ./Xray-core-${XRAY_VERSION}/
 RUN go mod download -x
 RUN env CGO_ENABLED=0 go build -v -o xray -trimpath -ldflags "-s -w" ./main/ && mv ./xray /tmp/
+WORKDIR ../v2ray-core-${V2FLY_VERSION}/
+RUN go mod download -x
+RUN env CGO_ENABLED=0 go build -v -o v2ray -trimpath -ldflags "-s -w" ./main/ && mv ./v2ray /tmp/
+WORKDIR ../v2ray-core-${SAGER_VERSION}/
+RUN go mod download -x
+RUN env CGO_ENABLED=0 go build -v -o sagray -trimpath -ldflags "-s -w" ./main/ && mv ./sagray /tmp/
 COPY --from=upx /upx/ /usr/
 RUN ls /tmp/*ray | xargs -P0 -n1 upx -9
 
