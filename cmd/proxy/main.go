@@ -57,7 +57,7 @@ func Load(configDir string, exposeDir string, config *Config) {
     common.CreateFolder(path.Join(exposeDir, "config"))
     common.CreateFolder(configDir)
     saveConfig(path.Join(exposeDir, "config"), "dns", dnsConfig, false)
-    saveConfig(path.Join(exposeDir, "config"), "route", routeConfig, false)
+    saveConfig(path.Join(exposeDir, "config"), "routing", routeConfig, false)
     saveConfig(path.Join(exposeDir, "config"), "outbounds", outboundsConfig, false)
     saveConfig(configDir, "inbounds", loadInbounds(config), true)
     saveConfig(configDir, "log", loadLogConfig(config.Log, path.Join(exposeDir, "log")), true)
