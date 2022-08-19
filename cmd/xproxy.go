@@ -10,8 +10,7 @@ import (
     "strconv"
 )
 
-var version = "0.9.1"
-
+var version = "0.9.2"
 var v4RouteTable = 100
 var v6RouteTable = 106
 var v4TProxyPort = 7288
@@ -19,6 +18,7 @@ var v6TProxyPort = 7289
 var configDir = "/etc/xproxy"
 var assetFile = "/assets.tar.xz"
 
+var goVersion string
 var subProcess []*process.Process
 var assetDir, exposeDir, configFile string
 
@@ -71,7 +71,7 @@ func main() {
     xproxyInit()
 
     var settings config.Config
-    log.Infof("XProxy %s start", version)
+    log.Infof("XProxy %s start (%s)", version, goVersion)
     config.Load(configFile, &settings)
     loadNetwork(&settings)
     loadProxy(&settings)

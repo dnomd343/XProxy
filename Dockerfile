@@ -30,7 +30,8 @@ RUN ls /tmp/*ray | xargs -P0 -n1 upx -9
 FROM golang:1.18-alpine3.16 AS xproxy
 COPY . /XProxy
 WORKDIR /XProxy
-RUN env CGO_ENABLED=0 go build -v -o xproxy -trimpath -ldflags "-s -w" ./cmd/ && mv ./xproxy /tmp/
+RUN env CGO_ENABLED=0 go build -v -o xproxy -trimpath \
+    -ldflags "-X 'main.goVersion=$(go version)' -s -w" ./cmd/ && mv ./xproxy /tmp/
 COPY --from=upx /upx/ /usr/
 RUN upx -9 /tmp/xproxy
 
