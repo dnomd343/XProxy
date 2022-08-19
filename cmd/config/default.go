@@ -2,6 +2,7 @@ package config
 
 var defaultConfig = `# default configure file for xproxy
 proxy:
+  core: xray
   log: warning
 
 network:

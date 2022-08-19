@@ -3,6 +3,7 @@ package proxy
 import (
     "XProxy/cmd/common"
     log "github.com/sirupsen/logrus"
+    "path"
 )
 
 var dnsConfig = `{
@@ -72,8 +73,8 @@ func loadLogConfig(logLevel string, logDir string) string {
     }
     logConfig := logObject{}
     logConfig.Log.Loglevel = logLevel
-    logConfig.Log.Access = logDir + "/access.log"
-    logConfig.Log.Error = logDir + "/error.log"
+    logConfig.Log.Access = path.Join(logDir, "access.log")
+    logConfig.Log.Error = path.Join(logDir, "error.log")
     return common.JsonEncode(logConfig)
 }
 

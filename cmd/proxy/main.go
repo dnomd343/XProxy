@@ -2,6 +2,7 @@ package proxy
 
 import (
     "XProxy/cmd/common"
+    "path"
 )
 
 type Config struct {
@@ -20,7 +21,7 @@ type Config struct {
 }
 
 func saveConfig(configDir string, caption string, content string, overwrite bool) {
-    filePath := configDir + "/" + caption + ".json"
+    filePath := path.Join(configDir, caption+".json")
     common.WriteFile(filePath, content+"\n", overwrite)
 }
 
@@ -52,15 +53,15 @@ func loadInbounds(config *Config) string {
 }
 
 func Load(configDir string, exposeDir string, config *Config) {
-    common.CreateFolder(exposeDir + "/log")
-    common.CreateFolder(exposeDir + "/config")
+    common.CreateFolder(path.Join(exposeDir, "log"))
+    common.CreateFolder(path.Join(exposeDir, "config"))
     common.CreateFolder(configDir)
-    saveConfig(exposeDir+"/config", "dns", dnsConfig, false)
-    saveConfig(exposeDir+"/config", "route", routeConfig, false)
-    saveConfig(exposeDir+"/config", "outbounds", outboundsConfig, false)
+    saveConfig(path.Join(exposeDir, "config"), "dns", dnsConfig, false)
+    saveConfig(path.Join(exposeDir, "config"), "route", routeConfig, false)
+    saveConfig(path.Join(exposeDir, "config"), "outbounds", outboundsConfig, false)
     saveConfig(configDir, "inbounds", loadInbounds(config), true)
-    saveConfig(configDir, "log", loadLogConfig(config.Log, exposeDir+"/log"), true)
-    for _, configFile := range common.ListFiles(exposeDir+"/config", ".json") {
-        common.CopyFile(exposeDir+"/config/"+configFile, configDir+"/"+configFile)
+    saveConfig(configDir, "log", loadLogConfig(config.Log, path.Join(exposeDir, "log")), true)
+    for _, configFile := range common.ListFiles(path.Join(exposeDir, "config"), ".json") {
+        common.CopyFile(path.Join(exposeDir, "config", configFile), path.Join(configDir, configFile))
     }
 }

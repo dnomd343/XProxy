@@ -1,25 +1,26 @@
 package main
 
 import (
+    "XProxy/cmd/common"
     "XProxy/cmd/config"
     "XProxy/cmd/process"
     log "github.com/sirupsen/logrus"
     "os"
+    "path"
     "strconv"
 )
 
-var version = "0.9.0"
+var version = "0.9.1"
 
 var v4RouteTable = 100
 var v6RouteTable = 106
 var v4TProxyPort = 7288
 var v6TProxyPort = 7289
-
 var configDir = "/etc/xproxy"
 var assetFile = "/assets.tar.xz"
-var assetDir, exposeDir, configFile string
 
 var subProcess []*process.Process
+var assetDir, exposeDir, configFile string
 
 func xproxyInit() {
     log.SetFormatter(&log.TextFormatter{
@@ -53,8 +54,9 @@ func xproxyInit() {
     if os.Getenv("EXPOSE_DIR") != "" {
         exposeDir = os.Getenv("EXPOSE_DIR")
     }
-    assetDir = exposeDir + "/assets"
-    configFile = exposeDir + "/config.yml"
+    common.CreateFolder(exposeDir)
+    assetDir = path.Join(exposeDir, "assets")
+    configFile = path.Join(exposeDir, "xproxy.yml")
     log.Debugf("Expose folder -> %s", exposeDir)
     log.Debugf("Assets folder -> %s", assetDir)
     log.Debugf("Config file -> %s", configFile)

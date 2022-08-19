@@ -11,6 +11,7 @@ import (
     log "github.com/sirupsen/logrus"
     "os"
     "os/signal"
+    "path"
     "syscall"
 )
 
@@ -71,6 +72,6 @@ func runProxy(settings *config.Config) {
 
 func runRadvd(settings *config.Config) {
     if settings.Radvd.Enable {
-        runProcess("radvd", "-n", "-m", "logfile", "-l", exposeDir+"/log/radvd.log")
+        runProcess("radvd", "-n", "-m", "logfile", "-l", path.Join(exposeDir, "log/radvd.log"))
     }
 }

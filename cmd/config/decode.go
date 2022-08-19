@@ -29,11 +29,11 @@ type yamlConfig struct {
 
 func yamlDecode(raw []byte) yamlConfig {
     var config yamlConfig
-    log.Debugf("Decode yaml content -> \n%s", string(raw))
+    log.Debugf("Config raw content -> \n%s", string(raw))
     if err := yaml.Unmarshal(raw, &config); err != nil { // yaml (or json) decode
         log.Panicf("Decode config file error -> %v", err)
     }
-    log.Debugf("Decoded config -> %v", config)
+    log.Debugf("Decoded configure -> %v", config)
     return config
 }
 
