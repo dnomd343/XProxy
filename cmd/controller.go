@@ -58,7 +58,15 @@ func runScript(settings *config.Config) {
 }
 
 func runProxy(settings *config.Config) {
-    runProcess("xray", "-confdir", configDir)
+    if settings.Proxy.Core == "xray" { // xray-core
+        runProcess("xray", "-confdir", configDir)
+    } else if settings.Proxy.Core == "v2ray" { // v2fly-core
+        runProcess("v2ray", "-confdir", configDir)
+    } else if settings.Proxy.Core == "sagray" { // sager-core
+        runProcess("sagray", "run", "-confdir", configDir)
+    } else {
+        log.Panicf("Unknown core type -> %s", settings.Proxy.Core)
+    }
 }
 
 func runRadvd(settings *config.Config) {

@@ -6,6 +6,7 @@ import (
 
 type Config struct {
     Log   string         `yaml:"log" json:"json"`
+    Core  string         `yaml:"core" json:"core"`
     Http  map[string]int `yaml:"http" json:"http"`
     Socks map[string]int `yaml:"socks" json:"socks"`
     AddOn []interface{}  `yaml:"addon" json:"addon"`
@@ -29,6 +30,9 @@ func loadInbounds(config *Config) string {
         RouteOnly:       !config.Sniff.Redirect,
         DestOverride:    []string{"http", "tls", "quic"},
         DomainsExcluded: config.Sniff.Exclude,
+    }
+    if config.Core == "v2ray" { // PATCH: v2fly-core v4 not support quic sniff
+        sniff.DestOverride = sniff.DestOverride[:len(sniff.DestOverride)-1]
     }
     var inbounds []interface{}
     inbounds = append(inbounds, loadTProxyConfig("tproxy", config.V4TProxyPort, sniff))

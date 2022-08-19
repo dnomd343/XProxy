@@ -88,7 +88,14 @@ func decodeIPv6(rawConfig *yamlConfig, config *Config) {
 
 func decodeProxy(rawConfig *yamlConfig, config *Config) {
     config.Proxy = rawConfig.Proxy
+    if config.Proxy.Core == "" {
+        config.Proxy.Core = "xray" // use xray in default
+    }
+    if config.Proxy.Core != "xray" && config.Proxy.Core != "v2ray" && config.Proxy.Core != "sagray" {
+        log.Warningf("Unknown core type -> %s", config.Proxy.Core)
+    }
     log.Debugf("Proxy log level -> %s", config.Proxy.Log)
+    log.Debugf("Core type -> %s", config.Proxy.Core)
     log.Debugf("Http inbounds -> %v", config.Proxy.Http)
     log.Debugf("Socks5 inbounds -> %v", config.Proxy.Socks)
     log.Debugf("Add-on inbounds -> %v", config.Proxy.AddOn)
