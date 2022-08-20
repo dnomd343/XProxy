@@ -7,6 +7,7 @@ import (
 )
 
 type Config struct {
+    Log    int               `yaml:"log" json:"log"`
     Enable bool              `yaml:"enable" json:"enable"`
     Client []string          `yaml:"client" json:"client"`
     Option map[string]string `yaml:"option" json:"option"`
@@ -40,9 +41,9 @@ func loadOption(options map[string]string, intend int) string { // load options 
     return ret
 }
 
-func loadClient(clients []string) string {
-    if len(clients) == 0 { // without client settings
-        return ""
+func loadClient(clients []string) string { // load radvd client configure
+    if len(clients) == 0 {
+        return "" // without client settings
     }
     ret := genSpace(4) + "clients {\n"
     for _, client := range clients {
@@ -52,32 +53,32 @@ func loadClient(clients []string) string {
 }
 
 func loadPrefix(prefix string, option map[string]string) string { // load radvd prefix configure
-    if prefix == "" {                                             // without prefix settings
-        return ""
+    if prefix == "" {
+        return "" // without prefix settings
     }
     header := genSpace(4) + "prefix " + prefix + " {\n"
     return header + loadOption(option, 8) + genSpace(4) + "};\n"
 }
 
 func loadRoute(cidr string, option map[string]string) string { // load radvd route configure
-    if cidr == "" {                                            // without route settings
-        return ""
+    if cidr == "" {
+        return "" // without route settings
     }
     header := genSpace(4) + "route " + cidr + " {\n"
     return header + loadOption(option, 8) + genSpace(4) + "};\n"
 }
 
-func loadRdnss(ip []string, option map[string]string) string {
-    if len(ip) == 0 { // without rdnss settings
-        return ""
+func loadRdnss(ip []string, option map[string]string) string { // load radvd RDNSS configure
+    if len(ip) == 0 {
+        return "" // without rdnss settings
     }
     header := genSpace(4) + "RDNSS " + strings.Join(ip, " ") + " {\n"
     return header + loadOption(option, 8) + genSpace(4) + "};\n"
 }
 
-func loadDnssl(suffix []string, option map[string]string) string {
-    if len(suffix) == 0 { // without dnssl settings
-        return ""
+func loadDnssl(suffix []string, option map[string]string) string { // load radvd DNSSL configure
+    if len(suffix) == 0 {
+        return "" // without dnssl settings
     }
     header := genSpace(4) + "DNSSL " + strings.Join(suffix, " ") + " {\n"
     return header + loadOption(option, 8) + genSpace(4) + "};\n"

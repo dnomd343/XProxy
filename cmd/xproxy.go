@@ -79,8 +79,8 @@ func main() {
     loadRadvd(&settings)
 
     runScript(&settings)
-    runProxy(&settings)
     runRadvd(&settings)
+    runProxy(&settings)
     blockWait()
     process.Exit(subProcess...)
 }

@@ -106,6 +106,7 @@ func decodeProxy(rawConfig *yamlConfig, config *Config) {
 
 func decodeRadvd(rawConfig *yamlConfig, config *Config) {
     config.Radvd = rawConfig.Radvd
+    log.Debugf("Radvd log level -> %d", config.Radvd.Log)
     log.Debugf("Radvd enable -> %t", config.Radvd.Enable)
     log.Debugf("Radvd options -> %v", config.Radvd.Option)
     log.Debugf("Radvd prefix -> %v", config.Radvd.Prefix)

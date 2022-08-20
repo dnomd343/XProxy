@@ -12,7 +12,9 @@ import (
     "os"
     "os/signal"
     "path"
+    "strconv"
     "syscall"
+    "time"
 )
 
 func runProcess(command ...string) {
@@ -72,6 +74,13 @@ func runProxy(settings *config.Config) {
 
 func runRadvd(settings *config.Config) {
     if settings.Radvd.Enable {
-        runProcess("radvd", "-n", "-m", "logfile", "-l", path.Join(exposeDir, "log/radvd.log"))
+        radvdCmd := []string{"radvd", "--nodaemon"}
+        if settings.Radvd.Log > 0 { // with log option
+            radvdCmd = append(radvdCmd, "--logmethod", "logfile")
+            radvdCmd = append(radvdCmd, "--logfile", path.Join(exposeDir, "log/radvd.log"))
+            radvdCmd = append(radvdCmd, "--debug", strconv.Itoa(settings.Radvd.Log))
+            time.Sleep(time.Second) // radvd will crash on first boot without delay (enable debug), why???
+        }
+        runProcess(radvdCmd...)
     }
 }
