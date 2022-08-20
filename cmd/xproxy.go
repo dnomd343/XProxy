@@ -4,13 +4,14 @@ import (
     "XProxy/cmd/common"
     "XProxy/cmd/config"
     "XProxy/cmd/process"
+    "flag"
     log "github.com/sirupsen/logrus"
     "os"
     "path"
     "strconv"
 )
 
-var version = "0.9.2"
+var version = "0.9.3"
 var v4RouteTable = 100
 var v6RouteTable = 106
 var v4TProxyPort = 7288
@@ -22,16 +23,22 @@ var goVersion string
 var subProcess []*process.Process
 var assetDir, exposeDir, configFile string
 
-func xproxyInit() {
+func logInit(isDebug bool) {
     log.SetFormatter(&log.TextFormatter{
         FullTimestamp:   true,
         TimestampFormat: "2006-01-02 15:04:05",
     })
-    if len(os.Args) > 1 && os.Args[1] == "--debug" {
+    log.SetLevel(log.InfoLevel) // default log level
+    if isDebug {
         log.SetLevel(log.DebugLevel)
-    } else {
-        log.SetLevel(log.InfoLevel)
     }
+}
+
+func xproxyInit() {
+    var isDebug = flag.Bool("debug", false, "Enable debug mode")
+    var configName = flag.String("config", "xproxy.yml", "Config file name")
+    flag.Parse()
+    logInit(*isDebug)
 
     if os.Getenv("IPV4_TABLE") != "" {
         v4RouteTable, _ = strconv.Atoi(os.Getenv("IPV4_TABLE"))
@@ -56,7 +63,7 @@ func xproxyInit() {
     }
     common.CreateFolder(exposeDir)
     assetDir = path.Join(exposeDir, "assets")
-    configFile = path.Join(exposeDir, "xproxy.yml")
+    configFile = path.Join(exposeDir, *configName)
     log.Debugf("Expose folder -> %s", exposeDir)
     log.Debugf("Assets folder -> %s", assetDir)
     log.Debugf("Config file -> %s", configFile)

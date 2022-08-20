@@ -5,39 +5,46 @@ import (
     "XProxy/cmd/common"
     "XProxy/cmd/proxy"
     "XProxy/cmd/radvd"
+    "encoding/json"
     log "github.com/sirupsen/logrus"
     "gopkg.in/yaml.v3"
 )
 
-type yamlNetConfig struct {
+type NetConfig struct {
     Gateway string `yaml:"gateway"` // network gateway
     Address string `yaml:"address"` // network address
 }
 
-type yamlConfig struct {
+type RawConfig struct {
     Custom  []string     `yaml:"custom" json:"custom"`
     Update  asset.Config `yaml:"update" json:"update"`
     Radvd   radvd.Config `yaml:"radvd" json:"radvd"`
     Proxy   proxy.Config `yaml:"proxy" json:"proxy"`
     Network struct {
-        DNS    []string      `yaml:"dns" json:"dns"`
-        ByPass []string      `yaml:"bypass" json:"bypass"`
-        IPv4   yamlNetConfig `yaml:"ipv4" json:"ipv4"`
-        IPv6   yamlNetConfig `yaml:"ipv6" json:"ipv6"`
+        DNS    []string  `yaml:"dns" json:"dns"`
+        ByPass []string  `yaml:"bypass" json:"bypass"`
+        IPv4   NetConfig `yaml:"ipv4" json:"ipv4"`
+        IPv6   NetConfig `yaml:"ipv6" json:"ipv6"`
     } `yaml:"network" json:"network"`
 }
 
-func yamlDecode(raw []byte) yamlConfig {
-    var config yamlConfig
+func configDecode(raw []byte, fileSuffix string) RawConfig {
+    var config RawConfig
     log.Debugf("Config raw content -> \n%s", string(raw))
-    if err := yaml.Unmarshal(raw, &config); err != nil { // yaml (or json) decode
-        log.Panicf("Decode config file error -> %v", err)
+    if fileSuffix == ".json" {
+        if err := json.Unmarshal(raw, &config); err != nil { // json format decode
+            log.Panicf("Decode config file error -> %v", err)
+        }
+    } else {
+        if err := yaml.Unmarshal(raw, &config); err != nil { // yaml format decode
+            log.Panicf("Decode config file error -> %v", err)
+        }
     }
     log.Debugf("Decoded configure -> %v", config)
     return config
 }
 
-func decodeDns(rawConfig *yamlConfig, config *Config) {
+func decodeDns(rawConfig *RawConfig, config *Config) {
     for _, address := range rawConfig.Network.DNS { // dns options
         if common.IsIPv4(address, false) || common.IsIPv6(address, false) {
             config.DNS = append(config.DNS, address)
@@ -48,7 +55,7 @@ func decodeDns(rawConfig *yamlConfig, config *Config) {
     log.Debugf("DNS server -> %v", config.DNS)
 }
 
-func decodeBypass(rawConfig *yamlConfig, config *Config) {
+func decodeBypass(rawConfig *RawConfig, config *Config) {
     for _, address := range rawConfig.Network.ByPass { // bypass options
         if common.IsIPv4(address, true) {
             config.IPv4.Bypass = append(config.IPv4.Bypass, address)
@@ -62,7 +69,7 @@ func decodeBypass(rawConfig *yamlConfig, config *Config) {
     log.Debugf("IPv6 bypass CIDR -> %s", config.IPv6.Bypass)
 }
 
-func decodeIPv4(rawConfig *yamlConfig, config *Config) {
+func decodeIPv4(rawConfig *RawConfig, config *Config) {
     config.IPv4.Address = rawConfig.Network.IPv4.Address
     config.IPv4.Gateway = rawConfig.Network.IPv4.Gateway
     if config.IPv4.Address != "" && !common.IsIPv4(config.IPv4.Address, true) {
@@ -74,7 +81,7 @@ func decodeIPv4(rawConfig *yamlConfig, config *Config) {
     log.Debugf("IPv4 -> address = %s | gateway = %s", config.IPv4.Address, config.IPv4.Gateway)
 }
 
-func decodeIPv6(rawConfig *yamlConfig, config *Config) {
+func decodeIPv6(rawConfig *RawConfig, config *Config) {
     config.IPv6.Address = rawConfig.Network.IPv6.Address
     config.IPv6.Gateway = rawConfig.Network.IPv6.Gateway
     if config.IPv6.Address != "" && !common.IsIPv6(config.IPv6.Address, true) {
@@ -86,7 +93,7 @@ func decodeIPv6(rawConfig *yamlConfig, config *Config) {
     log.Debugf("IPv6 -> address = %s | gateway = %s", config.IPv6.Address, config.IPv6.Gateway)
 }
 
-func decodeProxy(rawConfig *yamlConfig, config *Config) {
+func decodeProxy(rawConfig *RawConfig, config *Config) {
     config.Proxy = rawConfig.Proxy
     if config.Proxy.Core == "" {
         config.Proxy.Core = "xray" // use xray in default
@@ -104,7 +111,7 @@ func decodeProxy(rawConfig *yamlConfig, config *Config) {
     log.Debugf("Connection sniff exlcude -> %v", config.Proxy.Sniff.Exclude)
 }
 
-func decodeRadvd(rawConfig *yamlConfig, config *Config) {
+func decodeRadvd(rawConfig *RawConfig, config *Config) {
     config.Radvd = rawConfig.Radvd
     log.Debugf("Radvd log level -> %d", config.Radvd.Log)
     log.Debugf("Radvd enable -> %t", config.Radvd.Enable)
@@ -116,13 +123,13 @@ func decodeRadvd(rawConfig *yamlConfig, config *Config) {
     log.Debugf("Radvd DNSSL -> %v", config.Radvd.DNSSL)
 }
 
-func decodeUpdate(rawConfig *yamlConfig, config *Config) {
+func decodeUpdate(rawConfig *RawConfig, config *Config) {
     config.Update = rawConfig.Update
     log.Debugf("Update cron -> %s", config.Update.Cron)
     log.Debugf("Update urls -> %v", config.Update.Url)
 }
 
-func decodeCustom(rawConfig *yamlConfig, config *Config) {
+func decodeCustom(rawConfig *RawConfig, config *Config) {
     config.Script = rawConfig.Custom
     log.Debugf("Custom script -> %v", config.Script)
 }

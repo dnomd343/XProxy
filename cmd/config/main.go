@@ -8,6 +8,7 @@ import (
     "XProxy/cmd/radvd"
     log "github.com/sirupsen/logrus"
     "os"
+    "path"
 )
 
 type Config struct {
@@ -29,7 +30,7 @@ func Load(configFile string, config *Config) {
     if err != nil {
         log.Panicf("Failed to open %s -> %v", configFile, err)
     }
-    rawConfig := yamlDecode(raw) // decode yaml content
+    rawConfig := configDecode(raw, path.Ext(configFile)) // decode configure content
     decodeDns(&rawConfig, config)
     decodeBypass(&rawConfig, config)
     decodeIPv4(&rawConfig, config)
