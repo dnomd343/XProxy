@@ -39,7 +39,7 @@ func loadV4Network(v4 *Config) {
         run("ip", "-4", "addr", "add", v4.Address, "dev", "eth0")
     }
     if v4.Gateway != "" {
-        run("ip", "-4", "route", "add", "default", "via", v4.Gateway)
+        run("ip", "-4", "route", "add", "default", "via", v4.Gateway, "dev", "eth0")
     }
 }
 
@@ -51,6 +51,6 @@ func loadV6Network(v6 *Config) {
         run("ip", "-6", "addr", "add", v6.Address, "dev", "eth0")
     }
     if v6.Gateway != "" {
-        run("ip", "-6", "route", "add", "default", "via", v6.Gateway)
+        run("ip", "-6", "route", "add", "default", "via", v6.Gateway, "dev", "eth0")
     }
 }
