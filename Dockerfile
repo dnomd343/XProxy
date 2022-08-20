@@ -53,8 +53,7 @@ COPY --from=radvd /tmp/radvd* /asset/usr/sbin/
 COPY --from=proxy /tmp/*ray /asset/usr/bin/
 
 FROM alpine:3.16
-ENV XRAY_LOCATION_ASSET=/xproxy/assets
 RUN apk add --no-cache iptables ip6tables
 COPY --from=asset /asset/ /
 WORKDIR /xproxy
-CMD ["xproxy"]
+ENTRYPOINT ["xproxy"]

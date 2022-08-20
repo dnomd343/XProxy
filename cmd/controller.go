@@ -17,9 +17,9 @@ import (
     "time"
 )
 
-func runProcess(command ...string) {
+func runProcess(env []string, command ...string) {
     sub := process.New(command...)
-    sub.Run(true)
+    sub.Run(true, env)
     sub.Daemon()
     subProcess = append(subProcess, sub)
 }
@@ -62,11 +62,11 @@ func runScript(settings *config.Config) {
 
 func runProxy(settings *config.Config) {
     if settings.Proxy.Core == "xray" { // xray-core
-        runProcess("xray", "-confdir", configDir)
+        runProcess([]string{"XRAY_LOCATION_ASSET=" + assetDir}, "xray", "-confdir", configDir)
     } else if settings.Proxy.Core == "v2ray" { // v2fly-core
-        runProcess("v2ray", "-confdir", configDir)
+        runProcess([]string{"V2RAY_LOCATION_ASSET=" + assetDir}, "v2ray", "-confdir", configDir)
     } else if settings.Proxy.Core == "sagray" { // sager-core
-        runProcess("sagray", "run", "-confdir", configDir)
+        runProcess([]string{"V2RAY_LOCATION_ASSET=" + assetDir}, "sagray", "run", "-confdir", configDir)
     } else {
         log.Panicf("Unknown core type -> %s", settings.Proxy.Core)
     }
@@ -81,6 +81,6 @@ func runRadvd(settings *config.Config) {
             radvdCmd = append(radvdCmd, "--debug", strconv.Itoa(settings.Radvd.Log))
             time.Sleep(time.Second) // radvd will crash on first boot without delay (enable debug), why???
         }
-        runProcess(radvdCmd...)
+        runProcess(nil, radvdCmd...)
     }
 }

@@ -9,6 +9,7 @@ import (
 
 type Process struct {
     name    string
+    env     []string
     command []string
     process *exec.Cmd
 }
@@ -21,11 +22,16 @@ func New(command ...string) *Process {
     return process
 }
 
-func (p *Process) Run(isOutput bool) {
+func (p *Process) Run(isOutput bool, env []string) {
     p.process = exec.Command(p.command[0], p.command[1:]...)
     if isOutput {
         p.process.Stdout = os.Stdout
         p.process.Stderr = os.Stderr
+    }
+    p.env = env
+    if len(p.env) != 0 {
+        p.process.Env = p.env
+        log.Infof("Process %s with env -> %v", p.name, p.env)
     }
     err := p.process.Start()
     if err != nil {
