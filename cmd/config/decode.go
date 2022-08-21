@@ -101,6 +101,12 @@ func decodeProxy(rawConfig *RawConfig, config *Config) {
     if config.Proxy.Core != "xray" && config.Proxy.Core != "v2ray" && config.Proxy.Core != "sagray" {
         log.Warningf("Unknown core type -> %s", config.Proxy.Core)
     }
+    if config.Proxy.Core != "xray" && config.Proxy.Core != "sagray" && !config.Proxy.Sniff.Redirect {
+        log.Warningf("V2fly core couldn't disable redirect in sniff (aka `routeOnly` option)")
+    }
+    if config.Proxy.Core != "xray" && len(config.Proxy.Sniff.Exclude) != 0 {
+        log.Warningf("The exclude list in sniff options can only use for Xray-core")
+    }
     log.Debugf("Proxy log level -> %s", config.Proxy.Log)
     log.Debugf("Core type -> %s", config.Proxy.Core)
     log.Debugf("Http inbounds -> %v", config.Proxy.Http)
