@@ -10,7 +10,7 @@
 
 + 支持TCP、UDP流量代理，完整的Fullcone NAT支持
 
-+ 完全兼容IPv6，支持SLAAC地址分配，RRDNS与DNSSL配置
++ 完全兼容IPv6，支持SLAAC地址分配，RDNSS与DNSSL配置
 
 + （待支持）DHCP与DHCPv6地址自动分配
 
@@ -100,13 +100,16 @@ network:
     - fc00::/7
     - fe80::/10
     - ff00::/8
+  exclude:
+    - 192.168.2.2
+    - 192.168.2.240/28
 ```
 
 + `dns` ：指定系统DNS服务器
 
 + `ipv4` 与 `ipv6` ：指定IPv4与IPv6的网络信息，其中 `gateway` 为上游网关地址，`address` 为虚拟网关地址（CIDR格式，包含子网长度）；
 
-+ `bypass` ：不进行代理的目标网段或IP，建议绕过以下5个网段：
++ `bypass` ：绕过代理的目标网段或IP，建议绕过以下5个网段：
 
   + `169.254.0.0/16` ：IPv4链路本地地址
 
@@ -117,6 +120,10 @@ network:
   + `fe80::/10` ：IPv6链路本地地址
 
   + `ff00::/8` ：IPv6组播地址
+
++ `exclude` ：不代理的来源网段或IP；
+
++ > `bypass` 与 `exclude` 中指定的IP或CIDR，在运行时将不会被TProxy捕获，即不进入用户态的代理路由，相当于无损耗的直连；
 
 ### 路由资源
 
