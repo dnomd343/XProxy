@@ -14,6 +14,14 @@
 
 + （待支持）DHCP与DHCPv6地址自动分配
 
+## 拓扑模型
+
+XProxy部署在内网Linux主机上，通过 `macvlan` 网络创建独立MAC地址的虚拟网关，捕获内网设备的网络流量，对其进行透明代理；宿主机一般以单臂旁路由的方式接入，虚拟网关运行时不会干扰宿主机网络，且宿主机系统的流量也可被网关代理。
+
+![network](./docs/img/network-model.png)
+
+XProxy运行以后，内网流量将被收集到代理内核上，目前内置了 `xray` ，`v2ray` ，`sagray` 三种内核，支持 `Shadowsocks` ，`ShadowsocksR` ，`VMess` ，`VLESS` ，`Trojan` ，`WireGuard` ，`SSH` ，`PingTunnel` 等多种代理协议，支持 `XTLS` ，`WebSocket` ，`QUIC` ，`gRPC` 等多种传输方式。同时，得益于V2ray的路由设计基础，代理的网络流量可被精确地分流，可以依据内网设备、目标地址、访问端口、连接域名、流量类型等多种方式进行路由。
+
 ## 配置格式
 
 XProxy支持YAML与JSON格式的配置文件，包含以下部分：
@@ -233,7 +241,7 @@ radvd:
 
 ## 部署流程
 
-1. 初始配置
+### 1. 初始配置
 
 ```
 # 开启网卡混杂模式
@@ -252,10 +260,10 @@ shell> docker network create -d macvlan \
   --gateway=192.168.2.1 \
   --subnet=fc00::/64 \
   --gateway=fc00::1 \
-  --ipv6 -o parent=eth0 macvlan
+  --ipv6 -o parent=eth0 macvlan  # 此处指定eth0网卡，需按实际调整
 ```
 
-2. 开始部署
+### 2. 开始部署
 
 > 本项目基于Docker构建，在 [Docker Hub](https://hub.docker.com/repository/docker/dnomd343/xproxy) 或 [Github Package](https://github.com/dnomd343/XProxy/pkgs/container/xproxy) 可以查看已构建的各版本镜像。
 
@@ -318,7 +326,7 @@ shell> docker run --restart always \
 
 + 若启用RADVD功能，其日志将保存到 `radvd.log` 中；
 
-3. 调整配置文件
+### 3. 调整配置文件
 
 容器首次初始化时将生成默认配置文件 `xproxy.yml` ，其内容如下：
 
@@ -355,11 +363,16 @@ shell> docker restart xproxy
 shell> docker logs -f xproxy
 ```
 
-4. 宿主机访问虚拟网关
+### 4. 宿主机访问虚拟网关
 
-受限于macvlan机制，宿主机无法直接与macvlan容器通讯，需要配置网桥才能让宿主机访问虚拟网关。
+> 这一步旨在让宿主机能够使用虚拟网关，若无此需求可以跳过
+
+由于macvlan方式的限制，宿主机上开启macvlan的网卡无法直接与虚拟网关通讯，需要另外配置网桥才可连接，
+
+> 以下为配置基于Debian发行版，RH系或Arch系等的配置略有不同
 
 ```
+# 编辑网卡配置文件
 shell> vim /etc/network/interfaces
 ```
 
@@ -377,19 +390,18 @@ iface macvlan inet static
   gateway 192.168.2.2    # 虚拟网关IP地址
   dns-nameservers 192.168.2.3  # DNS主服务器
   dns-nameservers 192.168.2.1  # DNS备用服务器
-  pre-up ip link add macvlan link eth0 type macvlan mode bridge
-  post-down ip link del macvlan link eth0 type macvlan mode bridge
-  # 搭建网桥macvlan，用于与虚拟网关通讯
+  pre-up ip link add macvlan link eth0 type macvlan mode bridge  # 宿主机网卡上创建网桥
+  post-down ip link del macvlan link eth0 type macvlan mode bridge  # 退出时删除网桥
 ```
 
-重启宿主机网络生效（或直接重启宿主机）
+重启宿主机网络生效，或直接重启宿主机系统：
 
 ```
 shell> /etc/init.d/networking restart
 [ ok ] Restarting networking (via systemctl): networking.service.
 ```
 
-5. 局域网设备访问
+### 5. 局域网设备访问
 
 配置完成后，容器IP为虚拟旁路由网关地址，设备网关设置为该地址即可正常上网。
 
@@ -406,3 +418,13 @@ shell> /etc/init.d/networking restart
 + 在IPv6上，修改设备地址至容器指定子网内，网关地址配置为容器IPv6地址（非链路本地地址）
 
 综上，开启虚拟网关前需关闭路由器IPv6地址分配，而后连入设备将自动适配IPv4与IPv6网络（绝大多数设备均以DHCP与IPv6路由器发现机制联网），对于此前在内网固定IP地址的设备，手动为其配置网关地址即可。
+
+## 演示实例
+
+实例1. 利用校园网53端口漏洞，使用XProxy搭建免费网络
+
+实例2. 家庭网络IPv4与IPv6的透明代理
+
+## 开发相关
+
+## 许可证
