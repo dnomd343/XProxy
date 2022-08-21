@@ -144,8 +144,8 @@ update:
 
 ```yaml
 # 以下配置仅为示范
-# fc00::4 tcp&udp/53 <---> fc00::3 tcp&udp/5353
-# 192.168.2.4 tcp&udp/53 <---> 192.168.2.3 tcp&udp/5353
+# fc00::4 tcp/53 & udp/53 <---> fc00::3 tcp/5353 & udp/5353
+# 192.168.2.4 tcp/53 & udp/53 <---> 192.168.2.3 tcp/53 & udp/5353
 custom:
   - "iptables -t nat -A PREROUTING -d 192.168.2.4 -p udp --dport 53 -j DNAT --to-destination 192.168.2.3:5353"
   - "iptables -t nat -A POSTROUTING -d 192.168.2.3 -p udp --dport 5353 -j SNAT --to 192.168.2.4"
@@ -162,23 +162,25 @@ custom:
 ### IPv6路由广播
 
 ```yaml
+# 以下配置仅为示范
 radvd:
   log: 3
-  enable: false
+  enable: true
   option:
     AdvSendAdvert: on
     AdvManagedFlag: off
     AdvOtherConfigFlag: off
   client:
-    - fc00::5
+    - fe80::215:5dff:feb1:df9b
+    - fe80::21d:72ff:fe96:aaff
   prefix:
-    cidr: fc00::4/64
+    cidr: fc00::/64
     option:
       AdvOnLink: on
       AdvAutonomous: on
       AdvRouterAddr: off
-      AdvValidLifetime: 600
-      AdvPreferredLifetime: 100
+      AdvValidLifetime: 43200
+      AdvPreferredLifetime: 7200
   route:
     cidr: ""
     option: null
@@ -195,37 +197,39 @@ radvd:
 
 `radvd` 有大量配置选项，`XProxy` 均对其保持兼容，以下仅介绍部分常用选项，更多详细参数可参考[man文档](https://www.systutorials.com/docs/linux/man/5-radvd.conf/)；
 
-+ `log` ：RADVD日志级别，可选 `0-5`，数值越大越详细，默认为 `0` ；
++ `log` ：RADVD日志级别，可选 `0-5`，数值越大越详细，默认为 `0`
 
-+ `enable` ：是否启动RADVD，默认为 `false` ；
++ `enable` ：是否启动RADVD，默认为 `false`
 
-+ `option` ：RADVD主选项，即文档中 `INTERFACE SPECIFIC OPTIONS` 列出的配置：
++ `option` ：RADVD主选项，即文档中 `INTERFACE SPECIFIC OPTIONS` 章节列出的配置：
 
-  + `AdvSendAdvert` ：是否开启RA报文广播，启用IPv6时必须打开，默认为 `off` ；
+  + `AdvSendAdvert` ：是否开启RA报文广播，启用IPv6时必须打开，默认为 `off`
 
-  + `AdvManagedFlag` ：指示IPv6管理地址配置，即M位，默认为 `off` ；
+  + `AdvManagedFlag` ：指示IPv6管理地址配置，即M位，默认为 `off`
 
-  + `AdvOtherConfigFlag` ：指示IPv6其他有状态配置，即O位，默认为 `off` ；
+  + `AdvOtherConfigFlag` ：指示IPv6其他有状态配置，即O位，默认为 `off`
 
   + > M位与O位的详细定义在[RFC4862](https://www.rfc-editor.org/rfc/rfc4862)中给出：
 
-    + `M=off` 与 `O=off` ：启用 `Stateless` 模式，设备通过RA广播的前缀，配合 `EUI-64` 算法直接得到接口地址（即 `SLAAC` 方式）；
+    + `M=off` 与 `O=off` ：使用 `Stateless` 模式，设备通过RA广播的前缀，配合 `EUI-64` 算法直接得到接口地址（即 `SLAAC` 方式）
 
-    + `M=off` 与 `O=on` ：启用 `Stateless DHCPv6` 模式，设备通过RA广播前缀与 `EUI-64` 计算接口地址，同时从 `DHCPv6` 获取DNS等其他配置；
+    + `M=off` 与 `O=on` ：使用 `Stateless DHCPv6` 模式，设备通过RA广播前缀与 `EUI-64` 计算接口地址，同时从 `DHCPv6` 获取DNS等其他配置
 
-    + `M=on` 与 `O=on` ：启用 `Stateful DHCPv6` 模式，设备通过 `DHCPv6` 获取地址以及DNS等其他配置；
+    + `M=on` 与 `O=on` ：使用 `Stateful DHCPv6` 模式，设备通过 `DHCPv6` 获取地址以及DNS等其他配置
 
-    + `M=on` 与 `O=off` ：理论上不存在此配置；
+    + `M=on` 与 `O=off` ：理论上不存在此配置
 
-  + `client` ：
+  + `client` ：配置此项后，仅发送RA通告到指定IPv6单播地址而非组播地址，默认为空（组播发送）
 
-  + `prefix` ：
+  + `prefix` ：IPv6地址前缀配置，`cidr` 指定分配的前缀及掩码长度，`option` 指定前缀选项，即文档中 `PREFIX SPECIFIC OPTIONS` 章节列出的选项
 
-  + `route` ：
+  + `route` ：IPv6路由定义，`cidr` 指定通告的路由CIDR（注意客户端仅将RA报文来源链路地址设置为IPv6网关，此处设置并不能更改路由网关地址），`option` 指定路由选项，即文档中 `ROUTE SPECIFIC OPTIONS` 章节列出的选项
 
-  + `rdnss` ：
+  + `rdnss` ：递归DNS服务器地址，`ip` 指定IPv6下的DNS服务器列表，`option` 即 `RDNSS SPECIFIC OPTIONS` 章节列出的选项
 
-  + `dnssl` ：
+  + `dnssl` ：DNS搜寻域名，`suffix` 指定DNS解析的搜寻后缀列表，`option` 即 `DNSSL SPECIFIC OPTIONS` 章节列出的选项
+
+  + > `rdnss` 与 `dnssl` 在[RFC6106](https://www.rfc-editor.org/rfc/rfc6106)中定义，将DNS配置信息直接放置在RA报文中发送，使用 `SLAAC` 时无需 `DHCPv6` 即可获取DNS服务器，但是旧版本Windows与Android等不支持该功能。
 
 ## 部署流程
 
