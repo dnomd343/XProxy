@@ -45,7 +45,7 @@ COPY --from=xproxy /tmp/xproxy /asset/usr/bin/
 COPY --from=proxy /tmp/*ray /asset/usr/bin/
 
 FROM alpine:3.16
-RUN apk add --no-cache iptables ip6tables radvd
+RUN apk add --no-cache iptables ip6tables radvd && mkdir -p /run/radvd/
 COPY --from=asset /asset/ /
 WORKDIR /xproxy
 ENTRYPOINT ["xproxy"]

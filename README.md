@@ -18,7 +18,13 @@
 
 XProxy部署在内网Linux主机上，通过 `macvlan` 网络创建独立MAC地址的虚拟网关，捕获内网设备的网络流量，对其进行透明代理；宿主机一般以单臂旁路由的方式接入，虚拟网关运行时不会干扰宿主机网络，且宿主机系统的流量也可被网关代理。
 
+<details>
+
+<summary>Examples</summary>
+
 ![network](./docs/img/network-model.png)
+
+</details>
 
 XProxy运行以后，内网流量将被收集到代理内核上，目前内置了 `xray` ，`v2ray` ，`sagray` 三种内核，支持 `Shadowsocks` ，`ShadowsocksR` ，`VMess` ，`VLESS` ，`Trojan` ，`WireGuard` ，`SSH` ，`PingTunnel` 等多种代理协议，支持 `XTLS` ，`WebSocket` ，`QUIC` ，`gRPC` 等多种传输方式。同时，得益于V2ray的路由设计基础，代理的网络流量可被精确地分流，可以依据内网设备、目标地址、访问端口、连接域名、流量类型等多种方式进行路由。
 
@@ -237,7 +243,7 @@ radvd:
 
   + `dnssl` ：DNS搜寻域名，`suffix` 指定DNS解析的搜寻后缀列表，`option` 即 `DNSSL SPECIFIC OPTIONS` 章节列出的选项
 
-  + > `rdnss` 与 `dnssl` 在[RFC6106](https://www.rfc-editor.org/rfc/rfc6106)中定义，将DNS配置信息直接放置在RA报文中发送，使用 `SLAAC` 时无需 `DHCPv6` 即可获取DNS服务器，但是旧版本Windows与Android等不支持该功能。
+  + > `RDNSS` 与 `DNSSL` 在[RFC6106](https://www.rfc-editor.org/rfc/rfc6106)中定义，将DNS配置信息直接放置在RA报文中发送，使用 `SLAAC` 时无需 `DHCPv6` 即可获取DNS服务器，但是旧版本Windows与Android等不支持该功能。
 
 ## 部署流程
 
@@ -403,28 +409,32 @@ shell> /etc/init.d/networking restart
 
 ### 5. 局域网设备访问
 
-配置完成后，容器IP为虚拟旁路由网关地址，设备网关设置为该地址即可正常上网。
+> 对于手动配置了静态IP的设备，需要修改网关地址为容器IP
 
-对于非静态IP地址设备（常见情况）有以下情形：
+配置完成后，容器IP即为虚拟旁路由网关地址，内网其他设备的网关设置为该地址即可被透明代理，因此需要修改DHCP配置与RADVD路由广播，让内网设备自动接入虚拟网关。
 
-+ 在IPv4上，修改路由器DHCP设置，将网关指向容器IP即可全局生效
+> 您可以监视 `log/access.log` 文件，设备正常接入后会在此显示连接日志
 
-+ 在IPv6上，容器默认会启动IPv6路由组播机制，内网设备将会无状态配置子网地址，网关地址自动指向容器链路本地地址，该配置可全局生效（需关闭路由器IPv6分配，避免冲突）
++ IPv4下，修改内网DHCP服务器配置（一般位于路由器上），将网关改为容器IP地址，保存后重新接入设备即可生效。
 
-对于静态IP地址设备（非常见情况）有以下情形：
-
-+ 在IPv4上，修改设备网关为容器IPv4地址
-
-+ 在IPv6上，修改设备地址至容器指定子网内，网关地址配置为容器IPv6地址（非链路本地地址）
-
-综上，开启虚拟网关前需关闭路由器IPv6地址分配，而后连入设备将自动适配IPv4与IPv6网络（绝大多数设备均以DHCP与IPv6路由器发现机制联网），对于此前在内网固定IP地址的设备，手动为其配置网关地址即可。
++ IPv6下，你需要关闭路由或上级网络的RA广播功能，然后开启配置中的RADVD选项，如果需要使用DHCPv6，可调整配置中的M位与O位开启状态，保存后将设备重新接入网络即可。
 
 ## 演示实例
 
-实例1. 利用校园网53端口漏洞，使用XProxy搭建免费网络
+实例1. [使用XProxy绕过校园网认证登录](./docs/example_1.md)
 
-实例2. 家庭网络IPv4与IPv6的透明代理
+实例2. [家庭网络的IPv4与IPv6透明代理](./docs/example_2.md)
 
 ## 开发相关
 
++ v4/v6路由表号，TProxy默认端口号 ...
+
++ 修改默认暴露文件夹 ...
+
++ 修改默认配置文件，开启debug模式 ...
+
++ 容器自行编译
+
 ## 许可证
+
+MIT ©2022 [@dnomd343](https://github.com/dnomd343)

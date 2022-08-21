@@ -12,7 +12,7 @@ import (
 )
 
 var version = "0.9.3"
-var v4RouteTable = 100
+var v4RouteTable = 104
 var v6RouteTable = 106
 var v4TProxyPort = 7288
 var v6TProxyPort = 7289
