@@ -12,6 +12,7 @@ type Config struct {
     Address    string
     Gateway    string
     Bypass     []string
+    Exclude    []string
 }
 
 var run = common.RunCommand

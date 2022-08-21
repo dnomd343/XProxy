@@ -33,6 +33,7 @@ func Load(configFile string, config *Config) {
     rawConfig := configDecode(raw, path.Ext(configFile)) // decode configure content
     decodeDns(&rawConfig, config)
     decodeBypass(&rawConfig, config)
+    decodeExclude(&rawConfig, config)
     decodeIPv4(&rawConfig, config)
     decodeIPv6(&rawConfig, config)
     decodeProxy(&rawConfig, config)

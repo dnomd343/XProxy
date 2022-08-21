@@ -14,7 +14,6 @@ import (
     "path"
     "strconv"
     "syscall"
-    "time"
 )
 
 func runProcess(env []string, command ...string) {
@@ -79,7 +78,6 @@ func runRadvd(settings *config.Config) {
             radvdCmd = append(radvdCmd, "--logmethod", "logfile")
             radvdCmd = append(radvdCmd, "--logfile", path.Join(exposeDir, "log/radvd.log"))
             radvdCmd = append(radvdCmd, "--debug", strconv.Itoa(settings.Radvd.Log))
-            time.Sleep(time.Second) // radvd will crash on first boot without delay (enable debug), why???
         }
         runProcess(nil, radvdCmd...)
     }

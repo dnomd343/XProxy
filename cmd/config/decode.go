@@ -21,10 +21,11 @@ type RawConfig struct {
     Radvd   radvd.Config `yaml:"radvd" json:"radvd"`
     Proxy   proxy.Config `yaml:"proxy" json:"proxy"`
     Network struct {
-        DNS    []string  `yaml:"dns" json:"dns"`
-        ByPass []string  `yaml:"bypass" json:"bypass"`
-        IPv4   NetConfig `yaml:"ipv4" json:"ipv4"`
-        IPv6   NetConfig `yaml:"ipv6" json:"ipv6"`
+        DNS     []string  `yaml:"dns" json:"dns"`
+        ByPass  []string  `yaml:"bypass" json:"bypass"`
+        Exclude []string  `yaml:"exclude" json:"exclude"`
+        IPv4    NetConfig `yaml:"ipv4" json:"ipv4"`
+        IPv6    NetConfig `yaml:"ipv6" json:"ipv6"`
     } `yaml:"network" json:"network"`
 }
 
@@ -62,11 +63,25 @@ func decodeBypass(rawConfig *RawConfig, config *Config) {
         } else if common.IsIPv6(address, true) || common.IsIPv6(address, false) {
             config.IPv6.Bypass = append(config.IPv6.Bypass, address)
         } else {
-            log.Panicf("Invalid bypass CIDR -> %s", address)
+            log.Panicf("Invalid bypass IP or CIDR -> %s", address)
         }
     }
-    log.Debugf("IPv4 bypass CIDR -> %s", config.IPv4.Bypass)
-    log.Debugf("IPv6 bypass CIDR -> %s", config.IPv6.Bypass)
+    log.Debugf("IPv4 bypass -> %s", config.IPv4.Bypass)
+    log.Debugf("IPv6 bypass -> %s", config.IPv6.Bypass)
+}
+
+func decodeExclude(rawConfig *RawConfig, config *Config) {
+    for _, address := range rawConfig.Network.Exclude { // exclude options
+        if common.IsIPv4(address, true) || common.IsIPv4(address, false) {
+            config.IPv4.Exclude = append(config.IPv4.Exclude, address)
+        } else if common.IsIPv6(address, true) || common.IsIPv6(address, false) {
+            config.IPv6.Exclude = append(config.IPv6.Exclude, address)
+        } else {
+            log.Panicf("Invalid exclude IP or CIDR -> %s", address)
+        }
+    }
+    log.Debugf("IPv4 exclude -> %s", config.IPv4.Exclude)
+    log.Debugf("IPv6 exclude -> %s", config.IPv6.Exclude)
 }
 
 func decodeIPv4(rawConfig *RawConfig, config *Config) {

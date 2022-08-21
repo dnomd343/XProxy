@@ -16,6 +16,9 @@ func loadV4TProxy(v4 *Config, v4SysCidr []string) {
     for _, bypass := range v4Bypass {
         run("iptables", "-t", "mangle", "-A", "XPROXY", "-d", bypass, "-j", "RETURN")
     }
+    for _, exclude := range v4.Exclude {
+        run("iptables", "-t", "mangle", "-A", "XPROXY", "-s", exclude, "-j", "RETURN")
+    }
     run("iptables", "-t", "mangle", "-A", "XPROXY",
         "-p", "tcp", "-j", "TPROXY", "--on-port", strconv.Itoa(v4.TProxyPort), "--tproxy-mark", "1")
     run("iptables", "-t", "mangle", "-A", "XPROXY",
@@ -33,6 +36,9 @@ func loadV6TProxy(v6 *Config, v6SysCidr []string) {
     log.Infof("Setting up IPv6 bypass CIDR -> %v", v6Bypass)
     for _, bypass := range v6Bypass {
         run("ip6tables", "-t", "mangle", "-A", "XPROXY6", "-d", bypass, "-j", "RETURN")
+    }
+    for _, exclude := range v6.Exclude {
+        run("ip6tables", "-t", "mangle", "-A", "XPROXY6", "-s", exclude, "-j", "RETURN")
     }
     run("ip6tables", "-t", "mangle", "-A", "XPROXY6",
         "-p", "tcp", "-j", "TPROXY", "--on-port", strconv.Itoa(v6.TProxyPort), "--tproxy-mark", "1")
