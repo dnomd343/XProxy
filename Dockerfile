@@ -35,13 +35,6 @@ RUN env CGO_ENABLED=0 go build -v -o xproxy -trimpath \
 COPY --from=upx /upx/ /usr/
 RUN upx -9 /tmp/xproxy
 
-FROM alpine:3.16 AS radvd
-ENV RADVD_VERSION="2.19"
-RUN apk add build-base byacc flex-dev linux-headers
-RUN wget https://radvd.litech.org/dist/radvd-${RADVD_VERSION}.tar.xz && tar xf radvd-${RADVD_VERSION}.tar.xz
-WORKDIR ./radvd-${RADVD_VERSION}/
-RUN ./configure && make && mv ./radvd ./radvdump /tmp/ && strip /tmp/radvd*
-
 FROM alpine:3.16 AS asset
 WORKDIR /tmp/
 RUN apk add xz
@@ -49,11 +42,10 @@ RUN wget "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/downlo
 RUN wget "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
 RUN mkdir -p /asset/ && tar cJf /asset/assets.tar.xz ./*.dat
 COPY --from=xproxy /tmp/xproxy /asset/usr/bin/
-COPY --from=radvd /tmp/radvd* /asset/usr/sbin/
 COPY --from=proxy /tmp/*ray /asset/usr/bin/
 
 FROM alpine:3.16
-RUN apk add --no-cache iptables ip6tables
+RUN apk add --no-cache iptables ip6tables radvd
 COPY --from=asset /asset/ /
 WORKDIR /xproxy
 ENTRYPOINT ["xproxy"]
