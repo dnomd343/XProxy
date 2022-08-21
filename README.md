@@ -106,7 +106,7 @@ network:
 
 + `ipv4` 与 `ipv6` ：指定IPv4与IPv6的网络信息，其中 `gateway` 为上游网关地址，`address` 为虚拟网关地址（CIDR格式，包含子网长度）；
 
-+ `bypass` ：不进行代理的目标网段，建议绕过以下5个网段：
++ `bypass` ：不进行代理的目标网段或IP，建议绕过以下5个网段：
 
   + `169.254.0.0/16` ：IPv4链路本地地址
 
@@ -123,13 +123,13 @@ network:
 ```yaml
 # 以下配置仅为示范
 update:
-  cron: "0 0 4 * * *"
+  cron: "0 0 4 * * *"  # 每日凌晨4点更新
   url:
     geoip.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
     geosite.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
 ```
 
-+ `cron` ：触发更新的Cron表达式（此处表示每日凌晨4点更新）；
++ `cron` ：触发更新的Cron表达式；
 
 + `url` ：更新的文件名及下载地址；
 
@@ -137,6 +137,8 @@ update:
 
 ```yaml
 # 以下配置仅为示范
+# fc00::4 tcp&udp/53 <---> fc00::3 tcp&udp/5353
+# 192.168.2.4 tcp&udp/53 <---> 192.168.2.3 tcp&udp/5353
 custom:
   - "iptables -t nat -A PREROUTING -d 192.168.2.4 -p udp --dport 53 -j DNAT --to-destination 192.168.2.3:5353"
   - "iptables -t nat -A POSTROUTING -d 192.168.2.3 -p udp --dport 5353 -j SNAT --to 192.168.2.4"
@@ -160,9 +162,6 @@ radvd:
     AdvSendAdvert: on
     AdvManagedFlag: off
     AdvOtherConfigFlag: off
-    MinRtrAdvInterval: 10
-    MaxRtrAdvInterval: 30
-    MinDelayBetweenRAs: 3
   client:
     - fc00::5
   prefix:
@@ -187,9 +186,39 @@ radvd:
     option: null
 ```
 
-默认情况下为 `stateless` 无状态模式，自动根据容器IPv6地址发布RA报文。如果需要配置为 `stateful` 或无状态DHCPv6模式，修改 `AdvManagedFlag` 与 `AdvOtherConfigFlag` 的状态即可（两者分别对应RA报文的M字段与O字段），其他参数的解释可见[man手册](https://linux.die.net/man/5/radvd.conf)，需要注意的是，此处配置文件仅支持上述11个核心参数，其他选项将被忽略。
+`radvd` 有大量配置选项，`XProxy` 均对其保持兼容，以下仅介绍部分常用选项，更多详细参数可参考[man文档](https://www.systutorials.com/docs/linux/man/5-radvd.conf/)；
 
-待补充...
++ `log` ：RADVD日志级别，可选 `0-5`，数值越大越详细，默认为 `0` ；
+
++ `enable` ：是否启动RADVD，默认为 `false` ；
+
++ `option` ：RADVD主选项，即文档中 `INTERFACE SPECIFIC OPTIONS` 列出的配置：
+
+  + `AdvSendAdvert` ：是否开启RA报文广播，启用IPv6时必须打开，默认为 `off` ；
+
+  + `AdvManagedFlag` ：指示IPv6管理地址配置，即M位，默认为 `off` ；
+
+  + `AdvOtherConfigFlag` ：指示IPv6其他有状态配置，即O位，默认为 `off` ；
+
+  + > M位与O位的详细定义在[RFC4862](https://www.rfc-editor.org/rfc/rfc4862)中给出：
+
+    + `M=off` 与 `O=off` ：启用 `Stateless` 模式，设备通过RA广播的前缀，配合 `EUI-64` 算法直接得到接口地址（即 `SLAAC` 方式）；
+
+    + `M=off` 与 `O=on` ：启用 `Stateless DHCPv6` 模式，设备通过RA广播前缀与 `EUI-64` 计算接口地址，同时从 `DHCPv6` 获取DNS等其他配置；
+
+    + `M=on` 与 `O=on` ：启用 `Stateful DHCPv6` 模式，设备通过 `DHCPv6` 获取地址以及DNS等其他配置；
+
+    + `M=on` 与 `O=off` ：理论上不存在此配置；
+
+  + `client` ：
+
+  + `prefix` ：
+
+  + `route` ：
+
+  + `rdnss` ：
+
+  + `dnssl` ：
 
 ## 部署流程
 
@@ -229,19 +258,17 @@ shell> docker network create -d macvlan \
 
 > 下述命令中，容器路径可替换为上述其他源
 
-使用以下命令启动虚拟网关
+使用以下命令启动虚拟网关，配置文件将存储在本机 `/etc/scutweb/` 目录下：
 
 ```
 shell> docker run --restart always \
   --privileged --network macvlan -dt \
-  --name scutweb --hostname scutweb \
+  --name scutweb --hostname scutweb \  # 可选，指定容器名称与主机名
   --volume /etc/scutweb/:/xproxy/ \
-  --volume /etc/timezone:/etc/timezone:ro \ # 以下两句可选，用于映射宿主机时区信息
+  --volume /etc/timezone:/etc/timezone:ro \  # 以下两句可选，用于映射宿主机时区信息（容器内默认为UTC0时区）
   --volume /etc/localtime:/etc/localtime:ro \
   dnomd343/xproxy:latest
 ```
-
-其中 `--privileged` 启动特权模式，否则容器内部无法配置网络信息；配置文件将存储在本机 `/etc/scutweb/` 目录下；容器内部默认为 UTC0 时区，映射宿主机时间配置文件用于两者同步。
 
 成功运行以后，存储目录将生成以下文件夹
 
@@ -257,9 +284,9 @@ shell> docker run --restart always \
 
 **代理配置文件夹**
 
-`config` 目录存储代理配置文件，所有 `.json` 后缀文件均会被载入，容器初始化时会使用以下默认配置：
+`config` 目录存储代理配置文件，所有 `.json` 后缀文件均会被载入，用户可配置除 `inbounds` 以外的所有代理选项，多配置文件需要注意[合并规则](https://xtls.github.io/config/features/multiple.html#%E8%A7%84%E5%88%99%E8%AF%B4%E6%98%8E)，容器初始化时会使用以下默认配置：
 
-`dns.json` 指定路由匹配时的DNS服务器，默认使用主机DNS，具体原理见[Xray文档](https://xtls.github.io/config/dns.html)
+`dns.json` 指定路由匹配时的DNS服务器，默认使用主机DNS，具体原理见[内核文档](https://xtls.github.io/config/dns.html)
 
 ```
 {
@@ -271,7 +298,7 @@ shell> docker run --restart always \
 }
 ```
 
-`outbounds.json` 默认配置流量转发给上游网关，需要用户手动配置为上游接口，具体语法见[Xray文档](https://xtls.github.io/config/outbound.html)
+`outbounds.json` 默认配置流量转发给上游网关，需要用户手动配置为上游接口，具体语法见[内核文档](https://xtls.github.io/config/outbound.html)
 
 ```
 {
@@ -285,7 +312,7 @@ shell> docker run --restart always \
 }
 ```
 
-`routing.json` 默认配置将全部流量交由 `node` 接口，即 `outbounds.json` 中的 `freedom` 出口，具体语法见[Xray文档](https://xtls.github.io/config/routing.html)
+`routing.json` 默认配置将全部流量交由 `node` 接口，即 `outbounds.json` 中的 `freedom` 出口，具体语法见[内核文档](https://xtls.github.io/config/routing.html)
 
 ```
 {
@@ -302,18 +329,25 @@ shell> docker run --restart always \
 }
 ```
 
-此外，本目录下所有后缀为 `.json` 的文件将被加载到Xray中，使用[多文件配置](https://xtls.github.io/config/features/multiple.html)方式执行，容器内已预置 `log.json` 与 `inbounds.json` 两个文件，分别控制日志模块与入站流量，在 `config` 目录下创建同名文件可实现覆盖效果，不过若配置有误将导致代理失效，正常情况下不建议修改这两个文件。
-
 **日志文件夹**
 
-`log` 目录用于放置日志文件，代理数据将记录到 `access.log` 和 `error.log` 中。
+`log` 目录用于放置日志文件
 
++ 代理流量将记录到 `access.log` 和 `error.log` 中，前者存储访问日志，后者存储错误日志；
+
++ 若启用RADVD功能，其日志将保存到 `radvd.log` 中；
+
+3. 调整配置文件
+
+`xproxy.yml`
 
 在更改完以上参数后，重启容器即可生效
 
 ```
 shell> docker restart -t=0 scutweb
 ```
+
+4. 宿主机访问虚拟网关
 
 受限于macvlan机制，宿主机无法直接与macvlan容器通讯，需要配置网桥才能让宿主机访问虚拟网关。
 
@@ -346,6 +380,8 @@ iface macvlan inet static
 shell> /etc/init.d/networking restart
 [ ok ] Restarting networking (via systemctl): networking.service.
 ```
+
+5. 局域网设备访问
 
 配置完成后，容器IP为虚拟旁路由网关地址，设备网关设置为该地址即可正常上网。
 
