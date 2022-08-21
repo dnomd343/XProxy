@@ -6,31 +6,9 @@ import (
     "path"
 )
 
-var dnsConfig = `{
-  "dns": {
-    "servers": [
-      "localhost"
-    ]
-  }
-}`
-
-var routeConfig = `{
-  "routing": {
-    "domainStrategy": "AsIs",
-    "rules": [
-      {
-        "type": "field",
-        "network": "tcp,udp",
-        "outboundTag": "node"
-      }
-    ]
-  }
-}`
-
 var outboundsConfig = `{
   "outbounds": [
     {
-      "tag": "node",
       "protocol": "freedom",
       "settings": {}
     }

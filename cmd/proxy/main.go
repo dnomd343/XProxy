@@ -2,6 +2,7 @@ package proxy
 
 import (
     "XProxy/cmd/common"
+    log "github.com/sirupsen/logrus"
     "path"
 )
 
@@ -56,12 +57,13 @@ func Load(configDir string, exposeDir string, config *Config) {
     common.CreateFolder(path.Join(exposeDir, "log"))
     common.CreateFolder(path.Join(exposeDir, "config"))
     common.CreateFolder(configDir)
-    saveConfig(path.Join(exposeDir, "config"), "dns", dnsConfig, false)
-    saveConfig(path.Join(exposeDir, "config"), "routing", routeConfig, false)
     saveConfig(path.Join(exposeDir, "config"), "outbounds", outboundsConfig, false)
     saveConfig(configDir, "inbounds", loadInbounds(config), true)
     saveConfig(configDir, "log", loadLogConfig(config.Log, path.Join(exposeDir, "log")), true)
     for _, configFile := range common.ListFiles(path.Join(exposeDir, "config"), ".json") {
+        if configFile == "log.json" || configFile == "inbounds" {
+            log.Warningf("Config file %s will be override", configFile)
+        }
         common.CopyFile(path.Join(exposeDir, "config", configFile), path.Join(configDir, configFile))
     }
 }
