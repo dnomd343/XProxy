@@ -57,9 +57,9 @@ func decodeDns(rawConfig *RawConfig, config *Config) {
 
 func decodeBypass(rawConfig *RawConfig, config *Config) {
     for _, address := range rawConfig.Network.ByPass { // bypass options
-        if common.IsIPv4(address, true) {
+        if common.IsIPv4(address, true) || common.IsIPv4(address, false) {
             config.IPv4.Bypass = append(config.IPv4.Bypass, address)
-        } else if common.IsIPv6(address, true) {
+        } else if common.IsIPv6(address, true) || common.IsIPv6(address, false) {
             config.IPv6.Bypass = append(config.IPv6.Bypass, address)
         } else {
             log.Panicf("Invalid bypass CIDR -> %s", address)
