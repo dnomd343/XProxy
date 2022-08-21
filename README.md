@@ -265,13 +265,13 @@ shell> docker network create -d macvlan \
 
 > 下述命令中，容器路径可替换为上述其他源
 
-使用以下命令启动虚拟网关，配置文件将存储在本机 `/etc/scutweb/` 目录下：
+使用以下命令启动虚拟网关，配置文件将存储在本机 `/etc/xproxy/` 目录下：
 
 ```
 shell> docker run --restart always \
   --privileged --network macvlan -dt \
-  --name scutweb --hostname scutweb \  # 可选，指定容器名称与主机名
-  --volume /etc/scutweb/:/xproxy/ \
+  --name xproxy --hostname xproxy \  # 可选，指定容器名称与主机名
+  --volume /etc/xproxy/:/xproxy/ \
   --volume /etc/timezone:/etc/timezone:ro \  # 以下两句可选，用于映射宿主机时区信息（容器内默认为UTC0时区）
   --volume /etc/localtime:/etc/localtime:ro \
   dnomd343/xproxy:latest
@@ -291,48 +291,18 @@ shell> docker run --restart always \
 
 **代理配置文件夹**
 
-`config` 目录存储代理配置文件，所有 `.json` 后缀文件均会被载入，用户可配置除 `inbounds` 以外的所有代理选项，多配置文件需要注意[合并规则](https://xtls.github.io/config/features/multiple.html#%E8%A7%84%E5%88%99%E8%AF%B4%E6%98%8E)，容器初始化时会使用以下默认配置：
+`config` 目录存储代理配置文件，所有 `.json` 后缀文件均会被载入，用户可配置除 `inbounds` 与 `log` 以外的所有代理选项，多配置文件需要注意[合并规则](https://xtls.github.io/config/features/multiple.html#%E8%A7%84%E5%88%99%E8%AF%B4%E6%98%8E)；
 
-`dns.json` 指定路由匹配时的DNS服务器，默认使用主机DNS，具体原理见[内核文档](https://xtls.github.io/config/dns.html)
-
-```
-{
-  "dns": {
-    "servers": [
-      "localhost"
-    ]
-  }
-}
-```
-
-`outbounds.json` 默认配置流量转发给上游网关，需要用户手动配置为上游接口，具体语法见[内核文档](https://xtls.github.io/config/outbound.html)
+为了正常工作，容器初始化时会载入以下 `outbounds.json` 的默认出站配置，其指定所有流量为直连：
 
 ```
 {
   "outbounds": [
     {
-      "tag": "node",
       "protocol": "freedom",
       "settings": {}
     }
   ]
-}
-```
-
-`routing.json` 默认配置将全部流量交由 `node` 接口，即 `outbounds.json` 中的 `freedom` 出口，具体语法见[内核文档](https://xtls.github.io/config/routing.html)
-
-```
-{
-  "routing": {
-    "domainStrategy": "AsIs",
-    "rules": [
-      {
-        "type": "field",
-        "network": "tcp,udp",
-        "outboundTag": "node"
-      }
-    ]
-  }
 }
 ```
 
@@ -346,12 +316,39 @@ shell> docker run --restart always \
 
 3. 调整配置文件
 
-`xproxy.yml`
+容器首次初始化时将生成默认配置文件 `xproxy.yml` ，其内容如下：
 
-在更改完以上参数后，重启容器即可生效
+```yaml
+# default configure file for xproxy
+proxy:
+  core: xray
+  log: warning
+
+network:
+  bypass:
+    - 169.254.0.0/16
+    - 224.0.0.0/3
+    - fc00::/7
+    - fe80::/10
+    - ff00::/8
+
+update:
+  cron: "0 0 4 * * *"
+  url:
+    geoip.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
+    geosite.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
+```
+
+用户需要根据实际需求更改配置文件，保存以后重启容器即可生效：
 
 ```
-shell> docker restart -t=0 scutweb
+shell> docker restart xproxy
+```
+
+如果配置文件出错，`XProxy` 将无法正常工作，您可以使用以下命令查看工作日志：
+
+```
+shell> docker logs -f xproxy
 ```
 
 4. 宿主机访问虚拟网关
