@@ -16,7 +16,7 @@
 
 ## 拓扑模型
 
-XProxy部署在内网Linux主机上，通过 `macvlan` 网络创建独立MAC地址的虚拟网关，劫持内网设备的网络流量并进行透明代理；宿主机一般以单臂旁路由的方式接入，虚拟网关运行时不会干扰宿主机网络，且宿主机系统的流量也可被网关代理。
+XProxy 部署在内网 Linux 主机上，通过 `macvlan` 网络创建独立 MAC 地址的虚拟网关，劫持内网设备的网络流量进行透明代理；宿主机一般以单臂旁路由的方式接入，虚拟网关运行时不会干扰宿主机网络，同时宿主机系统的流量也可被网关代理。
 
 <details>
 
@@ -26,15 +26,15 @@ XProxy部署在内网Linux主机上，通过 `macvlan` 网络创建独立MAC地�
 
 </details>
 
-XProxy运行以后，内网流量将被收集到代理内核上，目前内置了 `xray` ，`v2ray` ，`sagray` 三种内核，支持 `Shadowsocks` ，`ShadowsocksR` ，`VMess` ，`VLESS` ，`Trojan` ，`WireGuard` ，`SSH` ，`PingTunnel` 等多种代理协议，支持 `XTLS` ，`WebSocket` ，`QUIC` ，`gRPC` 等多种传输方式。同时，得益于V2ray的路由设计，代理的网络流量可被精确地分流，可以依据内网设备、目标地址、访问端口、连接域名、流量类型等多种方式进行路由。
+XProxy 运行以后，内网流量将被收集到代理内核上，目前内置了 `xray` ，`v2ray` ，`sagray` 三种内核，支持 `Shadowsocks` ，`ShadowsocksR` ，`VMess` ，`VLESS` ，`Trojan` ，`WireGuard` ，`SSH` ，`PingTunnel` 等多种代理协议，支持 `XTLS` ，`WebSocket` ，`QUIC` ，`gRPC` 等多种传输方式。同时，得益于V2ray的路由设计，代理的网络流量可被精确地分流，可以依据内网设备、目标地址、访问端口、连接域名、流量类型等多种方式进行路由。
 
-由于 XProxy 与宿主机网络完全解耦，一台主机上可运行多个虚拟网关，它们拥有不同的MAC地址，在网络模型上是多台独立的主机；因此各个虚拟网关能负责不同的功能，甚至它们之间还能互为上下级路由的关系，灵活实现多种网络功能。
+由于 XProxy 与宿主机网络完全解耦，一台主机上可运行多个虚拟网关，它们拥有不同的 MAC 地址，在网络模型上是多台独立的主机；因此各个虚拟网关能负责不同的功能，甚至它们之间还能互为上下级路由的关系，灵活实现多种网络功能。
 
 ## 配置格式
 
-> 所有 `.json` 后缀的文件将视为JSON格式文件，其余将以YAML格式进行解析
+> 所有 `.json` 后缀的文件将视为 JSON 格式文件，其余将以 YAML 格式进行解析
 
-XProxy使用YAML或JSON格式的配置文件，包含以下部分：
+XProxy 使用 YAML 或 JSON 格式的配置文件，包含以下部分：
 
 ```yaml
 proxy:
@@ -89,9 +89,9 @@ proxy:
 
 + `core` ：代理内核类型，可选 `xray` 、`v2ray` 、`sagray`，默认为 `xray`
 
-+ `http` 与 `socks` ：配置 http 与 socks5 入站代理，使用 `key: value` 格式，前者指定入站标志（路由配置中的inboundTag），后者指定监听端口，默认为空
++ `http` 与 `socks` ：配置 http 与 socks5 入站代理，使用 `key: value` 格式，前者指定入站标志（路由配置中的 inboundTag），后者指定监听端口，默认为空
 
-+ `addon` ：自定义入站配置，每一项为单个内核inbound接口，具体格式可见[内核文档](https://xtls.github.io/config/inbound.html#inboundobject)，默认为空
++ `addon` ：自定义入站配置，每一项为单个内核 inbound 接口，具体格式可见[内核文档](https://xtls.github.io/config/inbound.html#inboundobject)，默认为空
 
 + `sniff` ：嗅探选项，用于获取透明代理中的连接域名：
 
@@ -130,21 +130,21 @@ network:
 
 + `ipv4` 与 `ipv6` ：指定 IPv4 与 IPv6 的网络信息，其中 `gateway` 为上游网关地址，`address` 为虚拟网关地址（CIDR格式，包含子网长度），不填写时保持不变，默认为空
 
-+ `bypass` ：绕过代理的目标网段或IP，默认为空，建议绕过以下5个网段：
++ `bypass` ：绕过代理的目标网段或 IP，默认为空，建议绕过以下5个网段：
 
-  + `169.254.0.0/16` ：IPv4链路本地地址
+  + `169.254.0.0/16` ：IPv4 链路本地地址
 
   + `224.0.0.0/3` ：D类多点播送地址，E类保留地址
 
-  + `fc00::/7` ：IPv6唯一本地地址
+  + `fc00::/7` ：IPv6 唯一本地地址
 
-  + `fe80::/10` ：IPv6链路本地地址
+  + `fe80::/10` ：IPv6 链路本地地址
 
-  + `ff00::/8` ：IPv6组播地址
+  + `ff00::/8` ：IPv6 组播地址
 
-+ `exclude` ：不代理的来源网段或IP；
++ `exclude` ：不代理的来源网段或 IP
 
-> `bypass` 与 `exclude` 中指定的IP或CIDR，在运行时将不会被TProxy捕获，即不进入用户态的代理路由，相当于无损耗的直连
+> `bypass` 与 `exclude` 中指定的 IP 或 CIDR，在运行时将不会被 TProxy 捕获，即不进入用户态的代理路由，相当于无损耗的直连
 
 ### 路由资源
 
@@ -178,7 +178,7 @@ custom:
   - "ip6tables -t nat -A POSTROUTING -d fc00::3 -p tcp --dport 5353 -j SNAT --to fc00::4"
 ```
 
-自定义脚本命令，在启动代理前将依次执行，用于注入一些其他功能，默认为空
+自定义脚本命令，在启动代理前将依次执行，用于注入额外功能，默认为空
 
 ### IPv6路由广播
 
@@ -226,17 +226,17 @@ radvd:
 
   + `AdvSendAdvert` ：是否开启 RA 报文广播，启用 IPv6 时必须打开，默认为 `off`
 
-  + `AdvManagedFlag` ：指示 IPv6 管理地址配置，即M位，默认为 `off`
+  + `AdvManagedFlag` ：指示 IPv6 管理地址配置，即 M 位，默认为 `off`
 
-  + `AdvOtherConfigFlag` ：指示 IPv6 其他有状态配置，即O位，默认为 `off`
+  + `AdvOtherConfigFlag` ：指示 IPv6 其他有状态配置，即 O 位，默认为 `off`
 
-  + > M位与O位的详细定义在 [RFC4862](https://www.rfc-editor.org/rfc/rfc4862) 中给出：
+  + > M 位与 O 位的详细定义在 [RFC4862](https://www.rfc-editor.org/rfc/rfc4862) 中给出：
 
-    + `M=off` 且 `O=off` ：使用 `Stateless` 模式，设备通过RA广播的前缀，配合 `EUI-64` 算法直接得到接口地址，即 `SLAAC` 方式
+    + `M=off` 且 `O=off` ：使用 `Stateless` 模式，设备通过 RA 广播的前缀，配合 `EUI-64` 算法直接得到接口地址，即 `SLAAC` 方式
 
-    + `M=off` 且 `O=on` ：使用 `Stateless DHCPv6` 模式，设备通过RA广播前缀与 `EUI-64` 计算接口地址，同时从 `DHCPv6` 获取DNS等其他配置
+    + `M=off` 且 `O=on` ：使用 `Stateless DHCPv6` 模式，设备通过 RA 广播前缀与 `EUI-64` 计算接口地址，同时从 `DHCPv6` 获取 DNS 等其他配置
 
-    + `M=on` 且 `O=on` ：使用 `Stateful DHCPv6` 模式，设备通过 `DHCPv6` 获取地址以及DNS等其他配置
+    + `M=on` 且 `O=on` ：使用 `Stateful DHCPv6` 模式，设备通过 `DHCPv6` 获取地址以及 DNS 等其他配置
 
     + `M=on` 且 `O=off` ：理论上不存在此配置
 
@@ -244,13 +244,13 @@ radvd:
 
   + `prefix` ：IPv6 地址前缀配置，`cidr` 指定分配的前缀及掩码长度，`option` 指定[前缀选项](https://code.tools/man/5/radvd.conf/#lbAE)
 
-  + `route` ：IPv6 路由定义，`cidr` 指定通告的路由 CIDR（注意客户端仅将RA报文来源链路地址设置为IPv6网关，此处设置并不能更改路由网关地址），`option` 指定[路由选项](https://code.tools/man/5/radvd.conf/#lbAF)
+  + `route` ：指定 IPv6 路由，`cidr` 为通告的路由 CIDR（注意客户端仅将 RA 报文来源链路地址设置为 IPv6 网关，此处设置并不能更改路由网关地址），`option` 指定[路由选项](https://code.tools/man/5/radvd.conf/#lbAF)
 
-  + `rdnss` ：递归 DNS 服务器地址，`ip` 指定 IPv6 下的 DNS 服务器列表，`option` 指定 [RDNSS 选项](https://code.tools/man/5/radvd.conf/#lbAG)
+  + `rdnss` ：递归 DNS 服务器地址，`ip` 指定 IPv6 下的 DNS 服务器列表，`option` 指定[RDNSS选项](https://code.tools/man/5/radvd.conf/#lbAG)
 
-  + `dnssl` ：DNS 搜寻域名，`suffix` 指定DNS解析的搜寻后缀列表，`option` 指定 [DNSSL 选项](https://code.tools/man/5/radvd.conf/#lbAH)
+  + `dnssl` ：DNS 搜寻域名，`suffix` 指定 DNS 解析的搜寻后缀列表，`option` 指定[DNSSL选项](https://code.tools/man/5/radvd.conf/#lbAH)
 
-> `RDNSS` 与 `DNSSL` 在 [RFC6106](https://www.rfc-editor.org/rfc/rfc6106) 中定义，将 DNS 配置信息直接放置在 RA 报文中发送，使用 `SLAAC` 时无需 `DHCPv6` 即可获取 DNS 服务器，但是旧版本 Windows 与 Android 等系统不支持该功能。
+> `RDNSS` 与 `DNSSL` 在 [RFC6106](https://www.rfc-editor.org/rfc/rfc6106) 中定义，将 DNS 配置信息直接放置在 RA 报文中发送，使用 `SLAAC` 时无需 `DHCPv6` 即可获取 DNS 服务器，但旧版本 Windows 与 Android 等系统不支持该功能。
 
 ### DHCP服务选项
 
@@ -260,8 +260,10 @@ WIP...
 
 ### 1. 初始配置
 
+> XProxy 基于 macvlan 网络，开启混杂模式可以捕获非本机物理网卡的数据包，以此模拟出不同 MAC 地址的网卡
+
 ```
-# 开启网卡混杂模式
+# 开启混杂模式，网卡按实际情况指定
 shell> ip link set eth0 promisc on
 
 # 启用IPv6内核模块
@@ -273,10 +275,8 @@ shell> modprobe ip6table_filter
 ```
 # 网络配置按实际情况指定
 shell> docker network create -d macvlan \
-  --subnet=192.168.2.0/24 \
-  --gateway=192.168.2.1 \
-  --subnet=fc00::/64 \
-  --gateway=fc00::1 \
+  --subnet={IPv4网段} --gateway={IPv4网关} \
+  --subnet={IPv6网段} --gateway={IPv6网关} \
   --ipv6 -o parent=eth0 macvlan  # 此处指定eth0网卡，需按实际调整
 ```
 
@@ -386,12 +386,13 @@ shell> docker logs -f xproxy
 
 > 这一步旨在让宿主机能够使用虚拟网关，若无此需求可以跳过
 
-由于macvlan方式的限制，宿主机上开启macvlan的网卡无法直接与虚拟网关通讯，需要另外配置网桥才可连接
+由于 macvlan 限制，宿主机网卡无法直接与虚拟网关通讯，需要另外配置网桥才可连接
 
 > 以下为配置基于 Debian，基于 RH、Arch 等的发行版配置略有不同
 
+编辑网卡配置文件
+
 ```
-# 编辑网卡配置文件
 shell> vim /etc/network/interfaces
 ```
 
@@ -433,11 +434,17 @@ shell> /etc/init.d/networking restart
 
 ## 演示实例
 
-实例1. [使用XProxy绕过校园网认证登录](./docs/example_1.md)
+> 由于 XProxy 涉及较为复杂的网络配置，这里准备了两个详细的实例供您理解
 
-实例2. [家庭网络的IPv4与IPv6透明代理](./docs/example_2.md)
++ 实例1. [使用XProxy绕过校园网认证登录](./docs/example_1.md)
+
++ 实例2. [家庭网络的IPv4与IPv6透明代理](./docs/example_2.md)
 
 ## 开发相关
+
+### 运行参数
+
+XProxy 默认使用 `/xproxy` 作为存储文件夹，该文件夹映射到外部主机作为持久存储，您可以使用 `EXPOSE_DIR` 环境变量修改该文件夹路径；同时，XProxy将默认读取该文件夹下的 `xproxy.yml` 作为配置文件，在运行时添加 `--config ...` 参数将读取指定配置文件；启动 XProxy 时若添加 `--debug` 参数，将进入调试模式，输出日志切换到 DEBUG 级别。
 
 ### TProxy配置
 
@@ -451,13 +458,9 @@ XProxy 默认使用以下配置：
 
 + IPv6 透明代理端口：`7289`，使用 `IPV6_TPROXY` 环境变量修改
 
-### 运行参数
-
-XProxy 默认使用 `/xproxy` 作为存储文件夹，该文件夹映射到外部主机作为持久存储，您可以使用 `EXPOSE_DIR` 环境变量修改该文件夹路径；同时，XProxy将默认读取该文件夹下的 `xproxy.yml` 作为配置文件，在运行时添加 `--config custom.yml` 参数将读取指定配置文件；启动 XProxy 时若添加 `--debug` 参数，将进入调试模式，输出日志切换到 `DEBUG` 级别。
-
 ### 容器构建
 
-> XProxy 针对 buildkit 进行优化，使用 buildx 命令将会加快构建速度
+> XProxy 针对 buildkit 进行优化，使用 buildx 命令可加快构建速度
 
 **本地构建**
 
