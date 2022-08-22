@@ -2,35 +2,39 @@
 
 > 虚拟代理网关，对局域网设备进行透明代理
 
-+ 基于容器运行，无需修改主机路由配置，开箱即用
++ ✅ 基于容器运行，无需修改主机路由配置，开箱即用
 
-+ 独立的MAC地址，与宿主机网络栈无耦合，随开随关
++ ✅ 独立的MAC地址，与宿主机网络栈无耦合，随开随关
 
-+ 允许自定义DNS、上游网关、IP地址等网络选项
++ ✅ 允许自定义DNS、上游网关、IP地址等网络选项
 
-+ 支持TCP、UDP流量代理，完整的Fullcone NAT支持
++ ✅ 支持TCP、UDP流量代理，完整的Fullcone NAT支持
 
-+ 完全兼容IPv6，支持SLAAC地址分配，RDNSS与DNSSL配置
++ ✅ 完全兼容IPv6，支持SLAAC地址分配，RDNSS与DNSSL配置
 
-+ （待支持）DHCP与DHCPv6地址自动分配
++ ⏳ 内置DHCP与DHCPv6服务器，支持IP地址自动分配
 
 ## 拓扑模型
 
-XProxy部署在内网Linux主机上，通过 `macvlan` 网络创建独立MAC地址的虚拟网关，捕获内网设备的网络流量，对其进行透明代理；宿主机一般以单臂旁路由的方式接入，虚拟网关运行时不会干扰宿主机网络，且宿主机系统的流量也可被网关代理。
+XProxy部署在内网Linux主机上，通过 `macvlan` 网络创建独立MAC地址的虚拟网关，劫持内网设备的网络流量并进行透明代理；宿主机一般以单臂旁路由的方式接入，虚拟网关运行时不会干扰宿主机网络，且宿主机系统的流量也可被网关代理。
 
 <details>
 
-<summary>Examples</summary>
+<summary>网络拓扑模型</summary>
 
 ![network](./docs/img/network-model.png)
 
 </details>
 
-XProxy运行以后，内网流量将被收集到代理内核上，目前内置了 `xray` ，`v2ray` ，`sagray` 三种内核，支持 `Shadowsocks` ，`ShadowsocksR` ，`VMess` ，`VLESS` ，`Trojan` ，`WireGuard` ，`SSH` ，`PingTunnel` 等多种代理协议，支持 `XTLS` ，`WebSocket` ，`QUIC` ，`gRPC` 等多种传输方式。同时，得益于V2ray的路由设计基础，代理的网络流量可被精确地分流，可以依据内网设备、目标地址、访问端口、连接域名、流量类型等多种方式进行路由。
+XProxy运行以后，内网流量将被收集到代理内核上，目前内置了 `xray` ，`v2ray` ，`sagray` 三种内核，支持 `Shadowsocks` ，`ShadowsocksR` ，`VMess` ，`VLESS` ，`Trojan` ，`WireGuard` ，`SSH` ，`PingTunnel` 等多种代理协议，支持 `XTLS` ，`WebSocket` ，`QUIC` ，`gRPC` 等多种传输方式。同时，得益于V2ray的路由设计，代理的网络流量可被精确地分流，可以依据内网设备、目标地址、访问端口、连接域名、流量类型等多种方式进行路由。
+
+由于 XProxy 与宿主机网络完全解耦，一台主机上可运行多个虚拟网关，它们拥有不同的MAC地址，在网络模型上是多台独立的主机；因此各个虚拟网关能负责不同的功能，甚至它们之间还能互为上下级路由的关系，灵活实现多种网络功能。
 
 ## 配置格式
 
-XProxy支持YAML与JSON格式的配置文件，包含以下部分：
+> 所有 `.json` 后缀的文件将视为JSON格式文件，其余将以YAML格式进行解析
+
+XProxy使用YAML或JSON格式的配置文件，包含以下部分：
 
 ```yaml
 proxy:
@@ -47,6 +51,9 @@ custom:
 
 radvd:
   ··· IPv6路由广播 ···
+
+dhcp:
+  ··· DHCP服务选项 ···
 
 ```
 
@@ -78,21 +85,21 @@ proxy:
       - courier.push.apple.com
 ```
 
-+ `log` ：代理日志级别，可选 `debug` 、`info` 、`warning` 、`error` 、`none` ，默认为 `warning` ；
++ `log` ：代理日志级别，可选 `debug` 、`info` 、`warning` 、`error` 、`none` ，默认为 `warning`
 
-+ `core` ：代理内核类型，可选 `xray` 、`v2ray` 、`sagray`，默认为 `xray` ；
++ `core` ：代理内核类型，可选 `xray` 、`v2ray` 、`sagray`，默认为 `xray`
 
-+ `http` 与 `socks` ：配置 http 与 socks5 入站代理，使用 `key: value` 格式，前者指定入站标志（路由配置中的inboundTag），后者指定监听端口；
++ `http` 与 `socks` ：配置 http 与 socks5 入站代理，使用 `key: value` 格式，前者指定入站标志（路由配置中的inboundTag），后者指定监听端口，默认为空
 
-+ `addon` ：自定义入站选项，具体格式可见[内核文档](https://xtls.github.io/config/inbound.html#inboundobject)；
++ `addon` ：自定义入站配置，每一项为单个内核inbound接口，具体格式可见[内核文档](https://xtls.github.io/config/inbound.html#inboundobject)，默认为空
 
-+ `sniff` ：嗅探选项，用于获取透明代理中的连接域名
++ `sniff` ：嗅探选项，用于获取透明代理中的连接域名：
 
-    + `enable` ：是否启用嗅探功能，默认为 `false` ；
+    + `enable` ：是否启用嗅探功能，默认为 `false`
 
-    + `redirect` ：是否使用嗅探结果覆盖目标地址，默认为 `false`（v2ray内核不支持）；
+    + `redirect` ：是否使用嗅探结果覆盖目标地址，默认为 `false`（v2ray 内核不支持）
 
-    + `exclude` ：不进行覆盖的域名列表（仅xray内核支持）；
+    + `exclude` ：不进行覆盖的域名列表，默认为空（仅 xray 内核支持）
 
 ### 网络选项
 
@@ -119,11 +126,11 @@ network:
     - 192.168.2.240/28
 ```
 
-+ `dns` ：指定系统DNS服务器
++ `dns` ：指定系统默认 DNS 服务器，留空时保持原配置不变，默认为空
 
-+ `ipv4` 与 `ipv6` ：指定IPv4与IPv6的网络信息，其中 `gateway` 为上游网关地址，`address` 为虚拟网关地址（CIDR格式，包含子网长度）；
++ `ipv4` 与 `ipv6` ：指定 IPv4 与 IPv6 的网络信息，其中 `gateway` 为上游网关地址，`address` 为虚拟网关地址（CIDR格式，包含子网长度），不填写时保持不变，默认为空
 
-+ `bypass` ：绕过代理的目标网段或IP，建议绕过以下5个网段：
++ `bypass` ：绕过代理的目标网段或IP，默认为空，建议绕过以下5个网段：
 
   + `169.254.0.0/16` ：IPv4链路本地地址
 
@@ -137,22 +144,22 @@ network:
 
 + `exclude` ：不代理的来源网段或IP；
 
-+ > `bypass` 与 `exclude` 中指定的IP或CIDR，在运行时将不会被TProxy捕获，即不进入用户态的代理路由，相当于无损耗的直连；
+> `bypass` 与 `exclude` 中指定的IP或CIDR，在运行时将不会被TProxy捕获，即不进入用户态的代理路由，相当于无损耗的直连
 
 ### 路由资源
 
 ```yaml
 # 以下配置仅为示范
 update:
-  cron: "0 0 4 * * *"  # 每日凌晨4点更新
+  cron: "0 0 4 * * *"  # 每天凌晨4点更新
   url:
     geoip.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
     geosite.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
 ```
 
-+ `cron` ：触发更新的Cron表达式；
++ `cron` ：触发更新的 Cron 表达式，留空时关闭自动升级，默认为空
 
-+ `url` ：更新的文件名及下载地址；
++ `url` ：更新的文件名及下载地址，文件保存至 `assets` 中，默认为空
 
 ### 自定义脚本
 
@@ -171,9 +178,11 @@ custom:
   - "ip6tables -t nat -A POSTROUTING -d fc00::3 -p tcp --dport 5353 -j SNAT --to fc00::4"
 ```
 
-自定义脚本命令，在启动代理前将依次执行；
+自定义脚本命令，在启动代理前将依次执行，用于注入一些其他功能，默认为空
 
 ### IPv6路由广播
+
+> `radvd` 有大量配置选项，`XProxy` 均对其保持兼容，以下仅介绍部分常用选项，更多详细参数可参考[man文档](https://www.systutorials.com/docs/linux/man/5-radvd.conf/)
 
 ```yaml
 # 以下配置仅为示范
@@ -209,41 +218,43 @@ radvd:
     option: null
 ```
 
-`radvd` 有大量配置选项，`XProxy` 均对其保持兼容，以下仅介绍部分常用选项，更多详细参数可参考[man文档](https://www.systutorials.com/docs/linux/man/5-radvd.conf/)；
++ `log` ：RADVD 日志级别，可选 `0-5`，数值越大越详细，默认为 `0`
 
-+ `log` ：RADVD日志级别，可选 `0-5`，数值越大越详细，默认为 `0`
++ `enable` ：是否启动 RADVD，默认为 `false`
 
-+ `enable` ：是否启动RADVD，默认为 `false`
++ `option` ：RADVD 主选项，完整参数列表查看[这里](https://code.tools/man/5/radvd.conf/#lbAD)：
 
-+ `option` ：RADVD主选项，即文档中 `INTERFACE SPECIFIC OPTIONS` 章节列出的配置：
+  + `AdvSendAdvert` ：是否开启 RA 报文广播，启用 IPv6 时必须打开，默认为 `off`
 
-  + `AdvSendAdvert` ：是否开启RA报文广播，启用IPv6时必须打开，默认为 `off`
+  + `AdvManagedFlag` ：指示 IPv6 管理地址配置，即M位，默认为 `off`
 
-  + `AdvManagedFlag` ：指示IPv6管理地址配置，即M位，默认为 `off`
+  + `AdvOtherConfigFlag` ：指示 IPv6 其他有状态配置，即O位，默认为 `off`
 
-  + `AdvOtherConfigFlag` ：指示IPv6其他有状态配置，即O位，默认为 `off`
+  + > M位与O位的详细定义在 [RFC4862](https://www.rfc-editor.org/rfc/rfc4862) 中给出：
 
-  + > M位与O位的详细定义在[RFC4862](https://www.rfc-editor.org/rfc/rfc4862)中给出：
+    + `M=off` 且 `O=off` ：使用 `Stateless` 模式，设备通过RA广播的前缀，配合 `EUI-64` 算法直接得到接口地址，即 `SLAAC` 方式
 
-    + `M=off` 与 `O=off` ：使用 `Stateless` 模式，设备通过RA广播的前缀，配合 `EUI-64` 算法直接得到接口地址（即 `SLAAC` 方式）
+    + `M=off` 且 `O=on` ：使用 `Stateless DHCPv6` 模式，设备通过RA广播前缀与 `EUI-64` 计算接口地址，同时从 `DHCPv6` 获取DNS等其他配置
 
-    + `M=off` 与 `O=on` ：使用 `Stateless DHCPv6` 模式，设备通过RA广播前缀与 `EUI-64` 计算接口地址，同时从 `DHCPv6` 获取DNS等其他配置
+    + `M=on` 且 `O=on` ：使用 `Stateful DHCPv6` 模式，设备通过 `DHCPv6` 获取地址以及DNS等其他配置
 
-    + `M=on` 与 `O=on` ：使用 `Stateful DHCPv6` 模式，设备通过 `DHCPv6` 获取地址以及DNS等其他配置
+    + `M=on` 且 `O=off` ：理论上不存在此配置
 
-    + `M=on` 与 `O=off` ：理论上不存在此配置
+  + `client` ：配置此项后，仅发送 RA 通告到指定 IPv6 单播地址而非组播地址，默认为空（组播发送）
 
-  + `client` ：配置此项后，仅发送RA通告到指定IPv6单播地址而非组播地址，默认为空（组播发送）
+  + `prefix` ：IPv6 地址前缀配置，`cidr` 指定分配的前缀及掩码长度，`option` 指定[前缀选项](https://code.tools/man/5/radvd.conf/#lbAE)
 
-  + `prefix` ：IPv6地址前缀配置，`cidr` 指定分配的前缀及掩码长度，`option` 指定前缀选项，即文档中 `PREFIX SPECIFIC OPTIONS` 章节列出的选项
+  + `route` ：IPv6 路由定义，`cidr` 指定通告的路由 CIDR（注意客户端仅将RA报文来源链路地址设置为IPv6网关，此处设置并不能更改路由网关地址），`option` 指定[路由选项](https://code.tools/man/5/radvd.conf/#lbAF)
 
-  + `route` ：IPv6路由定义，`cidr` 指定通告的路由CIDR（注意客户端仅将RA报文来源链路地址设置为IPv6网关，此处设置并不能更改路由网关地址），`option` 指定路由选项，即文档中 `ROUTE SPECIFIC OPTIONS` 章节列出的选项
+  + `rdnss` ：递归 DNS 服务器地址，`ip` 指定 IPv6 下的 DNS 服务器列表，`option` 指定 [RDNSS 选项](https://code.tools/man/5/radvd.conf/#lbAG)
 
-  + `rdnss` ：递归DNS服务器地址，`ip` 指定IPv6下的DNS服务器列表，`option` 即 `RDNSS SPECIFIC OPTIONS` 章节列出的选项
+  + `dnssl` ：DNS 搜寻域名，`suffix` 指定DNS解析的搜寻后缀列表，`option` 指定 [DNSSL 选项](https://code.tools/man/5/radvd.conf/#lbAH)
 
-  + `dnssl` ：DNS搜寻域名，`suffix` 指定DNS解析的搜寻后缀列表，`option` 即 `DNSSL SPECIFIC OPTIONS` 章节列出的选项
+> `RDNSS` 与 `DNSSL` 在 [RFC6106](https://www.rfc-editor.org/rfc/rfc6106) 中定义，将 DNS 配置信息直接放置在 RA 报文中发送，使用 `SLAAC` 时无需 `DHCPv6` 即可获取 DNS 服务器，但是旧版本 Windows 与 Android 等系统不支持该功能。
 
-  + > `RDNSS` 与 `DNSSL` 在[RFC6106](https://www.rfc-editor.org/rfc/rfc6106)中定义，将DNS配置信息直接放置在RA报文中发送，使用 `SLAAC` 时无需 `DHCPv6` 即可获取DNS服务器，但是旧版本Windows与Android等不支持该功能。
+### DHCP服务选项
+
+WIP...
 
 ## 部署流程
 
@@ -260,7 +271,7 @@ shell> modprobe ip6table_filter
 在 Docker 中创建 macvlan 网络
 
 ```
-# 网段与网关信息按实际网络指定
+# 网络配置按实际情况指定
 shell> docker network create -d macvlan \
   --subnet=192.168.2.0/24 \
   --gateway=192.168.2.1 \
@@ -271,9 +282,9 @@ shell> docker network create -d macvlan \
 
 ### 2. 开始部署
 
-> 本项目基于Docker构建，在 [Docker Hub](https://hub.docker.com/repository/docker/dnomd343/xproxy) 或 [Github Package](https://github.com/dnomd343/XProxy/pkgs/container/xproxy) 可以查看已构建的各版本镜像。
+> 本项目基于 Docker 构建，在 [Docker Hub](https://hub.docker.com/repository/docker/dnomd343/xproxy) 或 [Github Package](https://github.com/dnomd343/XProxy/pkgs/container/xproxy) 可以查看已构建的各版本镜像。
 
-`XProxy` 同时发布在多个镜像源上（国内网络可首选阿里云仓库）：
+XProxy 同时发布在多个镜像源上：
 
 + `Docker Hub` ：`dnomd343/xproxy`
 
@@ -281,7 +292,7 @@ shell> docker network create -d macvlan \
 
 + `阿里云镜像` ：`registry.cn-shenzhen.aliyuncs.com/dnomd343/xproxy`
 
-> 下述命令中，容器路径可替换为上述其他源
+> 下述命令中，容器路径可替换为上述其他源，国内网络建议首选阿里云仓库
 
 使用以下命令启动虚拟网关，配置文件将存储在本机 `/etc/xproxy/` 目录下：
 
@@ -295,23 +306,23 @@ shell> docker run --restart always \
   dnomd343/xproxy:latest
 ```
 
-成功运行以后，存储目录将生成以下文件夹
+成功运行以后，存储目录将生成以下文件夹：
 
-+ `assets`：存储路由资源文件
++ `assets` ：存储路由资源文件
 
-+ `config`：存储代理配置文件
++ `config` ：存储代理配置文件
 
-+ `log`：存储日志文件
++ `log` ：存储日志文件
 
 **路由资源文件夹**
 
-`assets` 目录默认放置 `geoip.dat` 与 `geosite.dat` 路由规则文件，分别存储IP与域名归属信息，在 `update` 中配置的自动更新将保存到此处；本目录亦可放置自定义规则文件，在代理[路由配置](https://xtls.github.io/config/routing.html#ruleobject)中以 `ext:${FILE}:tag` 格式引用。
+`assets` 目录默认放置 `geoip.dat` 与 `geosite.dat` 路由规则文件，分别存储IP与域名归属信息，在 `update` 中配置的自动更新将保存到此处；本目录亦可放置自定义规则文件，在[路由配置](https://xtls.github.io/config/routing.html#ruleobject)中以 `ext:${FILE}:tag` 格式引用。
 
 **代理配置文件夹**
 
-`config` 目录存储代理配置文件，所有 `.json` 后缀文件均会被载入，用户可配置除 `inbounds` 与 `log` 以外的所有代理选项，多配置文件需要注意[合并规则](https://xtls.github.io/config/features/multiple.html#%E8%A7%84%E5%88%99%E8%AF%B4%E6%98%8E)；
+`config` 目录存储代理配置文件，所有 `.json` 后缀文件均会被载入，用户可配置除 `inbounds` 与 `log` 以外的所有代理选项，多配置文件需要注意[合并规则](https://xtls.github.io/config/features/multiple.html#%E8%A7%84%E5%88%99%E8%AF%B4%E6%98%8E)。
 
-为了正常工作，容器初始化时会载入以下 `outbounds.json` 的默认出站配置，其指定所有流量为直连：
+为了正常工作，容器初始化时会载入以下 `outbounds.json` 作为默认出站配置，其指定所有流量为直连：
 
 ```
 {
@@ -328,9 +339,11 @@ shell> docker run --restart always \
 
 `log` 目录用于放置日志文件
 
-+ 代理流量将记录到 `access.log` 和 `error.log` 中，前者存储访问日志，后者存储错误日志；
++ `access.log` 记录代理流量连接
 
-+ 若启用RADVD功能，其日志将保存到 `radvd.log` 中；
++ `error.log` 记录代理连接错误信息
+
++ 若启用RADVD功能，其日志将保存到 `radvd.log` 中
 
 ### 3. 调整配置文件
 
@@ -373,20 +386,19 @@ shell> docker logs -f xproxy
 
 > 这一步旨在让宿主机能够使用虚拟网关，若无此需求可以跳过
 
-由于macvlan方式的限制，宿主机上开启macvlan的网卡无法直接与虚拟网关通讯，需要另外配置网桥才可连接，
+由于macvlan方式的限制，宿主机上开启macvlan的网卡无法直接与虚拟网关通讯，需要另外配置网桥才可连接
 
-> 以下为配置基于Debian发行版，RH系或Arch系等的配置略有不同
+> 以下为配置基于 Debian，基于 RH、Arch 等的发行版配置略有不同
 
 ```
 # 编辑网卡配置文件
 shell> vim /etc/network/interfaces
 ```
 
-补充如下配置
+补充如下配置，具体网络信息需要按实际情况指定：
 
 ```
-# 具体网络信息需要按实际情况指定
-auto eth0
+auto eth0  # 宿主机物理网卡
 iface eth0 inet manual
 
 auto macvlan
@@ -400,7 +412,7 @@ iface macvlan inet static
   post-down ip link del macvlan link eth0 type macvlan mode bridge  # 退出时删除网桥
 ```
 
-重启宿主机网络生效，或直接重启宿主机系统：
+重启宿主机网络生效（或直接重启系统）：
 
 ```
 shell> /etc/init.d/networking restart
@@ -409,11 +421,11 @@ shell> /etc/init.d/networking restart
 
 ### 5. 局域网设备访问
 
-> 对于手动配置了静态IP的设备，需要修改网关地址为容器IP
+> 对于手动配置了静态IP的设备，需要修改网关地址为虚拟网关IP
 
-配置完成后，容器IP即为虚拟旁路由网关地址，内网其他设备的网关设置为该地址即可被透明代理，因此需要修改DHCP配置与RADVD路由广播，让内网设备自动接入虚拟网关。
+配置完成后，容器 IP 即为虚拟网关地址，内网其他设备的网关设置为该地址即可被透明代理，因此这里需要配置 DHCP 与 RADVD 路由广播，让内网设备自动接入虚拟网关。
 
-> 您可以监视 `log/access.log` 文件，设备正常接入后会在此显示连接日志
+> 您可以监视 `log/access.log` 文件，设备正常接入后会在此输出访问日志
 
 + IPv4下，修改内网DHCP服务器配置（一般位于路由器上），将网关改为容器IP地址，保存后重新接入设备即可生效。
 
@@ -427,13 +439,39 @@ shell> /etc/init.d/networking restart
 
 ## 开发相关
 
-+ v4/v6路由表号，TProxy默认端口号 ...
+### TProxy配置
 
-+ 修改默认暴露文件夹 ...
+XProxy 默认使用以下配置：
 
-+ 修改默认配置文件，开启debug模式 ...
++ IPv4 路由表号：`104`，使用 `IPV4_TABLE` 环境变量修改
 
-+ 容器自行编译
++ IPv6 路由表号：`106`，使用 `IPV6_TABLE` 环境变量修改
+
++ IPv4 透明代理端口：`7288`，使用 `IPV4_TPROXY` 环境变量修改
+
++ IPv6 透明代理端口：`7289`，使用 `IPV6_TPROXY` 环境变量修改
+
+### 运行参数
+
+XProxy 默认使用 `/xproxy` 作为存储文件夹，该文件夹映射到外部主机作为持久存储，您可以使用 `EXPOSE_DIR` 环境变量修改该文件夹路径；同时，XProxy将默认读取该文件夹下的 `xproxy.yml` 作为配置文件，在运行时添加 `--config custom.yml` 参数将读取指定配置文件；启动 XProxy 时若添加 `--debug` 参数，将进入调试模式，输出日志切换到 `DEBUG` 级别。
+
+### 容器构建
+
+> XProxy 针对 buildkit 进行优化，使用 buildx 命令将会加快构建速度
+
+**本地构建**
+
+```
+shell> git clone https://github.com/dnomd343/XProxy.git
+shell> cd ./XProxy/
+shell> docker build -t xproxy .
+```
+
+**交叉构建**
+
+```
+shell> docker buildx build -t dnomd343/xproxy --platform="linux/amd64,linux/arm64,linux/386,linux/arm/v7" https://github.com/dnomd343/XProxy.git --push
+```
 
 ## 许可证
 

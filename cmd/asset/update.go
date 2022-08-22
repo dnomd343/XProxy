@@ -22,9 +22,11 @@ func updateAsset(urls map[string]string, assetDir string) { // download new asse
 }
 
 func AutoUpdate(update *Config, assetDir string) { // set cron task for auto update
-    autoUpdate := cron.New()
-    _ = autoUpdate.AddFunc(update.Cron, func() { // cron function
-        updateAsset(update.Url, assetDir)
-    })
-    autoUpdate.Start()
+    if update.Cron != "" {
+        autoUpdate := cron.New()
+        _ = autoUpdate.AddFunc(update.Cron, func() { // cron function
+            updateAsset(update.Url, assetDir)
+        })
+        autoUpdate.Start()
+    }
 }
