@@ -32,11 +32,37 @@ IPv6部分，由于路由器桥接，地址分配等操作均为光猫负责，�
 
 这也是IPv6在代理方面的缺点，它将发送 RA 广播的链路地址直接视为路由网关，且该地址无法通过其他协议更改，我们没法像 DHCPv4 一样直接配置网关地址，这在透明代理时远没有 IPv4 方便，只能将 RA 广播源放在网关上。
 
-### 配置XProxy
+### 启动服务
 
-在设计上，应该配置四个出口，分别为 IPv4直连、IPv4代理、IPv6直连、IPv6代理，这里创建 4 个对应的 socks5 入口 `direct` 、`proxy` 、`direct6` 、`proxy6` ，用于检测对应出口是否正常工作。
+首先创建 macvlan 网络：
+
+```
+# 宿主机网卡假定为 eth0
+shell> ip link set eth0 promisc on
+shell> modprobe ip6table_filter
+# IPv6网段后续由XProxy更改，这里可以随意指定
+shell> docker network create -d macvlan --subnet=fe80::/10 --ipv6 -o parent=eth0 macvlan
+```
+
+将配置文件保存在 `/etc/route` 目录下，使用以下命令开启 XProxy 服务：
+
+```
+shell> docker run --restart always \
+  --privileged --network macvlan -dt \
+  --name route --hostname route \
+  --volume /etc/route/:/xproxy/ \
+  --volume /etc/timezone:/etc/timezone:ro \
+  --volume /etc/localtime:/etc/localtime:ro \
+  dnomd343/xproxy:latest
+```
+
+### 参数配置
+
+在设计上，应该配置四个出口，分别为 IPv4直连、IPv4代理、IPv6直连、IPv6代理，这里创建 4 个对应的 socks5 接口 `direct` 、`proxy` 、`direct6` 、`proxy6` ，用于检测对应出口是否正常工作。
 
 此外，我们需要判断 IP 与域名的地理信息，而该数据库一直变动，需要持续更新；由于该项目的 Github Action 配置为 UTC 22:00 触发，即 UTC8+ 的 06:00 ，所以这里配置为每天早上 06 点 05 分更新，延迟 5 分钟拉取当日的新版本路由资源。
+
+修改 `xproxy.yml` ，写入以下配置：
 
 ```yaml
 proxy:
@@ -83,3 +109,116 @@ update:
     geoip.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
     geosite.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
 ```
+
+### 代理配置
+
+配置出站代理，修改 `config/outbounds.json` 文件，其中 direct 直连到国内网络，proxy 填入代理服务器参数：
+
+```json
+{
+  "outbounds": [
+    {
+      "tag": "direct4",
+      "protocol": "freedom",
+      "settings": {
+        "domainStrategy": "UseIP"
+      }
+    },
+    {
+      "tag": "direct6",
+      "protocol": "freedom",
+      "settings": {
+        "domainStrategy": "UseIP"
+      }
+    },
+    {
+      "tag": "proxy4",
+      ...
+    },
+    {
+      "tag": "proxy6",
+      ...
+    }
+  ]
+}
+```
+
+接着配置路由部分，让暴露的 4 个 socks5 接口对接上，并依据上文的分流方式编写路由规则；创建 `config/routing.json` 文件，写入以下配置：
+
+```json
+{
+  "routing": {
+    "domainStrategy": "IPOnDemand",
+    "rules": [
+      {
+        "type": "field",
+        "inboundTag": ["direct"],
+        "outboundTag": "direct4"
+      },
+      {
+        "type": "field",
+        "inboundTag": ["direct6"],
+        "outboundTag": "direct6"
+      },
+      {
+        "type": "field",
+        "inboundTag": ["proxy"],
+        "outboundTag": "proxy4"
+      },
+      {
+        "type": "field",
+        "inboundTag": ["proxy6"],
+        "outboundTag": "proxy6"
+      },
+      {
+        "type": "field",
+        "inboundTag": ["tproxy"],
+        "domain": ["geosite:cn"],
+        "outboundTag": "direct4"
+      },
+      {
+        "type": "field",
+        "inboundTag": ["tproxy6"],
+        "domain": ["geosite:cn"],
+        "outboundTag": "direct6"
+      },
+      {
+        "type": "field",
+        "inboundTag": ["tproxy"],
+        "ip": [
+          "geoip:cn",
+          "geoip:private"
+        ],
+        "outboundTag": "direct4"
+      },
+      {
+        "type": "field",
+        "inboundTag": ["tproxy6"],
+        "ip": [
+          "geoip:cn",
+          "geoip:private"
+        ],
+        "outboundTag": "direct6"
+      },
+      {
+        "type": "field",
+        "inboundTag": ["tproxy"],
+        "outboundTag": "proxy4"
+      },
+      {
+        "type": "field",
+        "inboundTag": ["tproxy6"],
+        "outboundTag": "proxy6"
+      }
+    ]
+  }
+}
+```
+
+重启 XProxy 容器使配置生效：
+
+```
+shell> docker restart route
+```
+
+最后，验证代理服务是否正常工作，若出现问题可以查看 `/etc/route/log` 文件夹下的日志，定位错误原因。

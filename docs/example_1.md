@@ -178,10 +178,10 @@ custom:
 }
 ```
 
-重启 XProxy 容器让配置生效：
+重启 XProxy 容器使配置生效：
 
 ```
 shell> docker restart scutweb
 ```
 
-最后，验证代理服务是否正常工作，若出现问题可以查看 XProxy 以及 `/etc/scutweb/log` 文件夹下的日志，定位错误原因。
+最后，验证代理服务是否正常工作，若出现问题可以查看 `/etc/scutweb/log` 文件夹下的日志，定位错误原因。
