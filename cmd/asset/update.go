@@ -13,6 +13,11 @@ type Config struct {
 }
 
 func updateAsset(urls map[string]string, assetDir string) { // download new assets
+    defer func() {
+        if err := recover(); err != nil {
+            log.Errorf("Update failed -> %v", err)
+        }
+    }()
     if len(urls) != 0 {
         log.Info("Start update assets")
         for file, url := range urls {
