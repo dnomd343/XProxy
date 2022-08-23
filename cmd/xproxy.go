@@ -86,13 +86,16 @@ func main() {
 
     var settings config.Config
     log.Infof("XProxy %s start (%s)", version, goVersion)
+    // TODO: load dhcp configure
     config.Load(configFile, &settings)
     loadNetwork(&settings)
     loadProxy(&settings)
+    // TODO: update assets via proxy
     loadAsset(&settings)
     loadRadvd(&settings)
 
     runScript(&settings)
+    // TODO: run dhcp service
     runRadvd(&settings)
     runProxy(&settings)
     blockWait()

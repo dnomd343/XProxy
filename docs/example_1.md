@@ -58,11 +58,13 @@ shell> docker run --restart always \
 
 由于校园网无 IPv6 支持，这里 IPv6 上游网关可以不填写；虚拟网关对内网发布 RA 通告，让内网设备使用 SLAAC 配置网络地址，同时将其作为 IPv6 网关；此外，如果路由器开启了 DHCP 服务，需要将默认网关改为 `192.168.2.2` ，也可以启用 XProxy 自带的 DHCPv4 服务。
 
+最后，由于我们代理全部流量，无需根据域名或者 IP 进行任何分流，因此路由资源自动更新部分可以省略。
+
 修改 `xproxy.yml` ，写入以下配置：
 
 ```yaml
 proxy:
-  log: debug
+  log: warning
   core: xray
   socks:
     nodeA: 1081
@@ -100,12 +102,6 @@ custom:
   - "ip6tables -t nat -N FAKE_PING"
   - "ip6tables -t nat -A FAKE_PING -j DNAT --to-destination fc00::2"
   - "ip6tables -t nat -A PREROUTING -i eth0 -p icmp -j FAKE_PING"
-
-update:
-  cron: "0 0 4 * * *"
-  url:
-    geoip.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
-    geosite.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
 ```
 
 在开始代理前，我们使用 `custom` 注入了一段脚本配置：由于这里我们只代理 TCP 与 UDP 流量，ICMP 数据包不走代理，内网设备 ping 外网时会一直无响应，加入这段脚本可以创建一个 NAT，假冒远程主机返回成功回复，但实际上 ICMP 数据包并未实际到达，效果上表现为 ping 成功且延迟为内网访问时间。
