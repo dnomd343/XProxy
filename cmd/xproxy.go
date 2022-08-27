@@ -13,7 +13,7 @@ import (
     "strconv"
 )
 
-var version = "0.9.4"
+var version = "0.9.5"
 var v4RouteTable = 104
 var v6RouteTable = 106
 var v4TProxyPort = 7288
@@ -43,8 +43,12 @@ func logInit(isDebug bool, logDir string) {
 }
 
 func xproxyInit() {
-    var isDebug = flag.Bool("debug", false, "Enable debug mode")
-    var configName = flag.String("config", "xproxy.yml", "Config file name")
+    xproxyConfig := "xproxy.yml"
+    if os.Getenv("CONFIG") != "" {
+        xproxyConfig = os.Getenv("CONFIG")
+    }
+    isDebug := flag.Bool("debug", os.Getenv("DEBUG") == "true", "Enable debug mode")
+    configName := flag.String("config", xproxyConfig, "Config file name")
     flag.Parse()
 
     exposeDir = "/xproxy" // default folder
@@ -99,5 +103,5 @@ func main() {
     blockWait()
     process.Exit(subProcess...)
     custom.RunPostScript(&settings.Custom)
-    log.Infof("All done, goodbye!")
+    log.Warningf("All done, goodbye!")
 }
