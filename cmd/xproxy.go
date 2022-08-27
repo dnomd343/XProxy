@@ -90,7 +90,6 @@ func main() {
     config.Load(configFile, &settings)
     loadNetwork(&settings)
     loadProxy(&settings)
-    // TODO: update assets via proxy
     loadAsset(&settings)
     loadRadvd(&settings)
 

@@ -8,6 +8,7 @@ import (
     "encoding/json"
     log "github.com/sirupsen/logrus"
     "gopkg.in/yaml.v3"
+    "net/url"
 )
 
 type NetConfig struct {
@@ -146,6 +147,13 @@ func decodeRadvd(rawConfig *RawConfig, config *Config) {
 
 func decodeUpdate(rawConfig *RawConfig, config *Config) {
     config.Update = rawConfig.Update
+    if config.Update.Proxy != "" {
+        _, err := url.Parse(config.Update.Proxy) // check proxy info
+        if err != nil {
+            log.Panicf("Invalid update proxy -> %s", config.Update.Proxy)
+        }
+    }
+    log.Debugf("Update proxy -> %s", config.Update.Proxy)
     log.Debugf("Update cron -> %s", config.Update.Cron)
     log.Debugf("Update urls -> %v", config.Update.Url)
 }

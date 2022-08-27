@@ -5,6 +5,7 @@ import (
     "io"
     "io/ioutil"
     "net/http"
+    "net/url"
     "os"
     "strings"
 )
@@ -69,21 +70,35 @@ func CopyFile(source string, target string) {
     }
 }
 
-func DownloadFile(url string, file string) {
-    log.Debugf("File download `%s` => `%s`", url, file)
-    resp, err := http.Get(url)
-    defer resp.Body.Close()
+func DownloadFile(fileUrl string, filePath string, proxyUrl string) {
+    log.Debugf("File download `%s` => `%s`", fileUrl, filePath)
+    client := http.Client{}
+    if proxyUrl != "" { // use proxy for download
+        log.Infof("File download via proxy -> %s", proxyUrl)
+        rawUrl, _ := url.Parse(proxyUrl)
+        client = http.Client{
+            Transport: &http.Transport{
+                Proxy: http.ProxyURL(rawUrl),
+            },
+        }
+    }
+    resp, err := client.Get(fileUrl)
+    defer func() {
+        if resp != nil {
+            resp.Body.Close()
+        }
+    }()
     if err != nil {
-        log.Errorf("Download `%s` error -> %v", url, err)
+        log.Errorf("Download `%s` error -> %v", fileUrl, err)
         return
     }
-    output, err := os.OpenFile(file, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
+    output, err := os.OpenFile(filePath, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
     defer output.Close()
     if err != nil {
-        log.Panicf("Open `%s` error -> %v", file, err)
+        log.Panicf("Open `%s` error -> %v", filePath, err)
     }
     if _, err = io.Copy(output, resp.Body); err != nil {
-        log.Panicf("File `%s` save error -> %v", file, err)
+        log.Panicf("File `%s` save error -> %v", filePath, err)
     }
-    log.Infof("Download success `%s` => `%s`", url, file)
+    log.Infof("Download success `%s` => `%s`", fileUrl, filePath)
 }
