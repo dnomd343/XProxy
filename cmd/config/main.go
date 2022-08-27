@@ -12,6 +12,7 @@ import (
 )
 
 type Config struct {
+    Dev    string
     DNS    []string
     IPv4   network.Config
     IPv6   network.Config
@@ -31,6 +32,7 @@ func Load(configFile string, config *Config) {
         log.Panicf("Failed to open %s -> %v", configFile, err)
     }
     rawConfig := configDecode(raw, path.Ext(configFile)) // decode configure content
+    decodeDev(&rawConfig, config)
     decodeDns(&rawConfig, config)
     decodeBypass(&rawConfig, config)
     decodeExclude(&rawConfig, config)

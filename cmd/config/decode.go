@@ -22,6 +22,7 @@ type RawConfig struct {
     Radvd   radvd.Config `yaml:"radvd" json:"radvd"`
     Proxy   proxy.Config `yaml:"proxy" json:"proxy"`
     Network struct {
+        Dev     string    `yaml:"dev" json:"dev"`
         DNS     []string  `yaml:"dns" json:"dns"`
         ByPass  []string  `yaml:"bypass" json:"bypass"`
         Exclude []string  `yaml:"exclude" json:"exclude"`
@@ -44,6 +45,18 @@ func configDecode(raw []byte, fileSuffix string) RawConfig {
     }
     log.Debugf("Decoded configure -> %v", config)
     return config
+}
+
+func decodeDev(rawConfig *RawConfig, config *Config) {
+    config.Dev = rawConfig.Network.Dev
+    if config.Dev == "" {
+        setV4 := rawConfig.Network.IPv4.Address != "" || rawConfig.Network.IPv4.Gateway != ""
+        setV6 := rawConfig.Network.IPv6.Address != "" || rawConfig.Network.IPv6.Gateway != ""
+        if setV4 || setV6 {
+            log.Panicf("Missing dev option in network settings")
+        }
+    }
+    log.Debugf("Network device -> %s", config.Dev)
 }
 
 func decodeDns(rawConfig *RawConfig, config *Config) {
@@ -135,7 +148,11 @@ func decodeProxy(rawConfig *RawConfig, config *Config) {
 
 func decodeRadvd(rawConfig *RawConfig, config *Config) {
     config.Radvd = rawConfig.Radvd
+    if config.Radvd.Enable && config.Radvd.Dev == "" {
+        log.Panicf("Radvd enabled without dev option")
+    }
     log.Debugf("Radvd log level -> %d", config.Radvd.Log)
+    log.Debugf("Radvd network dev -> %s", config.Radvd.Dev)
     log.Debugf("Radvd enable -> %t", config.Radvd.Enable)
     log.Debugf("Radvd options -> %v", config.Radvd.Option)
     log.Debugf("Radvd prefix -> %v", config.Radvd.Prefix)

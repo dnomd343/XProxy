@@ -8,6 +8,7 @@ import (
 
 type Config struct {
     Log    int               `yaml:"log" json:"log"`
+    Dev    string            `yaml:"dev" json:"dev"`
     Enable bool              `yaml:"enable" json:"enable"`
     Client []string          `yaml:"client" json:"client"`
     Option map[string]string `yaml:"option" json:"option"`
@@ -85,7 +86,7 @@ func loadDnssl(suffix []string, option map[string]string) string { // load radvd
 }
 
 func Load(Radvd *Config) {
-    config := "interface eth0 {\n"
+    config := "interface " + Radvd.Dev + " {\n"
     config += loadOption(Radvd.Option, 4)
     config += loadPrefix(Radvd.Prefix.Cidr, Radvd.Prefix.Option)
     config += loadRoute(Radvd.Route.Cidr, Radvd.Route.Option)

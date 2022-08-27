@@ -23,34 +23,48 @@ func getV6Cidr() []string {
     return v6Cidr
 }
 
-func flushNetwork() {
+func flushNetwork(dev string) {
     log.Info("Flush system IP configure")
-    run("ip", "link", "set", "eth0", "down")
-    run("ip", "-4", "addr", "flush", "dev", "eth0")
-    run("ip", "-6", "addr", "flush", "dev", "eth0")
-    run("ip", "link", "set", "eth0", "up")
+    run("ip", "link", "set", dev, "down")
+    run("ip", "-4", "addr", "flush", "dev", dev)
+    run("ip", "-6", "addr", "flush", "dev", dev)
+    run("ip", "link", "set", dev, "up")
 }
 
-func loadV4Network(v4 *Config) {
+func flushV4Network(dev string) {
+    log.Info("Flush system IPv4 configure")
+    run("ip", "link", "set", dev, "down")
+    run("ip", "-4", "addr", "flush", "dev", dev)
+    run("ip", "link", "set", dev, "up")
+}
+
+func flushV6Network(dev string) {
+    log.Info("Flush system IPv6 configure")
+    run("ip", "link", "set", dev, "down")
+    run("ip", "-6", "addr", "flush", "dev", dev)
+    run("ip", "link", "set", dev, "up")
+}
+
+func loadV4Network(v4 *Config, dev string) {
     log.Info("Enabled IPv4 forward")
     run("sysctl", "-w", "net.ipv4.ip_forward=1")
     log.Info("Setting up system IPv4 configure")
     if v4.Address != "" {
-        run("ip", "-4", "addr", "add", v4.Address, "dev", "eth0")
+        run("ip", "-4", "addr", "add", v4.Address, "dev", dev)
     }
     if v4.Gateway != "" {
-        run("ip", "-4", "route", "add", "default", "via", v4.Gateway, "dev", "eth0")
+        run("ip", "-4", "route", "add", "default", "via", v4.Gateway, "dev", dev)
     }
 }
 
-func loadV6Network(v6 *Config) {
+func loadV6Network(v6 *Config, dev string) {
     log.Info("Enabled IPv6 forward")
     run("sysctl", "-w", "net.ipv6.conf.all.forwarding=1")
     log.Info("Setting up system IPv6 configure")
     if v6.Address != "" {
-        run("ip", "-6", "addr", "add", v6.Address, "dev", "eth0")
+        run("ip", "-6", "addr", "add", v6.Address, "dev", dev)
     }
     if v6.Gateway != "" {
-        run("ip", "-6", "route", "add", "default", "via", v6.Gateway, "dev", "eth0")
+        run("ip", "-6", "route", "add", "default", "via", v6.Gateway, "dev", dev)
     }
 }
