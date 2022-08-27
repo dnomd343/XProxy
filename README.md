@@ -43,7 +43,7 @@ proxy:
 network:
   ··· 网络选项 ···
 
-update:
+asset:
   ··· 路由资源 ···
 
 custom:
@@ -153,13 +153,17 @@ network:
 
 ```yaml
 # 以下配置仅为示范
-update:
-  cron: "0 0 4 * * *"  # 每天凌晨4点更新
-  proxy: "socks5://192.168.2.4:1080"  # 通过 socks5 代理更新资源
-  url:
-    geoip.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
-    geosite.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
+asset:
+  disable: false
+  update:
+    cron: "0 0 4 * * *"  # 每天凌晨4点更新
+    proxy: "socks5://192.168.2.4:1080"  # 通过 socks5 代理更新资源
+    url:
+      geoip.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
+      geosite.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
 ```
+
++ `disable` ：是否关闭路由资源文件载入，默认为 `false`
 
 + `cron` ：触发更新的 Cron 表达式，留空时关闭自动升级，默认为空
 
@@ -380,11 +384,12 @@ network:
     - fe80::/10
     - ff00::/8
 
-update:
-  cron: "0 0 4 * * *"
-  url:
-    geoip.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
-    geosite.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
+asset:
+  update:
+    cron: "0 0 4 * * *"
+    url:
+      geoip.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
+      geosite.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
 ```
 
 用户需要根据实际需求更改配置文件，保存以后重启容器即可生效：

@@ -105,12 +105,13 @@ radvd:
   prefix:
     cidr: 2409:8a55:e2a7:3a0::/64
 
-update:
-  cron: "0 5 6 * * *"
-  proxy: "socks5://192.168.2.2:1094"  # 通过代理下载 Github 文件
-  url:
-    geoip.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
-    geosite.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
+asset:
+  update:
+    cron: "0 5 6 * * *"
+    proxy: "socks5://192.168.2.2:1094"  # 通过代理下载 Github 文件
+    url:
+      geoip.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
+      geosite.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
 ```
 
 ### 代理配置
