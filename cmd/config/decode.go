@@ -13,8 +13,8 @@ import (
 )
 
 type NetConfig struct {
-    Gateway string `yaml:"gateway"` // network gateway
-    Address string `yaml:"address"` // network address
+    Gateway string `yaml:"gateway" json:"gateway"` // network gateway
+    Address string `yaml:"address" json:"address"` // network address
 }
 
 type RawConfig struct {

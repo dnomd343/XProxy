@@ -44,6 +44,9 @@ type inboundObject struct {
 }
 
 func loadLogConfig(logLevel string, logDir string) string {
+    if logLevel == "" {
+        logLevel = "warning" // using warning level without log output
+    }
     if logLevel != "debug" && logLevel != "info" &&
         logLevel != "warning" && logLevel != "error" && logLevel != "none" {
         log.Warningf("Unknown log level -> %s", logLevel)
