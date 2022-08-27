@@ -106,6 +106,7 @@ proxy:
 ```yaml
 # 以下配置仅为示范
 network:
+  dev: eth0
   dns:
     - 223.6.6.6
     - 119.29.29.29
@@ -125,6 +126,8 @@ network:
     - 192.168.2.2
     - 192.168.2.240/28
 ```
+
++ `dev` ：指定运行的网卡，一般与物理网卡同名，默认为空
 
 + `dns` ：指定系统默认 DNS 服务器，留空时保持原配置不变，默认为空
 
@@ -152,12 +155,15 @@ network:
 # 以下配置仅为示范
 update:
   cron: "0 0 4 * * *"  # 每天凌晨4点更新
+  proxy: "socks5://192.168.2.4:1080"  # 通过 socks5 代理更新资源
   url:
     geoip.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
     geosite.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
 ```
 
 + `cron` ：触发更新的 Cron 表达式，留空时关闭自动升级，默认为空
+
++ `proxy` ：通过指定的代理服务更新资源文件，留空时直连更新，默认为空
 
 + `url` ：更新的文件名及下载地址，文件保存至 `assets` 中，默认为空
 
@@ -168,17 +174,25 @@ update:
 # fc00::4 tcp/53 & udp/53 <---> fc00::3 tcp/5353 & udp/5353
 # 192.168.2.4 tcp/53 & udp/53 <---> 192.168.2.3 tcp/53 & udp/5353
 custom:
-  - "iptables -t nat -A PREROUTING -d 192.168.2.4 -p udp --dport 53 -j DNAT --to-destination 192.168.2.3:5353"
-  - "iptables -t nat -A POSTROUTING -d 192.168.2.3 -p udp --dport 5353 -j SNAT --to 192.168.2.4"
-  - "iptables -t nat -A PREROUTING -d 192.168.2.4 -p tcp --dport 53 -j DNAT --to-destination 192.168.2.3:5353"
-  - "iptables -t nat -A POSTROUTING -d 192.168.2.3 -p tcp --dport 5353 -j SNAT --to 192.168.2.4"
-  - "ip6tables -t nat -A PREROUTING -d fc00::4 -p udp --dport 53 -j DNAT --to-destination [fc00::3]:5353"
-  - "ip6tables -t nat -A POSTROUTING -d fc00::3 -p udp --dport 5353 -j SNAT --to fc00::4"
-  - "ip6tables -t nat -A PREROUTING -d fc00::4 -p tcp --dport 53 -j DNAT --to-destination [fc00::3]:5353"
-  - "ip6tables -t nat -A POSTROUTING -d fc00::3 -p tcp --dport 5353 -j SNAT --to fc00::4"
+  pre:
+    - "iptables -t nat -A PREROUTING -d 192.168.2.4 -p udp --dport 53 -j DNAT --to-destination 192.168.2.3:5353"
+    - "iptables -t nat -A POSTROUTING -d 192.168.2.3 -p udp --dport 5353 -j SNAT --to 192.168.2.4"
+    - "iptables -t nat -A PREROUTING -d 192.168.2.4 -p tcp --dport 53 -j DNAT --to-destination 192.168.2.3:5353"
+    - "iptables -t nat -A POSTROUTING -d 192.168.2.3 -p tcp --dport 5353 -j SNAT --to 192.168.2.4"
+    - "ip6tables -t nat -A PREROUTING -d fc00::4 -p udp --dport 53 -j DNAT --to-destination [fc00::3]:5353"
+    - "ip6tables -t nat -A POSTROUTING -d fc00::3 -p udp --dport 5353 -j SNAT --to fc00::4"
+    - "ip6tables -t nat -A PREROUTING -d fc00::4 -p tcp --dport 53 -j DNAT --to-destination [fc00::3]:5353"
+    - "ip6tables -t nat -A POSTROUTING -d fc00::3 -p tcp --dport 5353 -j SNAT --to fc00::4"
+  post:
+    - "echo Here is post process"
+    - "echo Goodbye"
 ```
 
-自定义脚本命令，在启动代理前将依次执行，用于注入额外功能，默认为空
+> 本功能用于注入自定义功能，基于 Alpine 自带的 ash 执行，可能不支持部分 bash 语法
+
++ `pre` ：自定义脚本命令，在代理启动前执行，默认为空
+
++ `post` ：自定义脚本命令，在服务关闭前执行，默认为空
 
 ### IPv6路由广播
 
@@ -188,6 +202,7 @@ custom:
 # 以下配置仅为示范
 radvd:
   log: 3
+  dev: eth0
   enable: true
   option:
     AdvSendAdvert: on
@@ -219,6 +234,8 @@ radvd:
 ```
 
 + `log` ：RADVD 日志级别，可选 `0-5`，数值越大越详细，默认为 `0`
+
++ `dev` ：RADVD 运行的网卡，`enable` 为 `true` 时必选，一般与 `network` 中配置的网卡相同，默认为空
 
 + `enable` ：是否启动 RADVD，默认为 `false`
 

@@ -8,17 +8,17 @@
 
 为了方便讲解，我们假设以下典型情况：
 
-+ 校园网交换机无IPv6支持，同时存在QoS
++ 校园网交换机无 IPv6 支持，同时存在 QoS
 
-+ 无认证时允许53端口通行，ICMP流量无法通过
++ 无认证时允许 53 端口通行，ICMP 流量无法通过
 
-+ 使用三台公网服务器负载均衡，其53端口上运行有代理服务
++ 使用三台公网服务器负载均衡，其 53 端口上运行有代理服务
 
 + 三台服务器只有一台支持 IPv4 与 IPv6 双栈，其余只支持 IPv4
 
 ### 代理协议
 
-首先，从速度上考虑，我们应该选用socks层面的代理，它在代理服务器上的部署更方便，且CPU负载较低，缺点则是ICMP流量无法被代理，不过绝大多数情况下并不会用到公网ICMP流量（例如PING命令）；其次，由于存在高峰期QoS，应使用基于TCP的代理协议，此外，为了避开校园网的流量审查，我们应该将流量加密传输；最后，由于软路由性能一般较差，而代理服务器无需考虑协议兼容性问题，我们可以考虑基于 XTLS 的传输方式，它可以显著降低代理 https 流量时的性能开销。
+首先，从速度上考虑，我们应该选用 socks 层面的代理，它在代理服务器上的部署更方便，且 CPU 负载较低，缺点则是 ICMP 流量无法被代理，不过绝大多数情况下并不会用到公网 ICMP 流量（例如 PING 命令）；其次，由于存在高峰期 QoS，应使用基于 TCP 的代理协议，此外，为了避开校园网的流量审查，我们应该将流量加密传输；最后，由于软路由性能一般较差，而代理服务器无需考虑协议兼容性问题，我们可以考虑基于 XTLS 的传输方式，它可以显著降低代理 https 流量时的性能开销。
 
 综上，选择 VLESS + XTLS 或者 Trojan + XTLS 代理是当前网络环境下的最优解。
 
@@ -26,7 +26,7 @@
 
 > 分配 `192.168.2.0/24` 和 `fc00::/64` 给内网使用
 
-路由器 WAN 口接入学校交换机，构建一个 NAT 转换，代理流量在路由器转发后送到公网服务器的53端口上；假设内网中路由器地址为 `192.168.2.1` ，配置虚拟网关 IPv4 地址为 `192.168.2.2` ，IPv6 地址为 `fc00::2` ；在网关中，无论 IPv4 还是 IPv6 流量都会被透明代理，由于校园网无 IPv6 支持，数据被封装后只通过 IPv4 网络发送，代理服务器接收以后再将其解开，对于 IPv6 流量，这里相当于一个 6to4 隧道。
+路由器 WAN 口接入学校交换机，构建一个 NAT 转换，代理流量在路由器转发后送到公网服务器的 53 端口上；假设内网中路由器地址为 `192.168.2.1` ，配置虚拟网关 IPv4 地址为 `192.168.2.2` ，IPv6 地址为 `fc00::2` ；在网关中，无论 IPv4 还是 IPv6 流量都会被透明代理，由于校园网无 IPv6 支持，数据被封装后只通过 IPv4 网络发送，代理服务器接收以后再将其解开，对于 IPv6 流量，这里相当于一个 6to4 隧道。
 
 ```
 # 宿主机网卡假定为 eth0
@@ -72,6 +72,7 @@ proxy:
     nodeC: 1083
 
 network:
+  dev: eth0
   dns:
     - 192.168.2.1
   ipv4:
@@ -89,6 +90,7 @@ network:
 
 radvd:
   log: 5
+  dev: eth0
   enable: true
   option:
     AdvSendAdvert: on
@@ -96,12 +98,13 @@ radvd:
     cidr: fc00::/64
 
 custom:
-  - "iptables -t nat -N FAKE_PING"
-  - "iptables -t nat -A FAKE_PING -j DNAT --to-destination 192.168.2.2"
-  - "iptables -t nat -A PREROUTING -i eth0 -p icmp -j FAKE_PING"
-  - "ip6tables -t nat -N FAKE_PING"
-  - "ip6tables -t nat -A FAKE_PING -j DNAT --to-destination fc00::2"
-  - "ip6tables -t nat -A PREROUTING -i eth0 -p icmp -j FAKE_PING"
+  pre:
+    - "iptables -t nat -N FAKE_PING"
+    - "iptables -t nat -A FAKE_PING -j DNAT --to-destination 192.168.2.2"
+    - "iptables -t nat -A PREROUTING -i eth0 -p icmp -j FAKE_PING"
+    - "ip6tables -t nat -N FAKE_PING"
+    - "ip6tables -t nat -A FAKE_PING -j DNAT --to-destination fc00::2"
+    - "ip6tables -t nat -A PREROUTING -i eth0 -p icmp -j FAKE_PING"
 ```
 
 在开始代理前，我们使用 `custom` 注入了一段脚本配置：由于这里我们只代理 TCP 与 UDP 流量，ICMP 数据包不走代理，内网设备 ping 外网时会一直无响应，加入这段脚本可以创建一个 NAT，假冒远程主机返回成功回复，但实际上 ICMP 数据包并未实际到达，效果上表现为 ping 成功且延迟为内网访问时间。

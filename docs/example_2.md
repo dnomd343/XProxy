@@ -18,7 +18,7 @@
 
 目前路由资源中包含了一份国内常见域名列表，如果嗅探后的域名在其中，那可以直接判定为直连流量，但是对于其他流量，即使它不在列表内，但仍可能是国内服务，我们不能直接将它送往代理服务器；因此下一步我们需要引出分流的核心规则，它取决于 DNS 污染的一个特性：受污染的域名返回解析必然为境外 IP ，基于这个原则，我们将嗅探到的域名使用国内 DNS 进行一次解析，如果结果是国内 IP 地址，那就直连该流量，否则发往代理，IPv4 与 IPv6 均使用该逻辑分流。
 
-如果有可能的话，您可以在内网搭建一个无污染的解析服务，比如[ClearDNS](https://github.com/dnomd343/ClearDNS)，它的作用在于消除 DNS 污染，准确地给出国内外的解析地址，这样子可以在分流时就不用多做一次 DNS 解析，减少这一步导致的延迟（DNS 流量通过代理送出，远程解析以后再返回，其耗时较长且不稳定），无污染 DNS 可以更快更准确地进行分流。
+如果有可能的话，您可以在内网搭建一个无污染的解析服务，比如 [ClearDNS](https://github.com/dnomd343/ClearDNS)，它的作用在于消除 DNS 污染，准确地给出国内外的解析地址，这样子可以在分流时就不用多做一次 DNS 解析，减少这一步导致的延迟（DNS 流量通过代理送出，远程解析以后再返回，其耗时较长且不稳定），无污染 DNS 可以更快更准确地进行分流。
 
 ### 网络配置
 
@@ -78,6 +78,7 @@ proxy:
     redirect: true
 
 network:
+  dev: eth0
   dns:
     - 192.168.2.1
   ipv4:
@@ -95,6 +96,7 @@ network:
 
 radvd:
   log: 3
+  dev: eth0
   enable: true
   option:
     AdvSendAdvert: on
@@ -105,6 +107,7 @@ radvd:
 
 update:
   cron: "0 5 6 * * *"
+  proxy: "socks5://192.168.2.2:1094"  # 通过代理下载 Github 文件
   url:
     geoip.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
     geosite.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
