@@ -18,7 +18,7 @@ type Config struct {
     IPv4   network.Config
     IPv6   network.Config
     Proxy  proxy.Config
-    Update asset.Config
+    Asset  asset.Config
     Radvd  radvd.Config
     Custom custom.Config
 }

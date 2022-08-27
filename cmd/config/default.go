@@ -13,9 +13,10 @@ network:
     - fe80::/10
     - ff00::/8
 
-update:
-  cron: "0 0 4 * * *"
-  url:
-    geoip.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
-    geosite.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
+asset:
+  update:
+    cron: "0 0 4 * * *"
+    url:
+      geoip.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
+      geosite.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
 `

@@ -18,7 +18,7 @@ type NetConfig struct {
 }
 
 type RawConfig struct {
-    Update  asset.Config  `yaml:"update" json:"update"`
+    Asset   asset.Config  `yaml:"asset" json:"asset"`
     Radvd   radvd.Config  `yaml:"radvd" json:"radvd"`
     Proxy   proxy.Config  `yaml:"proxy" json:"proxy"`
     Custom  custom.Config `yaml:"custom" json:"custom"`
@@ -164,16 +164,17 @@ func decodeRadvd(rawConfig *RawConfig, config *Config) {
 }
 
 func decodeUpdate(rawConfig *RawConfig, config *Config) {
-    config.Update = rawConfig.Update
-    if config.Update.Proxy != "" {
-        _, err := url.Parse(config.Update.Proxy) // check proxy info
+    config.Asset = rawConfig.Asset
+    if config.Asset.Update.Proxy != "" {
+        _, err := url.Parse(config.Asset.Update.Proxy) // check proxy info
         if err != nil {
-            log.Panicf("Invalid update proxy -> %s", config.Update.Proxy)
+            log.Panicf("Invalid asset update proxy -> %s", config.Asset.Update.Proxy)
         }
     }
-    log.Debugf("Update proxy -> %s", config.Update.Proxy)
-    log.Debugf("Update cron -> %s", config.Update.Cron)
-    log.Debugf("Update urls -> %v", config.Update.Url)
+    log.Debugf("Asset disable -> %t", config.Asset.Disable)
+    log.Debugf("Asset update proxy -> %s", config.Asset.Update.Proxy)
+    log.Debugf("Asset update cron -> %s", config.Asset.Update.Cron)
+    log.Debugf("Asset update urls -> %v", config.Asset.Update.Url)
 }
 
 func decodeCustom(rawConfig *RawConfig, config *Config) {

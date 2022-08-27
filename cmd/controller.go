@@ -29,12 +29,20 @@ func blockWait() {
 }
 
 func loadRadvd(settings *config.Config) {
-    radvd.Load(&settings.Radvd)
+    if settings.Radvd.Enable {
+        radvd.Load(&settings.Radvd)
+    } else {
+        log.Infof("Skip loading radvd")
+    }
 }
 
 func loadAsset(settings *config.Config) {
-    asset.Load(assetFile, assetDir)
-    asset.AutoUpdate(&settings.Update, assetDir)
+    if settings.Asset.Disable {
+        log.Infof("Skip loading asset")
+    } else {
+        asset.Load(assetFile, assetDir)
+        asset.AutoUpdate(&settings.Asset, assetDir)
+    }
 }
 
 func loadNetwork(settings *config.Config) {
@@ -72,5 +80,7 @@ func runRadvd(settings *config.Config) {
             radvdCmd = append(radvdCmd, "--debug", strconv.Itoa(settings.Radvd.Log))
         }
         runProcess(nil, radvdCmd...)
+    } else {
+        log.Infof("Skip running radvd")
     }
 }

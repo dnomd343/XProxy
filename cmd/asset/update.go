@@ -8,9 +8,12 @@ import (
 )
 
 type Config struct {
-    Proxy string            `yaml:"proxy" json:"proxy"`
-    Cron  string            `yaml:"cron" json:"cron"`
-    Url   map[string]string `yaml:"url" json:"url"`
+    Disable bool `yaml:"disable" json:"disable"`
+    Update  struct {
+        Proxy string            `yaml:"proxy" json:"proxy"`
+        Cron  string            `yaml:"cron" json:"cron"`
+        Url   map[string]string `yaml:"url" json:"url"`
+    }
 }
 
 func updateAsset(urls map[string]string, assetDir string, updateProxy string) { // download new assets
@@ -27,11 +30,11 @@ func updateAsset(urls map[string]string, assetDir string, updateProxy string) { 
     }
 }
 
-func AutoUpdate(update *Config, assetDir string) { // set cron task for auto update
-    if update.Cron != "" {
+func AutoUpdate(config *Config, assetDir string) { // set cron task for auto update
+    if config.Update.Cron != "" {
         autoUpdate := cron.New()
-        _ = autoUpdate.AddFunc(update.Cron, func() { // cron function
-            updateAsset(update.Url, assetDir, update.Proxy)
+        _ = autoUpdate.AddFunc(config.Update.Cron, func() { // cron function
+            updateAsset(config.Update.Url, assetDir, config.Update.Proxy)
         })
         autoUpdate.Start()
     }
