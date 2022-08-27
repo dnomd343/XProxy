@@ -3,6 +3,7 @@ package main
 import (
     "XProxy/cmd/common"
     "XProxy/cmd/config"
+    "XProxy/cmd/custom"
     "XProxy/cmd/process"
     "flag"
     log "github.com/sirupsen/logrus"
@@ -83,7 +84,6 @@ func main() {
         }
     }()
     xproxyInit()
-
     var settings config.Config
     log.Infof("XProxy %s start (%s)", version, goVersion)
     // TODO: load dhcp configure
@@ -92,11 +92,12 @@ func main() {
     loadProxy(&settings)
     loadAsset(&settings)
     loadRadvd(&settings)
-
-    runScript(&settings)
+    custom.RunPreScript(&settings.Custom)
     // TODO: run dhcp service
     runRadvd(&settings)
     runProxy(&settings)
     blockWait()
     process.Exit(subProcess...)
+    custom.RunPostScript(&settings.Custom)
+    log.Infof("All done, goodbye!")
 }

@@ -3,6 +3,7 @@ package config
 import (
     "XProxy/cmd/asset"
     "XProxy/cmd/common"
+    "XProxy/cmd/custom"
     "XProxy/cmd/proxy"
     "XProxy/cmd/radvd"
     "encoding/json"
@@ -17,10 +18,10 @@ type NetConfig struct {
 }
 
 type RawConfig struct {
-    Custom  []string     `yaml:"custom" json:"custom"`
-    Update  asset.Config `yaml:"update" json:"update"`
-    Radvd   radvd.Config `yaml:"radvd" json:"radvd"`
-    Proxy   proxy.Config `yaml:"proxy" json:"proxy"`
+    Update  asset.Config  `yaml:"update" json:"update"`
+    Radvd   radvd.Config  `yaml:"radvd" json:"radvd"`
+    Proxy   proxy.Config  `yaml:"proxy" json:"proxy"`
+    Custom  custom.Config `yaml:"custom" json:"custom"`
     Network struct {
         Dev     string    `yaml:"dev" json:"dev"`
         DNS     []string  `yaml:"dns" json:"dns"`
@@ -176,6 +177,7 @@ func decodeUpdate(rawConfig *RawConfig, config *Config) {
 }
 
 func decodeCustom(rawConfig *RawConfig, config *Config) {
-    config.Script = rawConfig.Custom
-    log.Debugf("Custom script -> %v", config.Script)
+    config.Custom = rawConfig.Custom
+    log.Debugf("Custom pre-script -> %v", config.Custom.Pre)
+    log.Debugf("Custom post-script -> %v", config.Custom.Post)
 }

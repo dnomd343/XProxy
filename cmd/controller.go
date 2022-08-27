@@ -2,7 +2,6 @@ package main
 
 import (
     "XProxy/cmd/asset"
-    "XProxy/cmd/common"
     "XProxy/cmd/config"
     "XProxy/cmd/network"
     "XProxy/cmd/process"
@@ -50,13 +49,6 @@ func loadProxy(settings *config.Config) {
     settings.Proxy.V4TProxyPort = v4TProxyPort
     settings.Proxy.V6TProxyPort = v6TProxyPort
     proxy.Load(configDir, exposeDir, &settings.Proxy)
-}
-
-func runScript(settings *config.Config) {
-    for _, script := range settings.Script {
-        log.Infof("Run script command -> %s", script)
-        common.RunCommand("sh", "-c", script)
-    }
 }
 
 func runProxy(settings *config.Config) {

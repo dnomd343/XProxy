@@ -3,6 +3,7 @@ package config
 import (
     "XProxy/cmd/asset"
     "XProxy/cmd/common"
+    "XProxy/cmd/custom"
     "XProxy/cmd/network"
     "XProxy/cmd/proxy"
     "XProxy/cmd/radvd"
@@ -16,10 +17,10 @@ type Config struct {
     DNS    []string
     IPv4   network.Config
     IPv6   network.Config
-    Script []string
     Proxy  proxy.Config
     Update asset.Config
     Radvd  radvd.Config
+    Custom custom.Config
 }
 
 func Load(configFile string, config *Config) {
