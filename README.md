@@ -67,8 +67,8 @@ proxy:
   http:
     web: 8080
   socks:
-    proxy: 1094
-    direct: 1084
+    proxy4: 1094
+    direct4: 1084
     proxy6: 1096
     direct6: 1086
   addon:
@@ -84,6 +84,8 @@ proxy:
       - Mijia Cloud
       - courier.push.apple.com
 ```
+
+> 入站代理中内置 `tproxy4` 与 `tproxy6` 两个接口，分别对应 IPv4 与 IPv6 的透明代理，可作为 `inboundTag` 在路由中引用
 
 + `log` ：代理日志级别，可选 `debug` 、`info` 、`warning` 、`error` 、`none` ，默认为 `warning`
 

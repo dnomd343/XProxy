@@ -37,7 +37,7 @@ func loadInbounds(config *Config) string {
         sniff.DestOverride = sniff.DestOverride[:len(sniff.DestOverride)-1]
     }
     var inbounds []interface{}
-    inbounds = append(inbounds, loadTProxyConfig("tproxy", config.V4TProxyPort, sniff))
+    inbounds = append(inbounds, loadTProxyConfig("tproxy4", config.V4TProxyPort, sniff))
     inbounds = append(inbounds, loadTProxyConfig("tproxy6", config.V6TProxyPort, sniff))
     for tag, port := range config.Http {
         inbounds = append(inbounds, loadHttpConfig(tag, port, sniff))

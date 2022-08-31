@@ -69,8 +69,8 @@ proxy:
   log: info
   core: xray
   socks:
-    proxy: 1094
-    direct: 1084
+    proxy4: 1094
+    direct4: 1084
     proxy6: 1096
     direct6: 1086
   sniff:
@@ -137,11 +137,11 @@ asset:
     },
     {
       "tag": "proxy4",
-      ...
+      "...": "..."
     },
     {
       "tag": "proxy6",
-      ...
+      "...": "..."
     }
   ]
 }
@@ -156,7 +156,7 @@ asset:
     "rules": [
       {
         "type": "field",
-        "inboundTag": ["direct"],
+        "inboundTag": ["direct4"],
         "outboundTag": "direct4"
       },
       {
@@ -166,7 +166,7 @@ asset:
       },
       {
         "type": "field",
-        "inboundTag": ["proxy"],
+        "inboundTag": ["proxy4"],
         "outboundTag": "proxy4"
       },
       {
@@ -176,7 +176,7 @@ asset:
       },
       {
         "type": "field",
-        "inboundTag": ["tproxy"],
+        "inboundTag": ["tproxy4"],
         "domain": ["geosite:cn"],
         "outboundTag": "direct4"
       },
@@ -188,7 +188,7 @@ asset:
       },
       {
         "type": "field",
-        "inboundTag": ["tproxy"],
+        "inboundTag": ["tproxy4"],
         "ip": [
           "geoip:cn",
           "geoip:private"
@@ -206,7 +206,7 @@ asset:
       },
       {
         "type": "field",
-        "inboundTag": ["tproxy"],
+        "inboundTag": ["tproxy4"],
         "outboundTag": "proxy4"
       },
       {
