@@ -4,6 +4,7 @@ import (
     "XProxy/cmd/asset"
     "XProxy/cmd/common"
     "XProxy/cmd/custom"
+    "XProxy/cmd/dhcp"
     "XProxy/cmd/proxy"
     "XProxy/cmd/radvd"
     "encoding/json"
@@ -20,6 +21,7 @@ type NetConfig struct {
 type RawConfig struct {
     Asset   asset.Config  `yaml:"asset" json:"asset"`
     Radvd   radvd.Config  `yaml:"radvd" json:"radvd"`
+    DHCP    dhcp.Config   `yaml:"dhcp" json:"dhcp"`
     Proxy   proxy.Config  `yaml:"proxy" json:"proxy"`
     Custom  custom.Config `yaml:"custom" json:"custom"`
     Network struct {
@@ -161,6 +163,14 @@ func decodeRadvd(rawConfig *RawConfig, config *Config) {
     log.Debugf("Radvd clients -> %v", config.Radvd.Client)
     log.Debugf("Radvd RDNSS -> %v", config.Radvd.RDNSS)
     log.Debugf("Radvd DNSSL -> %v", config.Radvd.DNSSL)
+}
+
+func decodeDhcp(rawConfig *RawConfig, config *Config) {
+    config.DHCP = rawConfig.DHCP
+    log.Debugf("DHCPv4 enable -> %t", config.DHCP.IPv4.Enable)
+    log.Debugf("DHCPv4 config -> \n%s", config.DHCP.IPv4.Configure)
+    log.Debugf("DHCPv6 enable -> %t", config.DHCP.IPv6.Enable)
+    log.Debugf("DHCPv6 config -> \n%s", config.DHCP.IPv6.Configure)
 }
 
 func decodeUpdate(rawConfig *RawConfig, config *Config) {

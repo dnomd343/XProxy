@@ -4,6 +4,7 @@ import (
     "XProxy/cmd/asset"
     "XProxy/cmd/common"
     "XProxy/cmd/custom"
+    "XProxy/cmd/dhcp"
     "XProxy/cmd/network"
     "XProxy/cmd/proxy"
     "XProxy/cmd/radvd"
@@ -21,6 +22,7 @@ type Config struct {
     Asset  asset.Config
     Radvd  radvd.Config
     Custom custom.Config
+    DHCP   dhcp.Config
 }
 
 func Load(configFile string, config *Config) {
@@ -43,4 +45,5 @@ func Load(configFile string, config *Config) {
     decodeUpdate(&rawConfig, config)
     decodeCustom(&rawConfig, config)
     decodeRadvd(&rawConfig, config)
+    decodeDhcp(&rawConfig, config)
 }
