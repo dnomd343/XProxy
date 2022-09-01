@@ -25,8 +25,12 @@ func updateAsset(urls map[string]string, assetDir string, updateProxy string) { 
     if len(urls) != 0 {
         log.Info("Start update assets")
         for file, url := range urls {
-            common.DownloadFile(url, path.Join(assetDir, file), updateProxy) // maybe override old asset
+            if !common.DownloadFile(url, path.Join(assetDir, file), updateProxy) { // maybe override old asset
+                log.Infof("Try to download asset `%s` again", file)
+                common.DownloadFile(url, path.Join(assetDir, file), updateProxy) // download retry
+            }
         }
+        log.Infof("Assets update complete")
     }
 }
 

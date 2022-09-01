@@ -74,7 +74,7 @@ func CopyFile(source string, target string) {
     }
 }
 
-func DownloadFile(fileUrl string, filePath string, proxyUrl string) {
+func DownloadFile(fileUrl string, filePath string, proxyUrl string) bool {
     log.Debugf("File download `%s` => `%s`", fileUrl, filePath)
     client := http.Client{}
     if proxyUrl != "" { // use proxy for download
@@ -94,7 +94,7 @@ func DownloadFile(fileUrl string, filePath string, proxyUrl string) {
     }()
     if err != nil {
         log.Errorf("Download `%s` error -> %v", fileUrl, err)
-        return
+        return false
     }
     output, err := os.OpenFile(filePath, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
     defer output.Close()
@@ -102,7 +102,9 @@ func DownloadFile(fileUrl string, filePath string, proxyUrl string) {
         log.Panicf("Open `%s` error -> %v", filePath, err)
     }
     if _, err = io.Copy(output, resp.Body); err != nil {
-        log.Panicf("File `%s` save error -> %v", filePath, err)
+        log.Errorf("File `%s` save error -> %v", filePath, err)
+        return false
     }
     log.Infof("Download success `%s` => `%s`", fileUrl, filePath)
+    return true
 }
