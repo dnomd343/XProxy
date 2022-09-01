@@ -50,7 +50,7 @@ func loadNetwork(settings *config.Config) {
     settings.IPv4.TProxyPort = v4TProxyPort
     settings.IPv6.RouteTable = v6RouteTable
     settings.IPv6.TProxyPort = v6TProxyPort
-    network.Load(settings.DNS, &settings.IPv4, &settings.IPv6, settings.Dev)
+    network.Load(settings.DNS, settings.Dev, &settings.IPv4, &settings.IPv6)
 }
 
 func loadProxy(settings *config.Config) {

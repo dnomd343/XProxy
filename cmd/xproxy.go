@@ -35,6 +35,7 @@ func logInit(isDebug bool, logDir string) {
     if isDebug {
         log.SetLevel(log.DebugLevel)
     }
+    common.CreateFolder(logDir) // confirm log folder exist
     logFile, err := os.OpenFile(path.Join(logDir, "xproxy.log"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
     if err != nil {
         log.Errorf("Unable to open log file -> %s", path.Join(logDir, "xproxy.log"))
