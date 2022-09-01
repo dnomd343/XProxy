@@ -9,7 +9,7 @@ RUN make -C ./src/ && mkdir -p /upx/bin/ && mv ./src/upx.out /upx/bin/upx && \
     mkdir -p /upx/lib/ && cd /usr/lib/ && cp -d ./libgcc_s.so* ./libstdc++.so* ./libucl.so* /upx/lib/
 
 FROM golang:1.18-alpine3.16 AS xray
-ENV XRAY_VERSION="1.5.9"
+ENV XRAY_VERSION="1.5.10"
 RUN wget https://github.com/XTLS/Xray-core/archive/refs/tags/v${XRAY_VERSION}.tar.gz && tar xf v${XRAY_VERSION}.tar.gz
 WORKDIR ./Xray-core-${XRAY_VERSION}/
 RUN go mod download -x
