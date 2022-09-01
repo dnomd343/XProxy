@@ -11,9 +11,13 @@ import (
 )
 
 func CreateFolder(folderPath string) {
+    folder, err := os.Stat(folderPath)
+    if err == nil && folder.IsDir() { // folder exist -> skip create process
+        return
+    }
     log.Debugf("Create folder -> %s", folderPath)
     if err := os.MkdirAll(folderPath, 0755); err != nil {
-        log.Panicf("Failed to create folder -> %s", folderPath)
+        log.Errorf("Failed to create folder -> %s", folderPath)
     }
 }
 
