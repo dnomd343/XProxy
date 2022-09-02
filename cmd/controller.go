@@ -106,6 +106,8 @@ func runDhcp(settings *config.Config) {
         }
         runProcess(nil, "dhcpd", "-4", "-f", "-cf", v4Config, "-lf", v4Leases)
         time.Sleep(time.Second) // wait 1s for avoid cluttered output
+    } else {
+        log.Infof("Skip running DHCPv4")
     }
     if settings.DHCP.IPv6.Enable {
         v6Leases := path.Join(leaseDir, "dhcp6.leases")
@@ -115,5 +117,7 @@ func runDhcp(settings *config.Config) {
         }
         runProcess(nil, "dhcpd", "-6", "-f", "-cf", v6Config, "-lf", v6Leases)
         time.Sleep(time.Second) // wait 1s for avoid cluttered output
+    } else {
+        log.Infof("Skip running DHCPv6")
     }
 }

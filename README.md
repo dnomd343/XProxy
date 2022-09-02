@@ -253,7 +253,7 @@ radvd:
 
   + `AdvOtherConfigFlag` ：指示 IPv6 其他有状态配置，即 O 位，默认为 `off`
 
-  + > M 位与 O 位的详细定义在 [RFC4862](https://www.rfc-editor.org/rfc/rfc4862) 中给出：
+  + > M 位和 O 位的详细定义在 [RFC4862](https://www.rfc-editor.org/rfc/rfc4862) 中给出：
 
     + `M=off` 且 `O=off` ：使用 `Stateless` 模式，设备通过 RA 广播的前缀，配合 `EUI-64` 算法直接得到接口地址，即 `SLAAC` 方式
 
@@ -277,7 +277,36 @@ radvd:
 
 ### DHCP服务选项
 
-WIP...
+> DHCP 服务基于 [ISC-DHCP](https://www.isc.org/dhcp/) 项目提供
+
+```yaml
+# 以下配置仅为示范
+dhcp:
+  ipv4:
+    enable: false
+    config: |
+      default-lease-time 600;
+      max-lease-time 7200;
+
+      subnet 192.168.2.0 netmask 255.255.255.0 {
+        range 192.168.2.100 192.168.2.200;
+      }
+
+      host example {
+        hardware ethernet 03:48:c0:5d:bd:95;
+        fixed-address 192.168.2.233;
+      }
+  ipv6:
+    enable: false
+    config: |
+      ...
+```
+
++ `ipv4` 和 `ipv6` ：分别配置 DHCPv4 与 DHCPv6 服务
+
++ `enable` ：是否启动 DHCP 服务，默认为 `false`
+
++ `config` ：DHCP 服务配置文件，具体配置内容参考 [man文档](https://linux.die.net/man/5/dhcpd.conf)
 
 ## 部署流程
 
@@ -452,9 +481,9 @@ shell> /etc/init.d/networking restart
 
 > 您可以监视 `log/access.log` 文件，设备正常接入后会在此输出访问日志
 
-+ IPv4下，修改内网DHCP服务器配置（一般位于路由器上），将网关改为容器IP地址，保存后重新接入设备即可生效。
++ IPv4 下，修改内网 DHCP 服务器配置（一般位于路由器上），将网关改为容器 IP 地址，保存后重新接入设备即可生效。
 
-+ IPv6下，你需要关闭路由或上级网络的RA广播功能，然后开启配置中的RADVD选项，如果需要使用DHCPv6，可调整配置中的M位与O位开启状态，保存后将设备重新接入网络即可。
++ IPv6 下，你需要关闭路由或上级网络的RA广播功能，然后开启配置中的 RADVD 选项，如果需要使用 DHCPv6，可调整配置中的 M 位和 O 位开启状态，保存后将设备重新接入网络即可。
 
 ## 演示实例
 
