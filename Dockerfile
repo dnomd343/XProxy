@@ -38,6 +38,7 @@ RUN upx -9 /tmp/sagray
 FROM golang:1.18-alpine3.16 AS xproxy
 COPY . /XProxy
 WORKDIR /XProxy
+RUN go mod download -x
 RUN env CGO_ENABLED=0 go build -v -o xproxy -trimpath \
     -ldflags "-X 'main.goVersion=$(go version)' -s -w" ./cmd/ && mv ./xproxy /tmp/
 COPY --from=upx /upx/ /usr/
