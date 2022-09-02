@@ -91,14 +91,14 @@ func main() {
     xproxyInit()
     var settings config.Config
     log.Infof("XProxy %s start (%s)", version, goVersion)
-    // TODO: load dhcp configure
     config.Load(configFile, &settings)
     loadNetwork(&settings)
     loadProxy(&settings)
     loadAsset(&settings)
     loadRadvd(&settings)
+    loadDhcp(&settings)
     custom.RunPreScript(&settings.Custom)
-    // TODO: run dhcp service
+    runDhcp(&settings)
     runRadvd(&settings)
     runProxy(&settings)
     blockWait()

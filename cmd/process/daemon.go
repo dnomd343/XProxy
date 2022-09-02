@@ -12,6 +12,7 @@ func daemonSub(sub *Process) {
     log.Warningf("Catch process %s exit", sub.name)
     time.Sleep(5 * time.Second) // delay 3s -> try to restart
     if !exitFlag {
+        log.Debugf("Process %s restart -> %v", sub.name, sub.command)
         sub.Run(true, sub.env)
         log.Infof("Process %s restart success", sub.name)
         daemonSub(sub)

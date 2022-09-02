@@ -2,7 +2,9 @@ package main
 
 import (
     "XProxy/cmd/asset"
+    "XProxy/cmd/common"
     "XProxy/cmd/config"
+    "XProxy/cmd/dhcp"
     "XProxy/cmd/network"
     "XProxy/cmd/process"
     "XProxy/cmd/proxy"
@@ -13,6 +15,7 @@ import (
     "path"
     "strconv"
     "syscall"
+    "time"
 )
 
 func runProcess(env []string, command ...string) {
@@ -33,6 +36,14 @@ func loadRadvd(settings *config.Config) {
         radvd.Load(&settings.Radvd)
     } else {
         log.Infof("Skip loading radvd")
+    }
+}
+
+func loadDhcp(settings *config.Config) {
+    common.CreateFolder(dhcp.WorkDir)
+    if settings.DHCP.IPv4.Enable || settings.DHCP.IPv6.Enable {
+        common.CreateFolder(path.Join(exposeDir, "dhcp"))
+        dhcp.Load(&settings.DHCP)
     }
 }
 
@@ -82,5 +93,27 @@ func runRadvd(settings *config.Config) {
         runProcess(nil, radvdCmd...)
     } else {
         log.Infof("Skip running radvd")
+    }
+}
+
+func runDhcp(settings *config.Config) {
+    leaseDir := path.Join(exposeDir, "dhcp")
+    if settings.DHCP.IPv4.Enable {
+        v4Leases := path.Join(leaseDir, "dhcp4.leases")
+        v4Config := path.Join(dhcp.WorkDir, "dhcp4.conf")
+        if !common.IsFileExist(v4Leases) {
+            common.WriteFile(v4Leases, "", true)
+        }
+        runProcess(nil, "dhcpd", "-4", "-f", "-cf", v4Config, "-lf", v4Leases)
+        time.Sleep(time.Second) // wait 1s for avoid cluttered output
+    }
+    if settings.DHCP.IPv6.Enable {
+        v6Leases := path.Join(leaseDir, "dhcp6.leases")
+        v6Config := path.Join(dhcp.WorkDir, "dhcp6.conf")
+        if !common.IsFileExist(v6Leases) {
+            common.WriteFile(v6Leases, "", true)
+        }
+        runProcess(nil, "dhcpd", "-6", "-f", "-cf", v6Config, "-lf", v6Leases)
+        time.Sleep(time.Second) // wait 1s for avoid cluttered output
     }
 }
