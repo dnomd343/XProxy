@@ -4,15 +4,15 @@
 
 + ✅ 基于容器运行，无需修改主机路由配置，开箱即用
 
-+ ✅ 独立的MAC地址，与宿主机网络栈无耦合，随开随关
++ ✅ 独立的 MAC 地址，与宿主机网络栈无耦合，随开随关
 
-+ ✅ 允许自定义DNS、上游网关、IP地址等网络选项
++ ✅ 允许自定义 DNS 、上游网关、IP 地址等网络选项
 
-+ ✅ 支持TCP、UDP流量代理，完整的Fullcone NAT支持
++ ✅ 支持 TCP 、UDP 流量代理，完整的 Fullcone NAT 支持
 
-+ ✅ 完全兼容IPv6，支持SLAAC地址分配，RDNSS与DNSSL配置
++ ✅ 完全兼容 IPv6 ，支持 SLAAC 地址分配，RDNSS 与 DNSSL 配置
 
-+ ⏳ 内置DHCP与DHCPv6服务器，支持IP地址自动分配
++ ✅ 内置 DHCP 与 DHCPv6 服务器，支持 IP 地址自动分配
 
 ## 拓扑模型
 
@@ -133,7 +133,7 @@ network:
 
 + `dns` ：指定系统默认 DNS 服务器，留空时保持原配置不变，默认为空
 
-+ `ipv4` 与 `ipv6` ：指定 IPv4 与 IPv6 的网络信息，其中 `gateway` 为上游网关地址，`address` 为虚拟网关地址（CIDR格式，包含子网长度），不填写时保持不变，默认为空
++ `ipv4` 与 `ipv6` ：指定 IPv4 与 IPv6 的网络信息，其中 `gateway` 为上游网关地址，`address` 为虚拟网关地址（CIDR 格式，包含子网长度），不填写时保持不变，默认为空
 
 + `bypass` ：绕过代理的目标网段或 IP，默认为空，建议绕过以下5个网段：
 
@@ -158,7 +158,7 @@ network:
 asset:
   disable: false
   update:
-    cron: "0 0 4 * * *"  # 每天凌晨4点更新
+    cron: "0 5 6 * * *"  # 每天凌晨06点05分更新
     proxy: "socks5://192.168.2.4:1080"  # 通过 socks5 代理更新资源
     url:
       geoip.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
@@ -194,7 +194,7 @@ custom:
     - "echo Goodbye"
 ```
 
-> 本功能用于注入自定义功能，基于 Alpine 自带的 ash 执行，可能不支持部分 bash 语法
+> 本功能用于注入自定义功能，基于 Alpine 的 ash 执行，可能不支持部分 bash 语法
 
 + `pre` ：自定义脚本命令，在代理启动前执行，默认为空
 
@@ -203,6 +203,8 @@ custom:
 ### IPv6路由广播
 
 > `radvd` 有大量配置选项，`XProxy` 均对其保持兼容，以下仅介绍部分常用选项，更多详细参数可参考[man文档](https://www.systutorials.com/docs/linux/man/5-radvd.conf/)
+
+> 注意以下的 `on` 与 `off` 为字符串，但在部分 YAML 库中可能被解析成布尔值，为了安全起见，下游项目请注意转换时添加引号限定
 
 ```yaml
 # 以下配置仅为示范
@@ -241,7 +243,7 @@ radvd:
 
 + `log` ：RADVD 日志级别，可选 `0-5`，数值越大越详细，默认为 `0`
 
-+ `dev` ：RADVD 运行的网卡，`enable` 为 `true` 时必选，一般与 `network` 中配置的网卡相同，默认为空
++ `dev` ：执行 RA 广播的网卡，`enable` 为 `true` 时必选，一般与 `network` 中配置相同，默认为空
 
 + `enable` ：是否启动 RADVD，默认为 `false`
 
@@ -277,7 +279,7 @@ radvd:
 
 ### DHCP服务选项
 
-> DHCP 服务基于 [ISC-DHCP](https://www.isc.org/dhcp/) 项目提供
+> DHCP 与 DHCPv6 功能由 [ISC-DHCP](https://www.isc.org/dhcp/) 项目提供
 
 ```yaml
 # 以下配置仅为示范
@@ -312,7 +314,7 @@ dhcp:
 
 ### 1. 初始配置
 
-> XProxy 基于 macvlan 网络，开启混杂模式可以捕获非本机物理网卡的数据包，以此模拟出不同 MAC 地址的网卡
+> XProxy 基于 macvlan 网络，开启网卡混杂模式后可以捕获非本机 MAC 地址的数据包，以此模拟出不同 MAC 地址的网卡
 
 ```
 # 开启混杂模式，网卡按实际情况指定
@@ -329,7 +331,7 @@ shell> modprobe ip6table_filter
 shell> docker network create -d macvlan \
   --subnet={IPv4网段} --gateway={IPv4网关} \
   --subnet={IPv6网段} --gateway={IPv6网关} \
-  --ipv6 -o parent=eth0 macvlan  # 此处指定eth0网卡，需按实际调整
+  --ipv6 -o parent=eth0 macvlan  # 在eth0网卡上运行
 ```
 
 ### 2. 开始部署
@@ -366,6 +368,8 @@ shell> docker run --restart always \
 
 + `log` ：存储日志文件
 
++ `dhcp` ：存储 DHCP 数据库文件（仅当 DHCP 服务开启）
+
 **路由资源文件夹**
 
 `assets` 目录默认放置 `geoip.dat` 与 `geosite.dat` 路由规则文件，分别存储IP与域名归属信息，在 `update` 中配置的自动更新将保存到此处；本目录亦可放置自定义规则文件，在[路由配置](https://xtls.github.io/config/routing.html#ruleobject)中以 `ext:${FILE}:tag` 格式引用。
@@ -391,7 +395,9 @@ shell> docker run --restart always \
 
 `log` 目录用于放置日志文件
 
-+ `access.log` 记录代理流量连接
++ `xproxy.log` 记录 XProxy 工作信息
+
++ `access.log` 记录代理流量连接信息
 
 + `error.log` 记录代理连接错误信息
 
@@ -417,7 +423,7 @@ network:
 
 asset:
   update:
-    cron: "0 0 4 * * *"
+    cron: "0 5 6 * * *"
     url:
       geoip.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
       geosite.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
@@ -483,21 +489,21 @@ shell> /etc/init.d/networking restart
 
 + IPv4 下，修改内网 DHCP 服务器配置（一般位于路由器上），将网关改为容器 IP 地址，保存后重新接入设备即可生效。
 
-+ IPv6 下，你需要关闭路由或上级网络的RA广播功能，然后开启配置中的 RADVD 选项，如果需要使用 DHCPv6，可调整配置中的 M 位和 O 位开启状态，保存后将设备重新接入网络即可。
++ IPv6 下，你需要关闭路由或上级网络的 RA 广播功能，然后开启配置中的 RADVD 选项，如果需要使用 DHCPv6 ，可调整配置中的 M 位和 O 位开启状态，保存后将设备重新接入网络即可。
 
 ## 演示实例
 
-> 由于 XProxy 涉及较为复杂的网络配置，这里准备了两个详细的实例供您理解
+> 由于 XProxy 涉及较为复杂的网络配置，这里准备了两个详细的实例供您了解
 
-+ 实例1. [使用XProxy绕过校园网认证登录](./docs/example_1.md)
++ 实例1. [使用 XProxy 绕过校园网认证登录](./docs/example_1.md)
 
-+ 实例2. [家庭网络的IPv4与IPv6透明代理](./docs/example_2.md)
++ 实例2. [家庭网络的 IPv4 与 IPv6 透明代理](./docs/example_2.md)
 
 ## 开发相关
 
 ### 运行参数
 
-XProxy 默认使用 `/xproxy` 作为存储文件夹，该文件夹映射到外部主机作为持久存储，您可以使用 `EXPOSE_DIR` 环境变量修改该文件夹路径；同时，XProxy将默认读取该文件夹下的 `xproxy.yml` 作为配置文件，在运行时添加 `--config ...` 参数将读取指定配置文件；启动 XProxy 时若添加 `--debug` 参数，将进入调试模式，输出日志切换到 DEBUG 级别。
+XProxy 默认使用 `/xproxy` 作为存储文件夹，该文件夹映射到外部主机作为持久存储，您可以使用 `EXPOSE_DIR` 环境变量修改该文件夹路径；同时，XProxy 将默认读取该文件夹下的 `xproxy.yml` 作为配置文件，在运行时添加 `--config ...` 参数将读取指定配置文件；启动 XProxy 时若添加 `--debug` 参数，将进入调试模式，输出日志切换到 DEBUG 级别。
 
 ### TProxy配置
 

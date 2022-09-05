@@ -15,7 +15,7 @@ network:
 
 asset:
   update:
-    cron: "0 0 4 * * *"
+    cron: "0 5 6 * * *"
     url:
       geoip.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
       geosite.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
