@@ -33,9 +33,6 @@ func loadInbounds(config *Config) string {
         DestOverride:    []string{"http", "tls", "quic"},
         DomainsExcluded: config.Sniff.Exclude,
     }
-    if config.Core == "v2ray" { // PATCH: v2fly-core v4 not support quic sniff
-        sniff.DestOverride = sniff.DestOverride[:len(sniff.DestOverride)-1]
-    }
     var inbounds []interface{}
     inbounds = append(inbounds, loadTProxyConfig("tproxy4", config.V4TProxyPort, sniff))
     inbounds = append(inbounds, loadTProxyConfig("tproxy6", config.V6TProxyPort, sniff))
@@ -62,7 +59,7 @@ func Load(configDir string, exposeDir string, config *Config) {
     saveConfig(configDir, "log", loadLogConfig(config.Log, path.Join(exposeDir, "log")), true)
     for _, configFile := range common.ListFiles(path.Join(exposeDir, "config"), ".json") {
         if configFile == "log.json" || configFile == "inbounds" {
-            log.Warningf("Config file %s will be override", configFile)
+            log.Warningf("Config file %s will be overridden", configFile)
         }
         common.CopyFile(path.Join(exposeDir, "config", configFile), path.Join(configDir, configFile))
     }

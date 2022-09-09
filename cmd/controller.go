@@ -74,7 +74,7 @@ func runProxy(settings *config.Config) {
     if settings.Proxy.Core == "xray" { // xray-core
         runProcess([]string{"XRAY_LOCATION_ASSET=" + assetDir}, "xray", "-confdir", configDir)
     } else if settings.Proxy.Core == "v2ray" { // v2fly-core
-        runProcess([]string{"V2RAY_LOCATION_ASSET=" + assetDir}, "v2ray", "-confdir", configDir)
+        runProcess([]string{"V2RAY_LOCATION_ASSET=" + assetDir}, "v2ray", "run", "-d", configDir)
     } else if settings.Proxy.Core == "sagray" { // sager-core
         runProcess([]string{"V2RAY_LOCATION_ASSET=" + assetDir}, "sagray", "run", "-confdir", configDir)
     } else {

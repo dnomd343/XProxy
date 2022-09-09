@@ -146,7 +146,7 @@ func decodeProxy(rawConfig *RawConfig, config *Config) {
     log.Debugf("Add-on inbounds -> %v", config.Proxy.AddOn)
     log.Debugf("Connection sniff -> %t", config.Proxy.Sniff.Enable)
     log.Debugf("Connection redirect -> %t", config.Proxy.Sniff.Redirect)
-    log.Debugf("Connection sniff exlcude -> %v", config.Proxy.Sniff.Exclude)
+    log.Debugf("Connection sniff exclude -> %v", config.Proxy.Sniff.Exclude)
 }
 
 func decodeRadvd(rawConfig *RawConfig, config *Config) {

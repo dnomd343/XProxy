@@ -18,7 +18,7 @@ COPY --from=upx /upx/ /usr/
 RUN upx -9 /tmp/xray
 
 FROM golang:1.18-alpine3.16 AS v2ray
-ENV V2FLY_VERSION="4.45.2"
+ENV V2FLY_VERSION="5.1.0"
 RUN wget https://github.com/v2fly/v2ray-core/archive/refs/tags/v${V2FLY_VERSION}.tar.gz && tar xf v${V2FLY_VERSION}.tar.gz
 WORKDIR ./v2ray-core-${V2FLY_VERSION}/
 RUN go mod download -x

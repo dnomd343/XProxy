@@ -57,7 +57,7 @@ func ListFiles(folderPath string, suffix string) []string {
 func CopyFile(source string, target string) {
     log.Infof("Copy file `%s` => `%s`", source, target)
     if IsFileExist(target) {
-        log.Debugf("File `%s` will be overrided", target)
+        log.Debugf("File `%s` will be overridden", target)
     }
     srcFile, err := os.Open(source)
     defer srcFile.Close()
