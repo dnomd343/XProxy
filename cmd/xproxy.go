@@ -6,6 +6,7 @@ import (
     "XProxy/cmd/custom"
     "XProxy/cmd/process"
     "flag"
+    "fmt"
     log "github.com/sirupsen/logrus"
     "io"
     "os"
@@ -48,9 +49,14 @@ func xproxyInit() {
     if os.Getenv("CONFIG") != "" {
         xproxyConfig = os.Getenv("CONFIG")
     }
+    isVersion := flag.Bool("version", false, "Show version")
     isDebug := flag.Bool("debug", os.Getenv("DEBUG") == "true", "Enable debug mode")
     configName := flag.String("config", xproxyConfig, "Config file name")
     flag.Parse()
+    if *isVersion {
+        fmt.Printf("XProxy version %s (%s)\n", version, goVersion) // show version info and exit
+        os.Exit(0)
+    }
 
     exposeDir = "/xproxy" // default folder
     if os.Getenv("EXPOSE_DIR") != "" {
