@@ -35,8 +35,7 @@ FROM ${GOLANG_IMG} AS xproxy
 COPY . /XProxy
 WORKDIR /XProxy
 RUN go mod download -x
-RUN env CGO_ENABLED=0 go build -v -o xproxy -trimpath \
-      -ldflags "-X 'main.goVersion=$(go version)' -s -w" ./cmd/ && mv ./xproxy /tmp/
+RUN env CGO_ENABLED=0 go build -v -o xproxy -trimpath -ldflags "-s -w" ./cmd/ && mv ./xproxy /tmp/
 
 FROM alpine:3.16 AS asset
 WORKDIR /tmp/

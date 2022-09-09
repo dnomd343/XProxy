@@ -11,6 +11,7 @@ import (
     "io"
     "os"
     "path"
+    "runtime"
     "strconv"
 )
 
@@ -22,7 +23,6 @@ var v6TProxyPort = 7289
 var configDir = "/etc/xproxy"
 var assetFile = "/assets.tar.xz"
 
-var goVersion string
 var subProcess []*process.Process
 var assetDir, exposeDir, configFile string
 
@@ -53,8 +53,8 @@ func xproxyInit() {
     isDebug := flag.Bool("debug", os.Getenv("DEBUG") == "true", "Enable debug mode")
     configName := flag.String("config", xproxyConfig, "Config file name")
     flag.Parse()
-    if *isVersion {
-        fmt.Printf("XProxy version %s (%s)\n", version, goVersion) // show version info and exit
+    if *isVersion { // show version info and exit
+        fmt.Printf("XProxy version %s (%s %s/%s)\n", version, runtime.Version(), runtime.GOOS, runtime.GOARCH)
         os.Exit(0)
     }
 
@@ -96,7 +96,7 @@ func main() {
     }()
     xproxyInit()
     var settings config.Config
-    log.Infof("XProxy %s start (%s)", version, goVersion)
+    log.Infof("XProxy %s start (%s %s/%s)", version, runtime.Version(), runtime.GOOS, runtime.GOARCH)
     config.Load(configFile, &settings)
     loadNetwork(&settings)
     loadProxy(&settings)
