@@ -1,6 +1,6 @@
 module XProxy
 
-go 1.18
+go 1.19
 
 require (
 	github.com/robfig/cron v1.2.0
