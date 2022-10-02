@@ -27,13 +27,13 @@ FROM ${GOLANG_IMG} AS sagray
 #ENV SAGER_VER="5.0.16"
 #RUN wget https://github.com/SagerNet/v2ray-core/archive/refs/tags/v${SAGER_VER}.tar.gz && tar xf v${SAGER_VER}.tar.gz
 #WORKDIR ./v2ray-core-${SAGER_VER}/main/
-RUN apk add git && git clone https://github.com/SagerNet/v2ray-core.git
-WORKDIR ./v2ray-core/main/
+RUN wget https://github.com/SagerNet/v2ray-core/archive/refs/heads/main.zip && unzip main.zip
+WORKDIR ./v2ray-core-main/main/
 RUN go get -d
 RUN env CGO_ENABLED=0 go build -v -o sagray -trimpath -ldflags "-s -w" && mv sagray /tmp/
 
 FROM ${GOLANG_IMG} AS xproxy
-COPY . /XProxy
+COPY ./ /XProxy/
 WORKDIR /XProxy/cmd/
 RUN go get -d
 RUN env CGO_ENABLED=0 go build -v -o xproxy -trimpath -ldflags "-s -w" && mv xproxy /tmp/
@@ -55,5 +55,5 @@ RUN apk add --no-cache dhcp iptables ip6tables radvd && \
     mkdir -p /run/radvd/ && rm -f /etc/dhcp/dhcpd.conf.example && \
     touch /var/lib/dhcp/dhcpd.leases && touch /var/lib/dhcp/dhcpd6.leases
 COPY --from=asset /asset/ /
-WORKDIR /xproxy
+WORKDIR /xproxy/
 ENTRYPOINT ["xproxy"]
