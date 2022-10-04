@@ -13,7 +13,7 @@ func extractFile(archive string, geoFile string, targetDir string) { // extract 
         return
     }
     log.Infof("Extract asset file -> %s", filePath)
-    common.RunCommand("tar", "xvf", archive, "./"+geoFile, "-C", targetDir)
+    common.RunCommand("tar", "xf", archive, geoFile, "-C", targetDir)
 }
 
 func Load(assetFile string, assetDir string) {
