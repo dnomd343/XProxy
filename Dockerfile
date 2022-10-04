@@ -2,12 +2,12 @@ ARG ALPINE="alpine:3.16"
 ARG GOLANG="golang:1.19-alpine3.16"
 
 FROM ${ALPINE} AS upx
-ENV UPX_VER="3.96"
-RUN sed -i 's/v3.\d\d/v3.15/' /etc/apk/repositories && apk add bash build-base perl ucl-dev zlib-dev
-RUN wget https://github.com/upx/upx/releases/download/v${UPX_VER}/upx-${UPX_VER}-src.tar.xz && tar xf upx-${UPX_VER}-src.tar.xz
-WORKDIR ./upx-${UPX_VER}-src/
-RUN make -C ./src/ && mkdir -p /upx/bin/ && mv ./src/upx.out /upx/bin/upx && \
-    mkdir -p /upx/lib/ && cd /usr/lib/ && cp -d ./libgcc_s.so* ./libstdc++.so* ./libucl.so* /upx/lib/
+RUN apk add build-base cmake git
+RUN git clone https://github.com/dnomd343/upx.git
+WORKDIR ./upx/
+RUN git submodule update --init && rm -rf ./.git/
+RUN make UPX_CMAKE_CONFIG_FLAGS=-DCMAKE_EXE_LINKER_FLAGS=-static && \
+    mv ./build/release/upx /tmp/ && strip /tmp/upx
 
 FROM ${GOLANG} AS xray
 ENV XRAY="1.6.0"
@@ -15,6 +15,8 @@ RUN wget https://github.com/XTLS/Xray-core/archive/refs/tags/v${XRAY}.tar.gz && 
 WORKDIR ./Xray-core-${XRAY}/main/
 RUN go get -d
 RUN env CGO_ENABLED=0 go build -v -trimpath -ldflags "-s -w" && mv main /tmp/xray
+COPY --from=upx /tmp/upx /usr/bin/
+RUN upx -9 /tmp/xray
 
 FROM ${GOLANG} AS v2ray
 ENV V2FLY="5.1.0"
@@ -22,6 +24,8 @@ RUN wget https://github.com/v2fly/v2ray-core/archive/refs/tags/v${V2FLY}.tar.gz 
 WORKDIR ./v2ray-core-${V2FLY}/main/
 RUN go get -d
 RUN env CGO_ENABLED=0 go build -v -trimpath -ldflags "-s -w" && mv main /tmp/v2ray
+COPY --from=upx /tmp/upx /usr/bin/
+RUN upx -9 /tmp/v2ray
 
 FROM ${GOLANG} AS sagray
 #ENV SAGER_VER="5.0.17"
@@ -31,25 +35,27 @@ WORKDIR ./v2ray-core-main/main/
 #WORKDIR ./v2ray-core-${SAGER}/main/
 RUN go get -d
 RUN env CGO_ENABLED=0 go build -v -trimpath -ldflags "-s -w" && mv main /tmp/sagray
+COPY --from=upx /tmp/upx /usr/bin/
+RUN upx -9 /tmp/sagray
 
 FROM ${GOLANG} AS xproxy
 COPY ./ /XProxy/
 WORKDIR /XProxy/cmd/
 RUN go get -d
 RUN env CGO_ENABLED=0 go build -v -trimpath -ldflags "-s -w" && mv cmd /tmp/xproxy
+COPY --from=upx /tmp/upx /usr/bin/
+RUN upx -9 /tmp/xproxy
 
 FROM ${ALPINE} AS build
 RUN apk add xz
 WORKDIR /release/
 RUN wget "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat" && \
     wget "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat" && \
-    tar cJf assets.tar.xz *.dat
+    tar cJf assets.tar.xz *.dat && rm *.dat
 COPY --from=xproxy /tmp/xproxy /release/usr/bin/
 COPY --from=sagray /tmp/sagray /release/usr/bin/
 COPY --from=v2ray /tmp/v2ray /release/usr/bin/
 COPY --from=xray /tmp/xray /release/usr/bin/
-COPY --from=upx /upx/ /usr/
-RUN ls /release/usr/bin/* | xargs -P0 -n1 upx -9
 
 FROM ${ALPINE}
 RUN apk add --no-cache dhcp iptables ip6tables radvd && \
