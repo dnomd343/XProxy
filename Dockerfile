@@ -39,21 +39,22 @@ RUN go get -d
 RUN env CGO_ENABLED=0 go build -v -trimpath -ldflags "-s -w" && mv cmd /tmp/xproxy
 
 FROM ${ALPINE} AS build
-WORKDIR /tmp/
+RUN apk add xz
+WORKDIR /release/
 RUN wget "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat" && \
-    wget "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
-RUN apk add xz && mkdir -p /asset/ && tar cJf /asset/assets.tar.xz ./*.dat
-COPY --from=xproxy /tmp/xproxy /asset/usr/bin/
-COPY --from=sagray /tmp/sagray /asset/usr/bin/
-COPY --from=v2ray /tmp/v2ray /asset/usr/bin/
-COPY --from=xray /tmp/xray /asset/usr/bin/
+    wget "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat" && \
+    tar cJf assets.tar.xz *.dat
+COPY --from=xproxy /tmp/xproxy /release/usr/bin/
+COPY --from=sagray /tmp/sagray /release/usr/bin/
+COPY --from=v2ray /tmp/v2ray /release/usr/bin/
+COPY --from=xray /tmp/xray /release/usr/bin/
 COPY --from=upx /upx/ /usr/
-RUN ls /asset/usr/bin/* | xargs -P0 -n1 upx -9
+RUN ls /release/usr/bin/* | xargs -P0 -n1 upx -9
 
 FROM ${ALPINE}
 RUN apk add --no-cache dhcp iptables ip6tables radvd && \
     mkdir -p /run/radvd/ && rm -f /etc/dhcp/dhcpd.conf.example && \
     touch /var/lib/dhcp/dhcpd.leases && touch /var/lib/dhcp/dhcpd6.leases
-COPY --from=build /asset/ /
+COPY --from=build /release/ /
 WORKDIR /xproxy/
 ENTRYPOINT ["xproxy"]
