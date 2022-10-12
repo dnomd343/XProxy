@@ -18,13 +18,19 @@
 
 XProxy 部署在内网 Linux 主机上，通过 `macvlan` 网络创建独立 MAC 地址的虚拟网关，劫持内网设备的网络流量进行透明代理；宿主机一般以单臂旁路由的方式接入，虚拟网关运行时不会干扰宿主机网络，同时宿主机系统的流量也可被网关代理。
 
-<details>
-
-<summary>网络拓扑模型</summary>
-
-![network](./docs/img/network-model.png)
-
-</details>
+```mermaid
+  graph TD
+    net{{互联网}} === route(路由器)
+    subgraph 内网
+      route --- client_1(设备1)
+      route --- client_2(设备2)
+      route --- client_3(设备3)
+      subgraph 宿主设备
+        client(虚拟网关)
+      end
+      route -.- client
+    end
+```
 
 XProxy 运行以后，内网流量将被收集到代理内核上，目前内置了 `xray` ，`v2ray` ，`sagray` 三种内核，支持 `Shadowsocks` ，`ShadowsocksR` ，`VMess` ，`VLESS` ，`Trojan` ，`WireGuard` ，`SSH` ，`PingTunnel` 等多种代理协议，支持 `XTLS` ，`WebSocket` ，`QUIC` ，`gRPC` 等多种传输方式。同时，得益于V2ray的路由设计，代理的网络流量可被精确地分流，可以依据内网设备、目标地址、访问端口、连接域名、流量类型等多种方式进行路由。
 
