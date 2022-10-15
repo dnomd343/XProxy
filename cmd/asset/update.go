@@ -8,11 +8,11 @@ import (
 )
 
 type Config struct {
-    Disable bool `yaml:"disable" json:"disable"`
+    Disable bool `yaml:"disable" json:"disable" toml:"disable"`
     Update  struct {
-        Proxy string            `yaml:"proxy" json:"proxy"`
-        Cron  string            `yaml:"cron" json:"cron"`
-        Url   map[string]string `yaml:"url" json:"url"`
+        Proxy string            `yaml:"proxy" json:"proxy" toml:"proxy"`
+        Cron  string            `yaml:"cron" json:"cron" toml:"cron"`
+        Url   map[string]string `yaml:"url" json:"url" toml:"url"`
     }
 }
 

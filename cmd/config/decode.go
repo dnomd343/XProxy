@@ -13,25 +13,27 @@ import (
     "net/url"
 )
 
+// TODO: add TOML support
+
 type NetConfig struct {
-    Gateway string `yaml:"gateway" json:"gateway"` // network gateway
-    Address string `yaml:"address" json:"address"` // network address
+    Gateway string `yaml:"gateway" json:"gateway" toml:"gateway"` // network gateway
+    Address string `yaml:"address" json:"address" toml:"address"` // network address
 }
 
 type RawConfig struct {
-    Asset   asset.Config  `yaml:"asset" json:"asset"`
-    Radvd   radvd.Config  `yaml:"radvd" json:"radvd"`
-    DHCP    dhcp.Config   `yaml:"dhcp" json:"dhcp"`
-    Proxy   proxy.Config  `yaml:"proxy" json:"proxy"`
-    Custom  custom.Config `yaml:"custom" json:"custom"`
+    Asset   asset.Config  `yaml:"asset" json:"asset" toml:"asset"`
+    Radvd   radvd.Config  `yaml:"radvd" json:"radvd" toml:"radvd"`
+    DHCP    dhcp.Config   `yaml:"dhcp" json:"dhcp" toml:"dhcp"`
+    Proxy   proxy.Config  `yaml:"proxy" json:"proxy" toml:"proxy"`
+    Custom  custom.Config `yaml:"custom" json:"custom" toml:"custom"`
     Network struct {
-        Dev     string    `yaml:"dev" json:"dev"`
-        DNS     []string  `yaml:"dns" json:"dns"`
-        ByPass  []string  `yaml:"bypass" json:"bypass"`
-        Exclude []string  `yaml:"exclude" json:"exclude"`
-        IPv4    NetConfig `yaml:"ipv4" json:"ipv4"`
-        IPv6    NetConfig `yaml:"ipv6" json:"ipv6"`
-    } `yaml:"network" json:"network"`
+        Dev     string    `yaml:"dev" json:"dev" toml:"dev"`
+        DNS     []string  `yaml:"dns" json:"dns" toml:"dns"`
+        ByPass  []string  `yaml:"bypass" json:"bypass" toml:"bypass"`
+        Exclude []string  `yaml:"exclude" json:"exclude" toml:"exclude"`
+        IPv4    NetConfig `yaml:"ipv4" json:"ipv4" toml:"ipv4"`
+        IPv6    NetConfig `yaml:"ipv6" json:"ipv6" toml:"ipv6"`
+    } `yaml:"network" json:"network" toml:"network"`
 }
 
 func configDecode(raw []byte, fileSuffix string) RawConfig {

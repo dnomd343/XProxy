@@ -7,8 +7,8 @@ import (
 )
 
 type Config struct {
-    Pre  []string `yaml:"pre" json:"pre"`
-    Post []string `yaml:"post" json:"post"`
+    Pre  []string `yaml:"pre" json:"pre" toml:"pre"`
+    Post []string `yaml:"post" json:"post" toml:"post"`
 }
 
 func runScript(command string) {

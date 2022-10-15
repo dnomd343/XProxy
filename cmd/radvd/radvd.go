@@ -7,27 +7,27 @@ import (
 )
 
 type Config struct {
-    Log    int               `yaml:"log" json:"log"`
-    Dev    string            `yaml:"dev" json:"dev"`
-    Enable bool              `yaml:"enable" json:"enable"`
-    Client []string          `yaml:"client" json:"client"`
-    Option map[string]string `yaml:"option" json:"option"`
+    Log    int               `yaml:"log" json:"log" toml:"log"`
+    Dev    string            `yaml:"dev" json:"dev" toml:"dev"`
+    Enable bool              `yaml:"enable" json:"enable" toml:"enable"`
+    Client []string          `yaml:"client" json:"client" toml:"client"`
+    Option map[string]string `yaml:"option" json:"option" toml:"option"`
     Route  struct {
-        Cidr   string            `yaml:"cidr" json:"cidr"`
-        Option map[string]string `yaml:"option" json:"option"`
-    } `yaml:"route" json:"route"`
+        Cidr   string            `yaml:"cidr" json:"cidr" toml:"cidr"`
+        Option map[string]string `yaml:"option" json:"option" toml:"option"`
+    } `yaml:"route" json:"route" toml:"route"`
     Prefix struct {
-        Cidr   string            `yaml:"cidr" json:"cidr"`
-        Option map[string]string `yaml:"option" json:"option"`
-    } `yaml:"prefix" json:"prefix"`
+        Cidr   string            `yaml:"cidr" json:"cidr" toml:"cidr"`
+        Option map[string]string `yaml:"option" json:"option" toml:"option"`
+    } `yaml:"prefix" json:"prefix" toml:"prefix"`
     DNSSL struct { // DNS Search List
-        Suffix []string          `yaml:"suffix" json:"suffix"`
-        Option map[string]string `yaml:"option" json:"option"`
-    } `yaml:"dnssl" json:"dnssl"`
+        Suffix []string          `yaml:"suffix" json:"suffix" toml:"suffix"`
+        Option map[string]string `yaml:"option" json:"option" toml:"option"`
+    } `yaml:"dnssl" json:"dnssl" toml:"dnssl"`
     RDNSS struct { // Recursive DNS Server
-        IP     []string          `yaml:"ip" json:"ip"`
-        Option map[string]string `yaml:"option" json:"option"`
-    } `yaml:"rdnss" json:"rdnss"`
+        IP     []string          `yaml:"ip" json:"ip" toml:"ip"`
+        Option map[string]string `yaml:"option" json:"option" toml:"option"`
+    } `yaml:"rdnss" json:"rdnss" toml:"rdnss"`
 }
 
 func genSpace(num int) string {

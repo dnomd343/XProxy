@@ -7,16 +7,16 @@ import (
 )
 
 type Config struct {
-    Log   string         `yaml:"log" json:"log"`
-    Core  string         `yaml:"core" json:"core"`
-    Http  map[string]int `yaml:"http" json:"http"`
-    Socks map[string]int `yaml:"socks" json:"socks"`
-    AddOn []interface{}  `yaml:"addon" json:"addon"`
+    Log   string         `yaml:"log" json:"log" toml:"log"`
+    Core  string         `yaml:"core" json:"core" toml:"core"`
+    Http  map[string]int `yaml:"http" json:"http" toml:"http"`
+    Socks map[string]int `yaml:"socks" json:"socks" toml:"socks"`
+    AddOn []interface{}  `yaml:"addon" json:"addon" toml:"addon"`
     Sniff struct {
-        Enable   bool     `yaml:"enable" json:"enable"`
-        Redirect bool     `yaml:"redirect" json:"redirect"`
-        Exclude  []string `yaml:"exclude" json:"exclude"`
-    } `yaml:"sniff" json:"sniff"`
+        Enable   bool     `yaml:"enable" json:"enable" toml:"enable"`
+        Redirect bool     `yaml:"redirect" json:"redirect" toml:"redirect"`
+        Exclude  []string `yaml:"exclude" json:"exclude" toml:"exclude"`
+    } `yaml:"sniff" json:"sniff" toml:"sniff"`
     V4TProxyPort int
     V6TProxyPort int
 }

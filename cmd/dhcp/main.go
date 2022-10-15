@@ -9,13 +9,13 @@ import (
 var WorkDir = "/etc/dhcp"
 
 type dhcpConfig struct {
-    Enable    bool   `yaml:"enable" json:"enable"`
-    Configure string `yaml:"config" json:"config"`
+    Enable    bool   `yaml:"enable" json:"enable" toml:"enable"`
+    Configure string `yaml:"config" json:"config" toml:"config"`
 }
 
 type Config struct {
-    IPv4 dhcpConfig `yaml:"ipv4" json:"ipv4"`
-    IPv6 dhcpConfig `yaml:"ipv6" json:"ipv6"`
+    IPv4 dhcpConfig `yaml:"ipv4" json:"ipv4" toml:"ipv4"`
+    IPv6 dhcpConfig `yaml:"ipv6" json:"ipv6" toml:"ipv6"`
 }
 
 func Load(config *Config) {
