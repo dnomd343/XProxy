@@ -4,7 +4,7 @@
 
 以下为一般情况下的网络拓扑：
 
-![Network](./img/example_1.png)
+![Network](./img/campus_network.png)
 
 为了方便讲解，我们假设以下典型情况：
 
