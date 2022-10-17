@@ -7,8 +7,8 @@ import (
 )
 
 type Config struct {
+    //Bin  string         `yaml:"bin" json:"bin" toml:"bin"`
     Log   string         `yaml:"log" json:"log" toml:"log"`
-    Core  string         `yaml:"core" json:"core" toml:"core"`
     Http  map[string]int `yaml:"http" json:"http" toml:"http"`
     Socks map[string]int `yaml:"socks" json:"socks" toml:"socks"`
     AddOn []interface{}  `yaml:"addon" json:"addon" toml:"addon"`

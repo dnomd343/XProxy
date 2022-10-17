@@ -132,20 +132,9 @@ func decodeIPv6(rawConfig *RawConfig, config *Config) {
 
 func decodeProxy(rawConfig *RawConfig, config *Config) {
     config.Proxy = rawConfig.Proxy
-    if config.Proxy.Core == "" {
-        config.Proxy.Core = "xray" // use xray in default
-    }
-    if config.Proxy.Core != "xray" && config.Proxy.Core != "v2ray" && config.Proxy.Core != "sagray" {
-        log.Warningf("Unknown core type -> %s", config.Proxy.Core)
-    }
-    if config.Proxy.Core != "xray" && config.Proxy.Core != "sagray" && !config.Proxy.Sniff.Redirect {
-        log.Warningf("V2fly core couldn't disable redirect in sniff (aka `routeOnly` option)")
-    }
-    if config.Proxy.Core != "xray" && len(config.Proxy.Sniff.Exclude) != 0 {
-        log.Warningf("The exclude list in sniff options can only use for Xray-core")
-    }
+    // TODO: add proxy bin option
     log.Debugf("Proxy log level -> %s", config.Proxy.Log)
-    log.Debugf("Core type -> %s", config.Proxy.Core)
+    //log.Debugf("Core type -> %s", config.Proxy.Core)
     log.Debugf("Http inbounds -> %v", config.Proxy.Http)
     log.Debugf("Socks5 inbounds -> %v", config.Proxy.Socks)
     log.Debugf("Add-on inbounds -> %v", config.Proxy.AddOn)

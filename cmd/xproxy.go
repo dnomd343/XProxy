@@ -70,6 +70,8 @@ func xproxyInit() {
     log.Debugf("Assets folder -> %s", assetDir)
     log.Debugf("Config file -> %s", configFile)
 
+    // TODO: add PROXY_BIN env option
+
     if os.Getenv("IPV4_TABLE") != "" {
         v4RouteTable, _ = strconv.Atoi(os.Getenv("IPV4_TABLE"))
     }
