@@ -505,15 +505,21 @@ shell> /etc/init.d/networking restart
 
 > 由于 XProxy 涉及较为复杂的网络配置，这里准备了两个详细的实例供您了解
 
-+ 实例1. [使用 XProxy 绕过校园网认证登录](./docs/example_1.md)
++ 实例1. [使用 XProxy 绕过校园网认证登录](./docs/campus_network_cracking.md)
 
-+ 实例2. [家庭网络的 IPv4 与 IPv6 透明代理](./docs/example_2.md)
++ 实例2. [家庭网络的 IPv4 与 IPv6 透明代理](./docs/dual_stack_network_proxy.md)
 
 ## 开发相关
 
 ### 运行参数
 
-XProxy 默认使用 `/xproxy` 作为存储文件夹，该文件夹映射到外部主机作为持久存储，您可以使用 `EXPOSE_DIR` 环境变量修改该文件夹路径；同时，XProxy 将默认读取该文件夹下的 `xproxy.yml` 作为配置文件，在运行时添加 `--config ...` 参数将读取指定配置文件；启动 XProxy 时若添加 `--debug` 参数，将进入调试模式，输出日志切换到 DEBUG 级别。
+> XProxy 默认使用 `/xproxy` 作为存储文件夹，该文件夹映射到外部主机作为持久存储，您可以使用 `EXPOSE_DIR` 环境变量修改该文件夹路径
+
+> XProxy 默认使用 `xray` 作为代理内核，您可以使用 `PROXY_BIN` 环境变量来指定其他内核
+
++ `--config` ： 指定配置文件名称，默认为 `xproxy.yml`
+
++ `--debug` ：开启调试模式，输出日志切换到 DEBUG 级别。
 
 ### TProxy配置
 
