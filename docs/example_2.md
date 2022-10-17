@@ -75,7 +75,6 @@ shell> docker run --restart always \
 ```yaml
 proxy:
   log: info
-  core: xray
   socks:
     proxy4: 1094
     direct4: 1084

@@ -67,7 +67,6 @@ shell> docker run --restart always \
 ```yaml
 proxy:
   log: warning
-  core: xray
   socks:
     nodeA: 1081
     nodeB: 1082

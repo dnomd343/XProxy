@@ -32,15 +32,15 @@ XProxy 部署在内网 Linux 主机上，通过 `macvlan` 网络创建独立 MAC
     end
 ```
 
-XProxy 运行以后，内网流量将被收集到代理内核上，目前内置了 `xray` ，`v2ray` ，`sagray` 三种内核，支持 `Shadowsocks` ，`ShadowsocksR` ，`VMess` ，`VLESS` ，`Trojan` ，`WireGuard` ，`SSH` ，`PingTunnel` 等多种代理协议，支持 `XTLS` ，`WebSocket` ，`QUIC` ，`gRPC` 等多种传输方式。同时，得益于V2ray的路由设计，代理的网络流量可被精确地分流，可以依据内网设备、目标地址、访问端口、连接域名、流量类型等多种方式进行路由。
+XProxy 运行以后，内网流量将被收集到代理内核上，支持 `xray` ，`v2ray` ，`sagray` 等多种内核，支持 `Shadowsocks` ，`ShadowsocksR` ，`VMess` ，`VLESS` ，`Trojan` ，`WireGuard` ，`SSH` ，`PingTunnel` 等多种代理协议，支持 `XTLS` ，`WebSocket` ，`QUIC` ，`gRPC` 等多种传输方式。同时，得益于 V2ray 的路由设计，代理的网络流量可被精确地分流，可以依据内网设备、目标地址、访问端口、连接域名、流量类型等多种方式进行路由。
 
 由于 XProxy 与宿主机网络完全解耦，一台主机上可运行多个虚拟网关，它们拥有不同的 MAC 地址，在网络模型上是多台独立的主机；因此各个虚拟网关能负责不同的功能，甚至它们之间还能互为上下级路由的关系，灵活实现多种网络功能。
 
 ## 配置格式
 
-> 所有 `.json` 后缀的文件将视为 JSON 格式文件，其余将以 YAML 格式进行解析
+> XProxy 支持 JSON , YAML 与 TOML 格式的配置文件，其中 `.json` 与 `.toml` 后缀的文件分别以 JSON 与 TOML 格式解析，其余将以 YAML 格式解析
 
-XProxy 使用 YAML 或 JSON 格式的配置文件，包含以下部分：
+XProxy 的配置文件包含以下部分：
 
 ```yaml
 proxy:
@@ -68,8 +68,8 @@ dhcp:
 ```yaml
 # 以下配置仅为示范
 proxy:
+  bin: xray
   log: info
-  core: xray
   http:
     web: 8080
   socks:
@@ -93,9 +93,13 @@ proxy:
 
 > 入站代理中内置 `tproxy4` 与 `tproxy6` 两个接口，分别对应 IPv4 与 IPv6 的透明代理，可作为 `inboundTag` 在路由中引用
 
-+ `log` ：代理日志级别，可选 `debug` 、`info` 、`warning` 、`error` 、`none` ，默认为 `warning`
++ `bin` ：指定内核名称，默认为 `xray`
 
-+ `core` ：代理内核类型，可选 `xray` 、`v2ray` 、`sagray`，默认为 `xray`
+> 自 `1.0.2` 起，XProxy 镜像仅自带 `xray` 内核，其他内核需要用户自行添加
+
+> 例：在 Docker 启动命令中加入 `-v {V2RAY_BIN}:/usr/bin/v2ray` 可以将 `v2ray` 内核添加到容器中，在 `bin` 选项中指定内核名称即可生效，或者使用 `PROXY_BIN=v2ray` 环境变量指定。
+
++ `log` ：代理日志级别，可选 `debug` 、`info` 、`warning` 、`error` 、`none` ，默认为 `warning`
 
 + `http` 与 `socks` ：配置 http 与 socks5 入站代理，使用 `key: value` 格式，前者指定入站标志（路由配置中的 inboundTag），后者指定监听端口，默认为空
 
