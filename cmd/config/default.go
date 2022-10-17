@@ -12,7 +12,6 @@ import (
 
 var defaultConfig = map[string]interface{}{
     "proxy": map[string]string{
-        "bin": "xray",
         "log": "warning",
     },
     "network": map[string]interface{}{
