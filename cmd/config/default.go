@@ -11,9 +11,8 @@ import (
 )
 
 var defaultConfig = map[string]interface{}{
-    // TODO: add proxy bin option
     "proxy": map[string]string{
-        //"core": "xray",
+        "bin": "xray",
         "log": "warning",
     },
     "network": map[string]interface{}{

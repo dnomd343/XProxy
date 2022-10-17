@@ -132,9 +132,11 @@ func decodeIPv6(rawConfig *RawConfig, config *Config) {
 
 func decodeProxy(rawConfig *RawConfig, config *Config) {
     config.Proxy = rawConfig.Proxy
-    // TODO: add proxy bin option
+    if config.Proxy.Bin == "" {
+        config.Proxy.Bin = "xray" // default proxy bin
+    }
+    log.Debugf("Proxy bin -> %s", config.Proxy.Bin)
     log.Debugf("Proxy log level -> %s", config.Proxy.Log)
-    //log.Debugf("Core type -> %s", config.Proxy.Core)
     log.Debugf("Http inbounds -> %v", config.Proxy.Http)
     log.Debugf("Socks5 inbounds -> %v", config.Proxy.Socks)
     log.Debugf("Add-on inbounds -> %v", config.Proxy.AddOn)

@@ -7,7 +7,7 @@ import (
 )
 
 type Config struct {
-    //Bin  string         `yaml:"bin" json:"bin" toml:"bin"`
+    Bin   string         `yaml:"bin" json:"bin" toml:"bin"`
     Log   string         `yaml:"log" json:"log" toml:"log"`
     Http  map[string]int `yaml:"http" json:"http" toml:"http"`
     Socks map[string]int `yaml:"socks" json:"socks" toml:"socks"`
