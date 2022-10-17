@@ -207,18 +207,27 @@ XProxy 容器默认不自带 WireGuard 功能，需要额外安装 `wireguard-to
 > 以下代码用于生成 Alpine 的 WireGuard 安装脚本，您也可以选择手动拉取 apk 安装包
 
 ```python
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import os
+import re
+import sys
+
 alpine = '3.16'
-import os, re, sys
 
 if len(sys.argv) != 2:
     print('Invalid argument')
     sys.exit(1)
+
 workDir = os.path.join(os.path.dirname(os.path.realpath(__file__)), sys.argv[1])
+
 output = os.popen(' '.join([
     'docker', 'run', '--rm', '-it', '-v', '%s:/pkg' % workDir, '-w', '/pkg',
     'alpine:%s' % alpine, 'sh', '-c', '\'apk update && apk fetch -R %s\'' % sys.argv[1]
 ])).read()
 print("%(line)s\n%(msg)s%(line)s" % {'line': '=' * 88, 'msg': output})
+
 with open(os.path.join(workDir, 'setup'), 'w') as script:
     script.write("#!/bin/sh\ncd `dirname $0`\napk add --no-network " + ' '.join([
         s + '.apk' for s in re.findall(r'Downloading (\S+)', output)
