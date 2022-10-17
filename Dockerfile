@@ -3,11 +3,12 @@ ARG GOLANG="golang:1.19-alpine3.16"
 
 FROM ${ALPINE} AS upx
 RUN apk add build-base cmake git
-RUN git clone https://github.com/dnomd343/upx.git
+RUN git clone https://github.com/dnomd343/upx.git --depth=1
 WORKDIR ./upx/
 RUN git submodule update --init && rm -rf ./.git/
-RUN make UPX_CMAKE_CONFIG_FLAGS=-DCMAKE_EXE_LINKER_FLAGS=-static && \
-    mv ./build/release/upx /tmp/ && strip /tmp/upx
+RUN make UPX_CMAKE_CONFIG_FLAGS=-DCMAKE_EXE_LINKER_FLAGS=-static
+WORKDIR ./build/release/
+RUN strip upx && mv upx /tmp/
 
 FROM ${GOLANG} AS xray
 ENV XRAY="1.6.0"
