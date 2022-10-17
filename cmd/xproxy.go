@@ -20,6 +20,8 @@ var v4RouteTable = 104
 var v6RouteTable = 106
 var v4TProxyPort = 7288
 var v6TProxyPort = 7289
+
+var proxyBin = ""
 var configDir = "/etc/xproxy"
 var assetFile = "/assets.tar.xz"
 
@@ -70,6 +72,9 @@ func xproxyInit() {
     log.Debugf("Assets folder -> %s", assetDir)
     log.Debugf("Config file -> %s", configFile)
 
+    if os.Getenv("PROXY_BIN") != "" {
+        proxyBin = os.Getenv("PROXY_BIN")
+    }
     if os.Getenv("IPV4_TABLE") != "" {
         v4RouteTable, _ = strconv.Atoi(os.Getenv("IPV4_TABLE"))
     }

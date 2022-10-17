@@ -27,8 +27,7 @@ type Config struct {
 
 func Load(configFile string, config *Config) {
     if !common.IsFileExist(configFile) { // configure not exist -> load default
-        log.Infof("Load default configure -> %s", configFile)
-        common.WriteFile(configFile, defaultConfig, false)
+        loadDefaultConfig(configFile)
     }
     raw, err := os.ReadFile(configFile) // read configure content
     if err != nil {

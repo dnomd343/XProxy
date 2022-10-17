@@ -65,21 +65,20 @@ func loadNetwork(settings *config.Config) {
 }
 
 func loadProxy(settings *config.Config) {
+    if proxyBin != "" {
+        settings.Proxy.Bin = proxyBin // setting proxy bin from env
+    }
     settings.Proxy.V4TProxyPort = v4TProxyPort
     settings.Proxy.V6TProxyPort = v6TProxyPort
     proxy.Load(configDir, exposeDir, &settings.Proxy)
 }
 
 func runProxy(settings *config.Config) {
-    if settings.Proxy.Core == "xray" { // xray-core
-        runProcess([]string{"XRAY_LOCATION_ASSET=" + assetDir}, "xray", "-confdir", configDir)
-    } else if settings.Proxy.Core == "v2ray" { // v2fly-core
-        runProcess([]string{"V2RAY_LOCATION_ASSET=" + assetDir}, "v2ray", "run", "-d", configDir)
-    } else if settings.Proxy.Core == "sagray" { // sager-core
-        runProcess([]string{"V2RAY_LOCATION_ASSET=" + assetDir}, "sagray", "run", "-confdir", configDir)
-    } else {
-        log.Panicf("Unknown core type -> %s", settings.Proxy.Core)
+    assetEnv := []string{
+        "XRAY_LOCATION_ASSET=" + assetDir,  // xray asset folder
+        "V2RAY_LOCATION_ASSET=" + assetDir, // v2ray / sagray asset folder
     }
+    runProcess(assetEnv, settings.Proxy.Bin, "run", "-confdir", configDir)
 }
 
 func runRadvd(settings *config.Config) {

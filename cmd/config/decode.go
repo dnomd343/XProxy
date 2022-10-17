@@ -8,12 +8,11 @@ import (
     "XProxy/cmd/proxy"
     "XProxy/cmd/radvd"
     "encoding/json"
+    "github.com/BurntSushi/toml"
     log "github.com/sirupsen/logrus"
     "gopkg.in/yaml.v3"
     "net/url"
 )
-
-// TODO: add TOML support
 
 type NetConfig struct {
     Gateway string `yaml:"gateway" json:"gateway" toml:"gateway"` // network gateway
@@ -41,11 +40,15 @@ func configDecode(raw []byte, fileSuffix string) RawConfig {
     log.Debugf("Config raw content -> \n%s", string(raw))
     if fileSuffix == ".json" {
         if err := json.Unmarshal(raw, &config); err != nil { // json format decode
-            log.Panicf("Decode config file error -> %v", err)
+            log.Panicf("Decode JSON config file error -> %v", err)
+        }
+    } else if fileSuffix == ".toml" {
+        if err := toml.Unmarshal(raw, &config); err != nil { // toml format decode
+            log.Panicf("Decode TOML config file error -> %v", err)
         }
     } else {
         if err := yaml.Unmarshal(raw, &config); err != nil { // yaml format decode
-            log.Panicf("Decode config file error -> %v", err)
+            log.Panicf("Decode YAML config file error -> %v", err)
         }
     }
     log.Debugf("Decoded configure -> %v", config)
@@ -129,20 +132,11 @@ func decodeIPv6(rawConfig *RawConfig, config *Config) {
 
 func decodeProxy(rawConfig *RawConfig, config *Config) {
     config.Proxy = rawConfig.Proxy
-    if config.Proxy.Core == "" {
-        config.Proxy.Core = "xray" // use xray in default
+    if config.Proxy.Bin == "" {
+        config.Proxy.Bin = "xray" // default proxy bin
     }
-    if config.Proxy.Core != "xray" && config.Proxy.Core != "v2ray" && config.Proxy.Core != "sagray" {
-        log.Warningf("Unknown core type -> %s", config.Proxy.Core)
-    }
-    if config.Proxy.Core != "xray" && config.Proxy.Core != "sagray" && !config.Proxy.Sniff.Redirect {
-        log.Warningf("V2fly core couldn't disable redirect in sniff (aka `routeOnly` option)")
-    }
-    if config.Proxy.Core != "xray" && len(config.Proxy.Sniff.Exclude) != 0 {
-        log.Warningf("The exclude list in sniff options can only use for Xray-core")
-    }
+    log.Debugf("Proxy bin -> %s", config.Proxy.Bin)
     log.Debugf("Proxy log level -> %s", config.Proxy.Log)
-    log.Debugf("Core type -> %s", config.Proxy.Core)
     log.Debugf("Http inbounds -> %v", config.Proxy.Http)
     log.Debugf("Socks5 inbounds -> %v", config.Proxy.Socks)
     log.Debugf("Add-on inbounds -> %v", config.Proxy.AddOn)
