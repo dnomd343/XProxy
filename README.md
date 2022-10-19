@@ -8,7 +8,7 @@
 
 + ✅ 允许自定义 DNS 、上游网关、IP 地址等网络选项
 
-+ ✅ 支持 TCP 、UDP 流量代理，完整的 Fullcone NAT 支持
++ ✅ 支持 TCP 、UDP 流量代理，完整的 Full-cone NAT 支持
 
 + ✅ 完全兼容 IPv6 ，支持 SLAAC 地址分配，RDNSS 与 DNSSL 配置
 
@@ -535,7 +535,7 @@ XProxy 默认使用以下配置：
 
 ### 容器构建
 
-> XProxy 针对 buildkit 进行优化，使用 buildx 命令可加快构建速度
+> XProxy 针对 `buildkit` 进行优化，使用 `buildx` 命令可加快构建速度
 
 **本地构建**
 
