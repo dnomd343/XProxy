@@ -346,7 +346,7 @@ shell> docker network create -d macvlan \
 
 ### 2. 开始部署
 
-> 本项目基于 Docker 构建，在 [Docker Hub](https://hub.docker.com/repository/docker/dnomd343/xproxy) 或 [Github Package](https://github.com/dnomd343/XProxy/pkgs/container/xproxy) 可以查看已构建的各版本镜像。
+> 本项目基于 Docker 构建，在 [Docker Hub](https://hub.docker.com/r/dnomd343/xproxy) 或 [Github Package](https://github.com/dnomd343/XProxy/pkgs/container/xproxy) 可以查看已构建的各版本镜像。
 
 XProxy 同时发布在多个镜像源上：
 
