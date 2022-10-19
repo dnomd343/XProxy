@@ -1,4 +1,4 @@
-## 使用 XProxy 绕过校园网认证登录
+# 使用 XProxy 绕过校园网认证登录
 
 部分校园网在登录认证时需要 DNS 解析，因而在防火墙上允许 `TCP/53` 或 `UDP/53` 端口通行，借助这个漏洞，可将内网流量用 XProxy 代理并转发到公网服务器上，实现免认证、无限速的上网。
 
@@ -16,7 +16,7 @@
 
 + 三台服务器只有一台支持 IPv4 与 IPv6 双栈，其余只支持 IPv4
 
-### 代理协议
+## 代理协议
 
 从部署成本与便捷性方面考虑，socks 类代理是最合适的工具：无需修改服务器网卡路由表等配置，方便多级负载均衡，软件只在用户态运行，实测速度也相对 `IPSec` 、`L2TP` 等协议更有优势；但 socks 代理只接收 TCP 与 UDP 流量，ICMP 流量无法被直接代理（例如 PING 命令），不过大多数情况下我们不会用到公网 ICMP 流量，如果确实需要也可以曲线救国给它补上。
 
@@ -24,7 +24,7 @@
 
 既然我们已经选择 XTLS 方式，那使用轻量的无加密类型（在加密的 XTLS 隧道里传输）是当前网络的最优解，譬如 VLESS 或者 Trojan 协议，下面将用 VLESS + XTLS 代理进行配置演示；当然，具体的选择还是取决于您的实际应用场景，只要按需调整 XProxy 的配置文件即可。
 
-### 初始化配置
+## 初始化配置
 
 > 分配 `192.168.2.0/24` 和 `fc00::/64` 给内网使用
 
@@ -54,7 +54,7 @@ shell> docker run --restart always \
   dnomd343/xproxy:latest
 ```
 
-### 参数配置
+## 参数配置
 
 我们将三台服务器分别称为 `nodeA` ，`nodeB` 与 `nodeC` ，其中只有 `nodeC` 支持IPv6网络；此外，我们在内网分别暴露 3 个 socks5 端口，分别用于检测服务器的可用性。
 
@@ -112,7 +112,7 @@ custom:
 
 > 这段脚本并无实质作用，只是演示 `custom` 功能
 
-### 代理配置
+## 代理配置
 
 接下来，我们应该配置出站代理，修改 `config/outbounds.json` 文件，填入公网代理服务器参数：
 
@@ -130,7 +130,7 @@ custom:
     {
       "tag": "nodeC",
       "...": "..."
-    },
+    }
   ]
 }
 ```
@@ -190,7 +190,7 @@ shell> docker restart scutweb
 
 最后，验证代理服务是否正常工作，若出现问题可以查看 `/etc/scutweb/log` 文件夹下的日志，定位错误原因。
 
-### 代理 ICMP 流量
+## 代理 ICMP 流量
 
 > 这一步仅用于修复 ICMP 代理，无此需求可以忽略
 
@@ -200,7 +200,7 @@ shell> docker restart scutweb
 
 具体实现上，我们需要在容器中安装 WireGuard 工具包，然后在 XProxy 中配置启动注入脚本，开启 WireGuard 对 ICMP 流量的代理。
 
-1. 拉取 WireGuard 安装包
+### 1. 拉取 WireGuard 安装包
 
 XProxy 容器默认不自带 WireGuard 功能，需要额外安装 `wireguard-tools` 包，您可以在原有镜像上添加一层，或是使用以下方式安装离线包。
 
@@ -229,9 +229,9 @@ output = os.popen(' '.join([
 print("%(line)s\n%(msg)s%(line)s" % {'line': '=' * 88, 'msg': output})
 
 with open(os.path.join(workDir, 'setup'), 'w') as script:
-    script.write("#!/bin/sh\ncd `dirname $0`\napk add --no-network " + ' '.join([
+    script.write("#!/usr/bin/env sh\ncd \"$(dirname \"$0\")\"\napk add " + ' '.join([
         s + '.apk' for s in re.findall(r'Downloading (\S+)', output)
-    ]) + "\n")
+    ]) + " --no-network --quiet\n")
 os.system('chmod +x %s' % os.path.join(workDir, 'setup'))
 ```
 
@@ -247,7 +247,7 @@ shell> python3 fetch.py wireguard-tools  # 拉取wireguard-tools依赖
 
 拉取成功后将生成 `wireguard-tools` 文件夹，包含多个依赖的 `.apk` 安装包与 `setup` 安装脚本
 
-2. 写入 WireGuard 配置文件
+### 2. 写入 WireGuard 配置文件
 
 一个典型的客户端配置文件如下：
 
@@ -263,7 +263,7 @@ AllowedIPs = 0.0.0.0/0
 
 将其保存至 `/etc/scutweb/config/wg.conf`
 
-3. 容器注入 WireGuard 服务
+### 3. 容器注入 WireGuard 服务
 
 WireGuard 在这里使用 `192.168.1.0/24` 的 VPN 网段，客户端 IP 地址为 `192.168.1.2`，注意服务端应允许 `192.168.2.2/24` 网段，否则必须在容器中多做一层 NAT 才能代理。
 
