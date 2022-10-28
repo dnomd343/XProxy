@@ -2,10 +2,10 @@ ARG ALPINE="alpine:3.16"
 ARG GOLANG="golang:1.19-alpine3.16"
 
 FROM ${ALPINE} AS upx
-RUN apk add build-base cmake git
-RUN git clone https://github.com/dnomd343/upx.git --depth=1
-WORKDIR ./upx/
-RUN git submodule update --init && rm -rf ./.git/
+RUN apk add build-base cmake
+ENV UPX="3.99"
+RUN wget https://github.com/upx/upx/releases/download/v${UPX}/upx-${UPX}-src.tar.xz && tar xf upx-${UPX}-src.tar.xz
+WORKDIR ./upx-${UPX}-src/
 RUN make UPX_CMAKE_CONFIG_FLAGS=-DCMAKE_EXE_LINKER_FLAGS=-static
 WORKDIR ./build/release/
 RUN strip upx && mv upx /tmp/
