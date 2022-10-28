@@ -38,8 +38,8 @@ COPY --from=xray /tmp/xray /release/usr/bin/
 
 FROM ${ALPINE}
 RUN apk add --no-cache dhcp iptables ip6tables radvd && \
-    mkdir -p /run/radvd/ && rm -f /etc/dhcp/dhcpd.conf.example && \
-    touch /var/lib/dhcp/dhcpd.leases && touch /var/lib/dhcp/dhcpd6.leases
+    cd /var/lib/dhcp/ && touch dhcpd.leases dhcpd6.leases && \
+    rm -f /etc/dhcp/dhcpd.conf.example && mkdir -p /run/radvd/
 COPY --from=build /release/ /
 WORKDIR /xproxy/
 ENTRYPOINT ["xproxy"]
