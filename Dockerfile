@@ -11,7 +11,7 @@ WORKDIR ./build/release/
 RUN strip upx && mv upx /tmp/
 
 FROM ${GOLANG} AS xray
-ENV XRAY="1.6.3"
+ENV XRAY="1.6.5"
 RUN wget https://github.com/XTLS/Xray-core/archive/refs/tags/v${XRAY}.tar.gz && tar xf v${XRAY}.tar.gz
 WORKDIR ./Xray-core-${XRAY}/main/
 RUN go get -d
