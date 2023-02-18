@@ -3,7 +3,7 @@ ARG GOLANG="golang:1.19-alpine3.17"
 
 FROM ${ALPINE} AS upx
 RUN apk add build-base cmake
-ENV UPX="4.0.1"
+ENV UPX="4.0.2"
 RUN wget https://github.com/upx/upx/releases/download/v${UPX}/upx-${UPX}-src.tar.xz && tar xf upx-${UPX}-src.tar.xz
 WORKDIR ./upx-${UPX}-src/
 RUN make UPX_CMAKE_CONFIG_FLAGS=-DCMAKE_EXE_LINKER_FLAGS=-static
