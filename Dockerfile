@@ -11,9 +11,16 @@ WORKDIR ./build/release/
 RUN strip upx && mv upx /tmp/
 
 FROM ${GOLANG} AS xray
-ENV XRAY="1.7.5"
-RUN wget https://github.com/XTLS/Xray-core/archive/refs/tags/v${XRAY}.tar.gz && tar xf v${XRAY}.tar.gz
-WORKDIR ./Xray-core-${XRAY}/main/
+#ENV XRAY="1.7.5"
+#RUN wget https://github.com/XTLS/Xray-core/archive/refs/tags/v${XRAY}.tar.gz && tar xf v${XRAY}.tar.gz
+#WORKDIR ./Xray-core-${XRAY}/main/
+
+# TODO: use xray dev version just for now
+RUN apk add git
+RUN git clone https://github.com/XTLS/Xray-core.git
+WORKDIR ./Xray-core/main/
+RUN git checkout 4c8ee0af50bbabd29e6766f0d9509add6fc0b2e7
+
 RUN go get -d
 RUN env CGO_ENABLED=0 go build -v -trimpath -ldflags "-s -w" && mv main /tmp/xray
 COPY --from=upx /tmp/upx /usr/bin/
