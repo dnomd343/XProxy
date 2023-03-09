@@ -517,7 +517,7 @@ shell> /etc/init.d/networking restart
 
 > XProxy 默认使用 `xray` 作为代理内核，您可以使用 `PROXY_BIN` 环境变量来指定其他内核
 
-+ `--config` ： 指定配置文件名称，默认为 `xproxy.yml`
++ `--config` ：指定配置文件名称，默认为 `xproxy.yml`
 
 + `--debug` ：开启调试模式，输出日志切换到 DEBUG 级别。
 
@@ -539,16 +539,22 @@ XProxy 默认使用以下配置：
 
 **本地构建**
 
-```
-shell> git clone https://github.com/dnomd343/XProxy.git
-shell> cd ./XProxy/
-shell> docker build -t xproxy .
+```bash
+$ git clone https://github.com/dnomd343/XProxy.git
+$ cd ./XProxy/
+$ docker build -t xproxy .
 ```
 
 **交叉构建**
 
-```
-shell> docker buildx build -t dnomd343/xproxy --platform="linux/amd64,linux/arm64,linux/386,linux/arm/v7" https://github.com/dnomd343/XProxy.git --push
+```bash
+$ git clone https://github.com/dnomd343/XProxy.git
+$ cd ./XProxy/
+$ docker buildx build \
+    -t dnomd343/xproxy \
+    -t ghcr.io/dnomd343/xproxy \
+    -t registry.cn-shenzhen.aliyuncs.com/dnomd343/xproxy \
+    --platform="linux/amd64,linux/arm64,linux/386,linux/arm/v7" . --push
 ```
 
 ## 许可证
