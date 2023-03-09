@@ -326,19 +326,19 @@ dhcp:
 
 > XProxy 基于 macvlan 网络，开启网卡混杂模式后可以捕获非本机 MAC 地址的数据包，以此模拟出不同 MAC 地址的网卡
 
-```
+```bash
 # 开启混杂模式，网卡按实际情况指定
-shell> ip link set eth0 promisc on
+$ ip link set eth0 promisc on
 
 # 启用IPv6内核模块
-shell> modprobe ip6table_filter
+$ modprobe ip6table_filter
 ```
 
 在 Docker 中创建 macvlan 网络
 
-```
+```bash
 # 网络配置按实际情况指定
-shell> docker network create -d macvlan \
+docker network create -d macvlan \
   --subnet={IPv4网段} --gateway={IPv4网关} \
   --subnet={IPv6网段} --gateway={IPv6网关} \
   --ipv6 -o parent=eth0 macvlan  # 在eth0网卡上运行
@@ -360,8 +360,8 @@ XProxy 同时发布在多个镜像源上：
 
 使用以下命令启动虚拟网关，配置文件将存储在本机 `/etc/xproxy/` 目录下：
 
-```
-shell> docker run --restart always \
+```bash
+docker run --restart always \
   --privileged --network macvlan -dt \
   --name xproxy --hostname xproxy \  # 可选，指定容器名称与主机名
   --volume /etc/xproxy/:/xproxy/ \
@@ -390,7 +390,7 @@ shell> docker run --restart always \
 
 为了正常工作，容器初始化时会载入以下 `outbounds.json` 作为默认出站配置，其指定所有流量为直连：
 
-```
+```json
 {
   "outbounds": [
     {
@@ -441,14 +441,14 @@ asset:
 
 用户需要根据实际需求更改配置文件，保存以后重启容器即可生效：
 
-```
-shell> docker restart xproxy
+```bash
+docker restart xproxy
 ```
 
 如果配置文件出错，`XProxy` 将无法正常工作，您可以使用以下命令查看工作日志：
 
-```
-shell> docker logs -f xproxy
+```bash
+docker logs -f xproxy
 ```
 
 ### 4. 宿主机访问虚拟网关
@@ -461,13 +461,13 @@ shell> docker logs -f xproxy
 
 编辑网卡配置文件
 
-```
-shell> vim /etc/network/interfaces
+```bash
+vim /etc/network/interfaces
 ```
 
 补充如下配置，具体网络信息需要按实际情况指定：
 
-```
+```ini
 auto eth0  # 宿主机物理网卡
 iface eth0 inet manual
 
@@ -484,8 +484,8 @@ iface macvlan inet static
 
 重启宿主机网络生效（或直接重启系统）：
 
-```
-shell> /etc/init.d/networking restart
+```bash
+$ /etc/init.d/networking restart
 [ ok ] Restarting networking (via systemctl): networking.service.
 ```
 
