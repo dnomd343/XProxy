@@ -21,16 +21,17 @@ RUN git clone https://github.com/XTLS/Xray-core.git
 WORKDIR ./Xray-core/main/
 RUN git checkout 4c8ee0af50bbabd29e6766f0d9509add6fc0b2e7
 
-RUN go get -d
+RUN go get
 RUN env CGO_ENABLED=0 go build -v -trimpath -ldflags "-s -w" && mv main /tmp/xray
 COPY --from=upx /tmp/upx /usr/bin/
 RUN upx -9 /tmp/xray
 
 FROM ${GOLANG} AS xproxy
+RUN apk add git
 COPY ./ /XProxy/
 WORKDIR /XProxy/cmd/
-RUN go get -d
-RUN env CGO_ENABLED=0 go build -v -trimpath -ldflags "-s -w" && mv cmd /tmp/xproxy
+RUN go get
+RUN env CGO_ENABLED=0 go build -v -trimpath -ldflags "-X main.version=$(git describe --tag) -s -w" && mv cmd /tmp/xproxy
 COPY --from=upx /tmp/upx /usr/bin/
 RUN upx -9 /tmp/xproxy
 
