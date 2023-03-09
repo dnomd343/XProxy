@@ -19,7 +19,7 @@ FROM ${GOLANG} AS xray
 RUN apk add git
 RUN git clone https://github.com/XTLS/Xray-core.git
 WORKDIR ./Xray-core/main/
-RUN git checkout 4c8ee0af50bbabd29e6766f0d9509add6fc0b2e7
+RUN git checkout 79c0b0a0f2c82a67e353be41c2a85dcb9cbbfe59
 
 RUN go get
 RUN env CGO_ENABLED=0 go build -v -trimpath -ldflags "-s -w" && mv main /tmp/xray
