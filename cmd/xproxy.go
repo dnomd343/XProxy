@@ -15,7 +15,7 @@ import (
     "strconv"
 )
 
-var version = "1.0.2"
+var version = "dev"
 var v4RouteTable = 104
 var v6RouteTable = 106
 var v4TProxyPort = 7288

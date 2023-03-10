@@ -11,19 +11,20 @@ WORKDIR ./build/release/
 RUN strip upx && mv upx /tmp/
 
 FROM ${GOLANG} AS xray
-ENV XRAY="1.7.5"
+ENV XRAY="1.8.0"
 RUN wget https://github.com/XTLS/Xray-core/archive/refs/tags/v${XRAY}.tar.gz && tar xf v${XRAY}.tar.gz
 WORKDIR ./Xray-core-${XRAY}/main/
-RUN go get -d
+RUN go get
 RUN env CGO_ENABLED=0 go build -v -trimpath -ldflags "-s -w" && mv main /tmp/xray
 COPY --from=upx /tmp/upx /usr/bin/
 RUN upx -9 /tmp/xray
 
 FROM ${GOLANG} AS xproxy
+RUN apk add git
 COPY ./ /XProxy/
 WORKDIR /XProxy/cmd/
-RUN go get -d
-RUN env CGO_ENABLED=0 go build -v -trimpath -ldflags "-s -w" && mv cmd /tmp/xproxy
+RUN go get
+RUN env CGO_ENABLED=0 go build -v -trimpath -ldflags "-X main.version=$(git describe --tag) -s -w" && mv cmd /tmp/xproxy
 COPY --from=upx /tmp/upx /usr/bin/
 RUN upx -9 /tmp/xproxy
 
