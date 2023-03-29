@@ -107,11 +107,11 @@ proxy:
 
 + `sniff` ：嗅探选项，用于获取透明代理中的连接域名：
 
-    + `enable` ：是否启用嗅探功能，默认为 `false`
+  + `enable` ：是否启用嗅探功能，默认为 `false`
 
-    + `redirect` ：是否使用嗅探结果覆盖目标地址，默认为 `false`（v2ray 内核不支持）
+  + `redirect` ：是否使用嗅探结果覆盖目标地址，默认为 `false`（v2ray 内核不支持）
 
-    + `exclude` ：不进行覆盖的域名列表，默认为空（仅 xray 内核支持）
+  + `exclude` ：不进行覆盖的域名列表，默认为空（仅 xray 内核支持）
 
 ### 网络选项
 
@@ -386,11 +386,11 @@ docker run --restart always \
 
 + `dhcp` ：存储 DHCP 数据库文件（仅当 DHCP 服务开启）
 
-**路由资源文件夹**
+#### 路由资源文件夹
 
 `assets` 目录默认放置 `geoip.dat` 与 `geosite.dat` 路由规则文件，分别存储IP与域名归属信息，在 `update` 中配置的自动更新将保存到此处；本目录亦可放置自定义规则文件，在[路由配置](https://xtls.github.io/config/routing.html#ruleobject)中以 `ext:${FILE}:tag` 格式引用。
 
-**代理配置文件夹**
+#### 代理配置文件夹
 
 `config` 目录存储代理配置文件，所有 `.json` 后缀文件均会被载入，用户可配置除 `inbounds` 与 `log` 以外的所有代理选项，多配置文件需要注意[合并规则](https://xtls.github.io/config/features/multiple.html#%E8%A7%84%E5%88%99%E8%AF%B4%E6%98%8E)。
 
@@ -407,7 +407,7 @@ docker run --restart always \
 }
 ```
 
-**日志文件夹**
+#### 日志文件夹
 
 `log` 目录用于放置日志文件
 
@@ -541,17 +541,18 @@ XProxy 默认使用以下配置：
 
 ### 容器构建
 
-> XProxy 针对 `buildkit` 进行优化，使用 `buildx` 命令可加快构建速度
-
-**本地构建**
+#### 本地构建
 
 ```bash
 $ git clone https://github.com/dnomd343/XProxy.git
 $ cd ./XProxy/
 $ docker build -t xproxy .
+···
 ```
 
-**交叉构建**
+#### 交叉构建
+
+> XProxy 针对 `buildkit` 进行优化，使用 `buildx` 命令可加快构建速度
 
 ```bash
 $ git clone https://github.com/dnomd343/XProxy.git
