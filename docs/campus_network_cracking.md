@@ -8,13 +8,13 @@
 
 为了方便讲解，我们假设以下典型情况：
 
-+ 校园网交换机无 IPv6 支持，同时存在 QoS
++ 校园网交换机无 IPv6 支持，同时存在 QoS；
 
-+ 无认证时允许 53 端口通行，ICMP 流量无法通过
++ 无认证时允许 53 端口通行，ICMP 流量无法通过；
 
-+ 使用三台公网服务器负载均衡，其 53 端口上运行有代理服务
++ 使用三台公网服务器负载均衡，其 53 端口上运行有代理服务；
 
-+ 三台服务器只有一台支持 IPv4 与 IPv6 双栈，其余只支持 IPv4
++ 三台服务器只有一台支持 IPv4 与 IPv6 双栈，其余只支持 IPv4；
 
 ## 代理协议
 
@@ -26,15 +26,15 @@
 
 ## 初始化配置
 
-> 分配 `192.168.2.0/24` 和 `fc00::/64` 给内网使用
+> 分配 `192.168.2.0/24` 和 `fc00::/64` 给内网使用。
 
-路由器 WAN 口接入学校交换机，构建一个 NAT 转换，代理流量在路由器转发后送到公网服务器的 53 端口上；假设内网中路由器地址为 `192.168.2.1` ，配置虚拟网关 IPv4 地址为 `192.168.2.2` ，IPv6 地址为 `fc00::2` ；在网关中，无论 IPv4 还是 IPv6 流量都会被透明代理，由于校园网无 IPv6 支持，数据被封装后只通过 IPv4 网络发送，代理服务器接收以后再将其解开，对于 IPv6 流量，这里相当于一个 6to4 隧道。
+路由器 WAN 口接入学校交换机，构建一个 NAT 转换，代理流量在路由器转发后送到公网服务器的 53 端口上；假设内网中路由器地址为 `192.168.2.1` ，配置虚拟网关 IPv4 地址为 `192.168.2.2` ，IPv6 地址为 `fc00::2` ；在网关中，无论 IPv4 还是 IPv6 流量都会被透明代理，由于校园网无 IPv6 支持，数据被封装后只通过 IPv4 网络发送，代理服务器接收以后再将其解开，对于 IPv6 流量，这里相当于一个 `6to4` 隧道。
 
-```
+```bash
 # 宿主机网卡假定为 eth0
-shell> ip link set eth0 promisc on
-shell> modprobe ip6table_filter
-shell> docker network create -d macvlan \
+$ ip link set eth0 promisc on
+$ modprobe ip6table_filter
+$ docker network create -d macvlan \
   --subnet=192.168.2.0/24 \  # 此处指定的参数为容器的默认网络配置
   --gateway=192.168.2.1 \
   --subnet=fc00::/64 \
@@ -44,8 +44,8 @@ shell> docker network create -d macvlan \
 
 我们将配置文件保存在 `/etc/scutweb` 目录下，使用以下命令开启 XProxy 服务：
 
-```
-shell> docker run --restart always \
+```bash
+docker run --restart always \
   --privileged --network macvlan -dt \
   --name scutweb --hostname scutweb \
   --volume /etc/scutweb/:/xproxy/ \
@@ -110,7 +110,7 @@ custom:
 
 在开始代理前，我们使用 `custom` 注入了一段脚本配置：由于这里我们只代理 TCP 与 UDP 流量，ICMP 数据包不走代理，内网设备 ping 外网时会一直无响应，加入这段脚本可以创建一个 NAT，假冒远程主机返回成功回复，但实际上 ICMP 数据包并未实际到达，效果上表现为 ping 成功且延迟为内网访问时间。
 
-> 这段脚本并无实质作用，只是演示 `custom` 功能
+> 这段脚本并无实质作用，仅用于演示 `custom` 功能。
 
 ## 代理配置
 
@@ -184,15 +184,15 @@ custom:
 
 重启 XProxy 容器使配置生效：
 
-```
-shell> docker restart scutweb
+```bash
+docker restart scutweb
 ```
 
 最后，验证代理服务是否正常工作，若出现问题可以查看 `/etc/scutweb/log` 文件夹下的日志，定位错误原因。
 
 ## 代理 ICMP 流量
 
-> 这一步仅用于修复 ICMP 代理，无此需求可以忽略
+> 这一步仅用于修复 ICMP 代理，无此需求可以忽略。
 
 由于 socks5 代理服务不支持 ICMP 协议，当前搭建的网络只有 TCP 与 UDP 发往外网，即使在上文我们注入了一段命令用于劫持 PING 流量，但是返回的仅仅是虚假结果，并没有实际意义；所以如果对这个缺陷不满，您可以考虑使用以下方法修复这个问题。
 
@@ -235,23 +235,22 @@ with open(os.path.join(workDir, 'setup'), 'w') as script:
 os.system('chmod +x %s' % os.path.join(workDir, 'setup'))
 ```
 
-```
+```bash
 # fetch.py 为上述脚本
-
-shell> cd /etc/scutweb
-shell> mkdir -p ./toolset && cd ./toolset
-shell> python3 fetch.py wireguard-tools  # 拉取wireguard-tools依赖
+$ cd /etc/scutweb
+$ mkdir -p ./toolset && cd ./toolset
+$ python3 fetch.py wireguard-tools  # 拉取wireguard-tools依赖
 ···
 ···
 ```
 
-拉取成功后将生成 `wireguard-tools` 文件夹，包含多个依赖的 `.apk` 安装包与 `setup` 安装脚本
+拉取成功后将生成 `wireguard-tools` 文件夹，包含多个依赖的 `.apk` 安装包与 `setup` 安装脚本。
 
 ### 2. 写入 WireGuard 配置文件
 
 一个典型的客户端配置文件如下：
 
-```
+```ini
 [Interface]
 PrivateKey = 客户端私钥
 
