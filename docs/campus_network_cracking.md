@@ -210,28 +210,27 @@ XProxy 容器默认不自带 WireGuard 功能，需要额外安装 `wireguard-to
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import os
-import re
-import sys
+Alpine = '3.17'
 
-alpine = '3.16'
+import os, re, sys
 
-if len(sys.argv) != 2:
-    print('Invalid argument')
-    sys.exit(1)
+pkgName = sys.argv[1]
+workDir = os.path.join(os.path.dirname(os.path.realpath(__file__)), pkgName)
 
-workDir = os.path.join(os.path.dirname(os.path.realpath(__file__)), sys.argv[1])
-
-output = os.popen(' '.join([
-    'docker', 'run', '--rm', '-it', '-v', '%s:/pkg' % workDir, '-w', '/pkg',
-    'alpine:%s' % alpine, 'sh', '-c', '\'apk update && apk fetch -R %s\'' % sys.argv[1]
+rawOutput = os.popen(' '.join([
+    'docker run --rm -w /tmp -v %s:/tmp' % workDir,
+    'alpine:%s' % Alpine, 'sh -c "apk update && apk fetch -R %s"' % pkgName
 ])).read()
-print("%(line)s\n%(msg)s%(line)s" % {'line': '=' * 88, 'msg': output})
+
+print("%s\n%s%s" % ('=' * 88, rawOutput, '=' * 88), file = sys.stderr)
 
 with open(os.path.join(workDir, 'setup'), 'w') as script:
-    script.write("#!/usr/bin/env sh\ncd \"$(dirname \"$0\")\"\napk add " + ' '.join([
-        s + '.apk' for s in re.findall(r'Downloading (\S+)', output)
-    ]) + " --no-network --quiet\n")
+    setupCmd = '#!/usr/bin/env sh\ncd "$(dirname "$0")" && apk add --no-network --quiet '
+    setupCmd += ' '.join([
+        '%s.apk' % x for x in re.findall(r'Downloading (\S+)', rawOutput)
+    ])
+    script.write(setupCmd)
+
 os.system('chmod +x %s' % os.path.join(workDir, 'setup'))
 ```
 
@@ -240,7 +239,6 @@ os.system('chmod +x %s' % os.path.join(workDir, 'setup'))
 $ cd /etc/scutweb
 $ mkdir -p ./toolset && cd ./toolset
 $ python3 fetch.py wireguard-tools  # 拉取wireguard-tools依赖
-···
 ···
 ```
 
