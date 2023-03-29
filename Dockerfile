@@ -18,8 +18,8 @@ RUN mv cmd /tmp/xproxy
 
 FROM ${ALPINE} AS geo-data
 RUN apk add xz
-RUN wget "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
-RUN wget "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
+RUN wget "https://cdn.dnomd343.top/v2ray-rules-dat/geoip.dat"
+RUN wget "https://cdn.dnomd343.top/v2ray-rules-dat/geosite.dat"
 RUN tar cJf /tmp/assets.tar.xz geoip.dat geosite.dat
 
 FROM ${ALPINE} AS build

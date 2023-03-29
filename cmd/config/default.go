@@ -27,8 +27,8 @@ var defaultConfig = map[string]interface{}{
         "update": map[string]interface{}{
             "cron": "0 5 6 * * *",
             "url": map[string]string{
-                "geoip.dat":   "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat",
-                "geosite.dat": "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat",
+                "geoip.dat":   "https://cdn.dnomd343.top/v2ray-rules-dat/geoip.dat",
+                "geosite.dat": "https://cdn.dnomd343.top/v2ray-rules-dat/geosite.dat",
             },
         },
     },

@@ -171,8 +171,8 @@ asset:
     cron: "0 5 6 * * *"  # 每天凌晨06点05分更新
     proxy: "socks5://192.168.2.4:1080"  # 通过 socks5 代理更新资源
     url:
-      geoip.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
-      geosite.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
+      geoip.dat: "https://cdn.dnomd343.top/v2ray-rules-dat/geoip.dat"
+      geosite.dat: "https://cdn.dnomd343.top/v2ray-rules-dat/geosite.dat"
 ```
 
 + `disable` ：是否关闭路由资源文件载入，默认为 `false`
@@ -182,6 +182,12 @@ asset:
 + `proxy` ：通过指定的代理服务更新资源文件，留空时直连更新，默认为空
 
 + `url` ：更新的文件名及下载地址，文件保存至 `assets` 中，默认为空
+
+> 默认下载链接为 `Loyalsoldier/v2ray-rules-dat` 镜像，如果您的网络可以正常访问 Github 资源，可以换用以下 URL：
+>
+> + `https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat`
+>
+> + `https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat`
 
 ### 自定义脚本
 
@@ -435,8 +441,8 @@ asset:
   update:
     cron: "0 5 6 * * *"
     url:
-      geoip.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
-      geosite.dat: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
+      geoip.dat: "https://cdn.dnomd343.top/v2ray-rules-dat/geoip.dat"
+      geosite.dat: "https://cdn.dnomd343.top/v2ray-rules-dat/geosite.dat"
 ```
 
 用户需要根据实际需求更改配置文件，保存以后重启容器即可生效：
