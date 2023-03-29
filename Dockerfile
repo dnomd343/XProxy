@@ -6,7 +6,8 @@ ENV XRAY="1.8.0"
 RUN wget https://github.com/XTLS/Xray-core/archive/v${XRAY}.tar.gz -O- | tar xz
 WORKDIR ./Xray-core-${XRAY}/main/
 RUN go get
-RUN env CGO_ENABLED=0 go build -v -trimpath -ldflags "-s -w" && mv main /tmp/xray
+RUN env CGO_ENABLED=0 go build -v -trimpath -ldflags "-s -w"
+RUN mv main /xray
 
 FROM ${GOLANG} AS xproxy
 RUN apk add git
@@ -14,26 +15,27 @@ COPY ./ /XProxy/
 WORKDIR /XProxy/cmd/
 RUN go get
 RUN env CGO_ENABLED=0 go build -v -trimpath -ldflags "-X main.version=$(git describe --tag) -s -w"
-RUN mv cmd /tmp/xproxy
+RUN mv cmd /xproxy
 
-FROM ${ALPINE} AS geo-data
+FROM ${ALPINE} AS assets
 RUN apk add xz
 RUN wget "https://cdn.dnomd343.top/v2ray-rules-dat/geoip.dat"
 RUN wget "https://cdn.dnomd343.top/v2ray-rules-dat/geosite.dat"
-RUN tar cJf /tmp/assets.tar.xz geoip.dat geosite.dat
+RUN tar cJf /assets.tar.xz geoip.dat geosite.dat
 
-FROM ${ALPINE} AS build
+FROM ${ALPINE} AS release
 RUN apk add upx
-COPY --from=geo-data /tmp/assets.tar.xz /release/
-COPY --from=xproxy /tmp/xproxy /release/usr/bin/
-COPY --from=xray /tmp/xray /release/usr/bin/
+WORKDIR /release/run/radvd/
+WORKDIR /release/var/lib/dhcp/
+RUN touch dhcpd.leases dhcpd6.leases
+COPY --from=xproxy /xproxy /release/usr/bin/
+COPY --from=assets /assets.tar.xz /release/
+COPY --from=xray /xray /release/usr/bin/
 WORKDIR /release/usr/bin/
 RUN ls | xargs -n1 -P0 upx -9
 
 FROM ${ALPINE}
-RUN apk add --no-cache dhcp iptables ip6tables radvd && \
-    cd /var/lib/dhcp/ && touch dhcpd.leases dhcpd6.leases && \
-    rm -f /etc/dhcp/dhcpd.conf.example && mkdir -p /run/radvd/
-COPY --from=build /release/ /
+RUN apk add --no-cache dhcp radvd iptables ip6tables
+COPY --from=release /release/ /
 WORKDIR /xproxy/
 ENTRYPOINT ["xproxy"]
