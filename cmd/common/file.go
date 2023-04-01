@@ -1,6 +1,10 @@
 package common
 
 import (
+    "github.com/andybalholm/brotli"
+    "github.com/go-http-utils/headers"
+    "github.com/klauspost/compress/flate"
+    "github.com/klauspost/compress/gzip"
     log "github.com/sirupsen/logrus"
     "io"
     "io/ioutil"
@@ -74,11 +78,12 @@ func CopyFile(source string, target string) {
     }
 }
 
-func DownloadFile(fileUrl string, filePath string, proxyUrl string) bool {
-    log.Debugf("File download `%s` => `%s`", fileUrl, filePath)
+func DownloadBytes(fileUrl string, proxyUrl string) ([]byte, error) {
     client := http.Client{}
-    if proxyUrl != "" { // use proxy for download
-        log.Infof("File download via proxy -> %s", proxyUrl)
+    if proxyUrl == "" {
+        log.Infof("Download `%s` without proxy", fileUrl)
+    } else { // use proxy for download
+        log.Infof("Download `%s` via `%s`", fileUrl, proxyUrl)
         rawUrl, _ := url.Parse(proxyUrl)
         client = http.Client{
             Transport: &http.Transport{
@@ -86,22 +91,59 @@ func DownloadFile(fileUrl string, filePath string, proxyUrl string) bool {
             },
         }
     }
-    resp, err := client.Get(fileUrl)
-    defer func() {
-        if resp != nil {
-            resp.Body.Close()
+
+    req, err := http.NewRequest("GET", fileUrl, nil)
+    if err != nil {
+        log.Errorf("Failed to create http request")
+        return nil, err
+    }
+    req.Header.Set(headers.AcceptEncoding, "gzip, deflate, br")
+    resp, err := client.Do(req)
+    if err != nil {
+        log.Errorf("Failed to execute http GET request")
+        return nil, err
+    }
+    if resp != nil {
+        defer resp.Body.Close()
+        log.Debugf("Remote data downloaded successfully")
+    }
+
+    switch resp.Header.Get(headers.ContentEncoding) {
+    case "br":
+        log.Debugf("Downloaded content using brolti encoding")
+        return io.ReadAll(brotli.NewReader(resp.Body))
+    case "gzip":
+        log.Debugf("Downloaded content using gzip encoding")
+        gr, err := gzip.NewReader(resp.Body)
+        if err != nil {
+            return nil, err
         }
-    }()
+        return io.ReadAll(gr)
+    case "deflate":
+        log.Debugf("Downloaded content using deflate encoding")
+        zr := flate.NewReader(resp.Body)
+        defer zr.Close()
+        return io.ReadAll(zr)
+    default:
+        return io.ReadAll(resp.Body)
+    }
+}
+
+func DownloadFile(fileUrl string, filePath string, proxyUrl string) bool {
+    log.Debugf("File download `%s` => `%s`", fileUrl, filePath)
+    data, err := DownloadBytes(fileUrl, proxyUrl)
     if err != nil {
         log.Errorf("Download `%s` error -> %v", fileUrl, err)
         return false
     }
-    output, err := os.OpenFile(filePath, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
-    defer output.Close()
+
+    file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
+    defer file.Close()
     if err != nil {
         log.Panicf("Open `%s` error -> %v", filePath, err)
+        return false
     }
-    if _, err = io.Copy(output, resp.Body); err != nil {
+    if _, err = file.Write(data); err != nil {
         log.Errorf("File `%s` save error -> %v", filePath, err)
         return false
     }
