@@ -4,7 +4,10 @@ import (
     "XProxy/cmd/common"
     "github.com/robfig/cron"
     log "github.com/sirupsen/logrus"
+    "os"
+    "os/signal"
     "path"
+    "syscall"
 )
 
 type Config struct {
@@ -42,4 +45,13 @@ func AutoUpdate(config *Config, assetDir string) { // set cron task for auto upd
         })
         autoUpdate.Start()
     }
+    updateChan := make(chan os.Signal, 1)
+    go func() {
+        for {
+            <-updateChan
+            log.Infof("Receive SIGALRM -> update assets")
+            updateAsset(config.Update.Url, assetDir, config.Update.Proxy)
+        }
+    }()
+    signal.Notify(updateChan, syscall.SIGALRM)
 }
