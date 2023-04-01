@@ -27,7 +27,7 @@ func runProcess(env []string, command ...string) {
 
 func blockWait() {
     sigExit := make(chan os.Signal, 1)
-    signal.Notify(sigExit, syscall.SIGINT, syscall.SIGTERM) // wait until get exit signal
+    signal.Notify(sigExit, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM) // wait until get exit signal
     <-sigExit
 }
 
