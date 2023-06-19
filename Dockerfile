@@ -2,12 +2,9 @@ ARG ALPINE="alpine:3.18"
 ARG GOLANG="golang:1.20-alpine3.18"
 
 FROM ${GOLANG} AS xray
-#ENV XRAY="1.8.1"
-#RUN wget https://github.com/XTLS/Xray-core/archive/v${XRAY}.tar.gz -O- | tar xz
-#WORKDIR ./Xray-core-${XRAY}/main/
-RUN apk add git && git clone https://github.com/XTLS/Xray-core.git
-WORKDIR ./Xray-core/main/
-RUN git checkout 9112cfd39c2105d5b513275f9659b26e92fa7b67
+ENV XRAY="1.8.3"
+RUN wget https://github.com/XTLS/Xray-core/archive/v${XRAY}.tar.gz -O- | tar xz
+WORKDIR ./Xray-core-${XRAY}/main/
 RUN go get
 RUN env CGO_ENABLED=0 go build -v -trimpath -ldflags "-s -w"
 RUN mv main /xray
