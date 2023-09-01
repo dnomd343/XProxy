@@ -1,8 +1,8 @@
 ARG ALPINE="alpine:3.18"
-ARG GOLANG="golang:1.20-alpine3.18"
+ARG GOLANG="golang:1.21-alpine3.18"
 
 FROM ${GOLANG} AS xray
-ENV XRAY="1.8.3"
+ENV XRAY="1.8.4"
 RUN wget https://github.com/XTLS/Xray-core/archive/v${XRAY}.tar.gz -O- | tar xz
 WORKDIR ./Xray-core-${XRAY}/main/
 RUN go get
