@@ -9,5 +9,5 @@ func main() {
 	Logger.Infof("here is %s level", "info")
 	Logger.Warnf("here is %s level", "warn")
 	Logger.Errorf("here is %s level", "error")
-
+	//Logger.Panicf("here is %s level", "panic")
 }
