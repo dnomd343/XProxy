@@ -1,79 +1,85 @@
 package assets
 
 import (
+	. "XProxy/next/logger"
+	"bytes"
+	"compress/bzip2"
 	"compress/gzip"
 	"fmt"
+	"github.com/ulikunitz/xz"
 	"io"
 	"os"
 )
 
-func gzipExtract(reader io.Reader) ([]byte, error) {
-	gzipReader, err := gzip.NewReader(reader)
+const gzSample = "/root/XProxy/LICENSE.gz"
+const xzSample = "/root/XProxy/LICENSE.xz"
+const bz2Sample = "/root/XProxy/LICENSE.bz2"
+
+func gzipExtract(content io.Reader) ([]byte, error) {
+	Logger.Debugf("Start extracting gzip archive")
+	reader, err := gzip.NewReader(content)
 	if err != nil {
-		fmt.Println("gzip content error")
+		Logger.Errorf("Failed to extract gzip archive -> %v", err)
+		return nil, err
 	}
-	//
-	defer gzipReader.Close()
+	defer reader.Close()
 
-	//var buffer bytes.Buffer
-	//_, err = io.Copy()
-	var buffer []byte
-	buffer, err = io.ReadAll(gzipReader)
-	fmt.Println(len(buffer))
+	var buffer bytes.Buffer
+	size, err := io.Copy(&buffer, reader)
+	if err != nil {
+		Logger.Errorf("Failed to handle gzip archive -> %v", err)
+		return nil, err
+	}
+	Logger.Debugf("Successfully extracted gzip archive -> %d bytes", size)
+	return buffer.Bytes(), nil
+}
 
-	//fmt.Println(buffer)
-	//fmt.Println(string(buffer))
+func bzip2Extract(content io.Reader) ([]byte, error) {
+	Logger.Debugf("Start extracting bzip2 archive")
+	reader := bzip2.NewReader(content)
 
-	//gzipFile, err := os.Open("")
-	//if err != nil {
-	//	return nil, nil
-	//}
-	//defer gzipFile.Close()
-	//gzipReader, err := gzip.NewReader(gzipFile)
-	//if err != nil {
-	//	return nil, nil
-	//}
-	//defer gzipReader.Close()
-	//var buf bytes.Buffer
-	//_, err = io.Copy(&buf, gzipReader)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//return buf.Bytes(), nil
+	var buffer bytes.Buffer
+	size, err := io.Copy(&buffer, reader)
+	if err != nil {
+		Logger.Errorf("Failed to extract bzip2 archive -> %v", err)
+		return nil, err
+	}
+	Logger.Debugf("Successfully extracted bzip2 archive -> %d bytes", size)
+	return buffer.Bytes(), nil
+}
 
-	return nil, nil
+func xzExtract(content io.Reader) ([]byte, error) {
+	Logger.Debugf("Start extracting xz archive")
+	reader, err := xz.NewReader(content)
+	if err != nil {
+		Logger.Errorf("Failed to extract xz archive -> %v", err)
+		return nil, err
+	}
+
+	var buffer bytes.Buffer
+	size, err := io.Copy(&buffer, reader)
+	if err != nil {
+		Logger.Errorf("Failed to handle xz archive -> %v", err)
+		return nil, err
+	}
+	Logger.Debugf("Successfully extracted xz archive -> %d bytes", size)
+	return buffer.Bytes(), nil
 }
 
 func Demo() {
-	fmt.Println("assets demo")
+	Logger.Infof("Assets demo begin")
 
-	path := "/root/XProxy/LICENSE.gz"
-
-	fp, err := os.Open(path)
+	//fp, err := os.Open(gzSample)
+	//fp, err := os.Open(bz2Sample)
+	fp, err := os.Open(xzSample)
 	if err != nil {
 		fmt.Println("open failed")
 	}
 	defer fp.Close()
 
-	//gzipDemo(fp)
-
-	//fmt.Printf("name -> %s\n", fp.Name())
-
-	//var buffer []byte
-	//n, err := fp.Read(buffer)
-	//fmt.Println(n)
-	//fmt.Println(err)
-	//buffer, err := io.ReadAll(fp)
-
-	//buffer, err := os.ReadFile(path)
-	//if err != nil {
-	//	fmt.Printf("error -> %s\n", err)
-	//}
-	//fmt.Printf("buffer size -> %d\n", len(buffer))
-	//fmt.Printf("buffer -> %b\n", buffer)
-
-	//gzipExtract(buffer)
-	gzipExtract(fp)
+	//gzipExtract(fp)
+	//bzip2Extract(fp)
+	xzExtract(fp)
 
 	//fp.Name()
 
