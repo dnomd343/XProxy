@@ -85,7 +85,7 @@ func archiveType(data []byte) uint {
 		Logger.Debugf("Data detected as xz format")
 		return xzArchive
 	default:
-		Logger.Debugf("Data detected as non-archive format -> %s", mime)
+		Logger.Debugf("Data detected as non-archive format -> `%s`", mime)
 		return notArchive
 	}
 }
