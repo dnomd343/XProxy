@@ -42,7 +42,7 @@ func init() {
 		zapcore.NewConsoleEncoder(logConfig(true)),
 		zapcore.Lock(os.Stderr), level,
 	)
-	logger := zap.New(core, zap.AddCaller())
+	logger := zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
 	handle = Logger{
 		logger:  logger,
 		level:   &level,
@@ -62,7 +62,7 @@ func addWrites(writers ...zapcore.WriteSyncer) {
 	)
 	handle.logger = zap.New(
 		zapcore.NewTee(handle.stdCore, plainCore),
-		zap.AddCaller(),
+		zap.AddCaller(), zap.AddCallerSkip(1),
 	)
 	handle.sugar = handle.logger.Sugar()
 }
