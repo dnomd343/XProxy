@@ -1,46 +1,58 @@
 package logger
 
 import (
-	"github.com/fatih/color"
+	"fmt"
+	"github.com/gookit/color"
 	"go.uber.org/zap/zapcore"
 	"time"
 )
 
-func encodeTime(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
+// timeEncoder formats the time as a string.
+func timeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 	enc.AppendString(t.Format("2006-01-02 15:04:05.000"))
 }
 
-func encodeColoredTime(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
-	enc.AppendString(color.WhiteString(t.Format("2006-01-02 15:04:05.000")))
+// timeColoredEncoder formats the time as a colored string
+// with `[XProxy]` prefix.
+func timeColoredEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
+	enc.AppendString(fmt.Sprintf(
+		"%s %s",
+		color.Cyan.Render("[XProxy]"),
+		color.Gray.Render(t.Format("2006-01-02 15:04:05.000")),
+	))
 }
 
-func encodeCaller(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
+// callerEncoder formats caller in square brackets.
+func callerEncoder(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
 	enc.AppendString("[" + caller.TrimmedPath() + "]")
 }
 
-func encodeColoredCaller(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
-	enc.AppendString(color.MagentaString("[" + caller.TrimmedPath() + "]"))
+// callerColoredEncoder formats caller in square brackets
+// with magenta color.
+func callerColoredEncoder(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
+	enc.AppendString(color.Magenta.Render("[" + caller.TrimmedPath() + "]"))
 }
 
-func encodeLevel(level zapcore.Level, enc zapcore.PrimitiveArrayEncoder) {
+// levelEncoder formats log level using square brackets.
+func levelEncoder(level zapcore.Level, enc zapcore.PrimitiveArrayEncoder) {
 	enc.AppendString("[" + level.CapitalString() + "]")
 }
 
-func encodeColoredLevel(level zapcore.Level, enc zapcore.PrimitiveArrayEncoder) {
-	enc.AppendString(func(level zapcore.Level) func(string, ...interface{}) string {
-		switch level {
-		case zapcore.DebugLevel:
-			return color.CyanString
-		case zapcore.InfoLevel:
-			return color.GreenString
-		case zapcore.WarnLevel:
-			return color.YellowString
-		case zapcore.ErrorLevel:
-			return color.RedString
-		case zapcore.PanicLevel:
-			return color.HiRedString
-		default:
-			return color.WhiteString
-		}
-	}(level)("[" + level.CapitalString() + "]"))
+// levelColoredEncoder formats log level using square brackets
+// and uses different colors.
+func levelColoredEncoder(level zapcore.Level, enc zapcore.PrimitiveArrayEncoder) {
+	levelStr := "[" + level.CapitalString() + "]"
+	switch level {
+	case zapcore.DebugLevel:
+		levelStr = color.FgDefault.Render(levelStr)
+	case zapcore.InfoLevel:
+		levelStr = color.Green.Render(levelStr)
+	case zapcore.WarnLevel:
+		levelStr = color.Yellow.Render(levelStr)
+	case zapcore.ErrorLevel:
+		levelStr = color.Red.Render(levelStr)
+	case zapcore.PanicLevel:
+		levelStr = color.LightRed.Render(levelStr)
+	}
+	enc.AppendString(levelStr)
 }

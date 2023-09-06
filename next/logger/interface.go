@@ -1,6 +1,9 @@
 package logger
 
-import "go.uber.org/zap/zapcore"
+import (
+	"go.uber.org/zap/zapcore"
+	"io"
+)
 
 const (
 	DebugLevel = zapcore.DebugLevel
@@ -36,4 +39,13 @@ func Errorf(template string, args ...interface{}) {
 
 func Panicf(template string, args ...interface{}) {
 	handle.sugar.Panicf(template, args...)
+}
+
+// AddOutputs adds more plain log outputs.
+func AddOutputs(outputs ...io.Writer) {
+	var writers []zapcore.WriteSyncer
+	for _, output := range outputs {
+		writers = append(writers, zapcore.AddSync(output))
+	}
+	addWrites(writers...)
 }
