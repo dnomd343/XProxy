@@ -2,7 +2,7 @@ package main
 
 import (
 	"XProxy/next/assets"
-	. "XProxy/next/logger"
+	"XProxy/next/logger"
 )
 
 const gzSample = "/root/XProxy/LICENSE.gz"
@@ -26,6 +26,6 @@ func main() {
 	//raw, _ := assets.Download("https://cdn.dnomd343.top/v2ray-rules-dat/geosite.dat", "socks5://192.168.2.2:1084")
 	raw, _ := assets.Download("https://cdn.dnomd343.top/v2ray-rules-dat/geosite.dat.xz", "")
 	ret, _ := assets.Extract(raw)
-	Logger.Debugf("content size -> %d", len(ret))
+	logger.Debugf("content size -> %d", len(ret))
 
 }
