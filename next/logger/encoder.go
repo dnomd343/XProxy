@@ -1,11 +1,25 @@
 package logger
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/gookit/color"
 	"go.uber.org/zap/zapcore"
+	"runtime"
+	"strconv"
 	"time"
 )
+
+// getGID get goroutine ID only for debugging.
+// -> https://blog.sgmansfield.com/2015/12/goroutine-ids/
+func getGID() uint64 {
+	b := make([]byte, 64)
+	b = b[:runtime.Stack(b, false)]
+	b = bytes.TrimPrefix(b, []byte("goroutine "))
+	b = b[:bytes.IndexByte(b, ' ')]
+	n, _ := strconv.ParseUint(string(b), 10, 64)
+	return n
+}
 
 // timeEncoder formats the time as a string.
 func timeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
@@ -24,13 +38,25 @@ func timeColoredEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 
 // callerEncoder formats caller in square brackets.
 func callerEncoder(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
-	enc.AppendString("[" + caller.TrimmedPath() + "]")
+	if !handle.gid {
+		enc.AppendString("[" + caller.TrimmedPath() + "]")
+	} else {
+		enc.AppendString(fmt.Sprintf("[%s] [%d]", caller.TrimmedPath(), getGID()))
+	}
 }
 
 // callerColoredEncoder formats caller in square brackets
 // with magenta color.
 func callerColoredEncoder(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
-	enc.AppendString(color.Magenta.Render("[" + caller.TrimmedPath() + "]"))
+	if !handle.gid {
+		enc.AppendString(color.Magenta.Render("[" + caller.TrimmedPath() + "]"))
+		return
+	}
+	enc.AppendString(fmt.Sprintf(
+		"%s %s",
+		color.Magenta.Render("["+caller.TrimmedPath()+"]"),
+		color.Blue.Render(fmt.Sprintf("[%d]", getGID())),
+	))
 }
 
 // levelEncoder formats log level using square brackets.

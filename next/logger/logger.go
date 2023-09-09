@@ -7,6 +7,7 @@ import (
 )
 
 type Logger struct {
+	gid     bool
 	logger  *zap.Logger
 	level   *zap.AtomicLevel
 	sugar   *zap.SugaredLogger
@@ -44,6 +45,7 @@ func init() {
 	)
 	logger := zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
 	handle = Logger{
+		gid:     true,
 		logger:  logger,
 		level:   &level,
 		sugar:   logger.Sugar(),
