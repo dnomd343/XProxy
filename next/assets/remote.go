@@ -3,6 +3,7 @@ package assets
 import (
 	"XProxy/next/logger"
 	"bytes"
+	"errors"
 	"github.com/andybalholm/brotli"
 	"github.com/go-http-utils/headers"
 	"github.com/klauspost/compress/flate"
@@ -114,6 +115,10 @@ func download(url string, proxy string) ([]byte, *time.Time, error) {
 		return nil, nil, err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		logger.Errorf("Download `%s` with http status code -> %d", url, resp.StatusCode)
+		return nil, nil, errors.New("http status code non-2xx")
+	}
 	logger.Debugf("Remote data downloaded successfully")
 
 	var content []byte
