@@ -90,6 +90,7 @@ func createClient(remoteUrl string, proxyUrl string) (http.Client, error) {
 	}, nil
 }
 
+// doRequest initiates http request and allows retries.
 func doRequest(client http.Client, req *http.Request) (*http.Response, error) {
 	maxRetry := retry.Attempts(DownloadRetry)
 	maxDelay := retry.MaxDelay(DownloadTimeout * time.Second)
