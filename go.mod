@@ -17,6 +17,7 @@ require (
 )
 
 require (
+	github.com/avast/retry-go v3.0.0+incompatible // indirect
 	github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/net v0.8.0 // indirect

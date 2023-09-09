@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"errors"
 	"github.com/andybalholm/brotli"
+	"github.com/avast/retry-go"
 	"github.com/go-http-utils/headers"
 	"github.com/klauspost/compress/flate"
 	"github.com/klauspost/compress/gzip"
@@ -13,6 +14,9 @@ import (
 	"net/url"
 	"time"
 )
+
+const DownloadRetry = 3     // max retry times
+const DownloadTimeout = 480 // max request seconds
 
 // broltiDecode handles brolti encoding in http responses.
 func broltiDecode(stream io.Reader) ([]byte, error) {
@@ -68,7 +72,9 @@ func nonDecode(stream io.Reader) ([]byte, error) {
 func createClient(remoteUrl string, proxyUrl string) (http.Client, error) {
 	if proxyUrl == "" {
 		logger.Infof("Downloading `%s` without proxy", remoteUrl)
-		return http.Client{}, nil
+		return http.Client{
+			Timeout: DownloadTimeout * time.Second,
+		}, nil
 	}
 	logger.Infof("Downloading `%s` via `%s`", remoteUrl, proxyUrl)
 	proxy, err := url.Parse(proxyUrl)
@@ -80,7 +86,33 @@ func createClient(remoteUrl string, proxyUrl string) (http.Client, error) {
 		Transport: &http.Transport{
 			Proxy: http.ProxyURL(proxy),
 		},
+		Timeout: DownloadTimeout * time.Second,
 	}, nil
+}
+
+func doRequest(client http.Client, req *http.Request) (*http.Response, error) {
+	maxRetry := retry.Attempts(DownloadRetry)
+	maxDelay := retry.MaxDelay(DownloadTimeout * time.Second)
+	onRetry := retry.OnRetry(func(n uint, err error) {
+		logger.Errorf("Failed to execute http request -> %v", err)
+		if DownloadRetry != n+1 {
+			logger.Infof("Download retry on the %d times, remain %d times...", n+1, DownloadRetry-n-1)
+		}
+	})
+	delay := retry.Delay(4 * time.Second) // backoff start at 4s
+
+	var resp *http.Response
+	retryFunc := func() error {
+		var err error
+		if resp, err = client.Do(req); err != nil {
+			return err
+		}
+		return nil
+	}
+	if err := retry.Do(retryFunc, delay, maxDelay, onRetry, maxRetry); err != nil {
+		return nil, err
+	}
+	return resp, nil
 }
 
 // assetDate attempts to obtain the last modification time of the remote
@@ -95,9 +127,9 @@ func assetDate(resp *http.Response) *time.Time {
 	return &date
 }
 
-// download obtains resource file from the remote server, gets its
+// downloadAsset obtains resource file from the remote server, gets its
 // modification time, and supports proxy acquisition.
-func download(url string, proxy string) ([]byte, *time.Time, error) {
+func downloadAsset(url string, proxy string) ([]byte, *time.Time, error) {
 	client, err := createClient(url, proxy)
 	if err != nil {
 		return nil, nil, err
@@ -109,9 +141,9 @@ func download(url string, proxy string) ([]byte, *time.Time, error) {
 		return nil, nil, err
 	}
 	req.Header.Set(headers.AcceptEncoding, "gzip, deflate, br")
-	resp, err := client.Do(req)
+
+	resp, err := doRequest(client, req)
 	if err != nil {
-		logger.Errorf("Failed to execute http request -> %v", err)
 		return nil, nil, err
 	}
 	defer resp.Body.Close()

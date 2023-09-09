@@ -5,9 +5,11 @@ import (
 	"os"
 )
 
+// updateRemoteAsset will download remote asset via the optional proxy and
+// save them locally. Local files will be overwritten if they exist.
 func updateRemoteAsset(file string, url string, proxy string) error {
 	logger.Debugf("Start downloading remote asset `%s` to `%s`", url, file)
-	asset, date, err := download(url, proxy)
+	asset, date, err := downloadAsset(url, proxy)
 	if err != nil {
 		logger.Errorf("Failed to download remote asset `%s`", url)
 		return err
