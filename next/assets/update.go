@@ -4,6 +4,7 @@ import (
 	"XProxy/next/logger"
 	urlpkg "net/url"
 	"os"
+	"path"
 	"sync"
 	"time"
 )
@@ -11,14 +12,18 @@ import (
 // saveAsset is used to write to a local file and specify its last modify
 // time. If the file exists, it will be replaced.
 func saveAsset(file string, content []byte, date *time.Time) error {
-	// TODO: create folder if not exist
+	err := os.MkdirAll(path.Dir(file), 0755)
+	if err != nil {
+		logger.Errorf("Failed to create folder -> %v", err)
+		return err
+	}
+
 	fp, err := os.OpenFile(file, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
-		logger.Errorf("Failed to open file `%s` -> %v", file, err)
+		logger.Errorf("Failed to open file -> %v", err)
 		return err
 	}
 	defer fp.Close()
-
 	_, err = fp.Write(content)
 	if err != nil {
 		logger.Errorf("Failed to save file `%s` -> %v", file, err)
