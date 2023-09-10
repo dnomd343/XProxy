@@ -1,29 +1,75 @@
 package assets
 
+import (
+	"XProxy/next/logger"
+	urlpkg "net/url"
+	"strings"
+	"sync"
+)
+
 var buildinAssets = map[string]string{
-	"geoip.dat":   "geoip.dat.xz",
-	"geosite.dat": "geosite.dat.xz",
+	"geoip.dat":   "/geoip.dat.xz",
+	"geosite.dat": "/geosite.dat.xz",
 }
 
-func Demo() {
+type UpdateSettings struct {
+	cron   string
+	mutex  sync.Mutex
+	proxy  *urlpkg.URL
+	assets map[string]string
+}
 
-	remoteAssets := map[string]string{
-		"geoip.dat":   "https://cdn.dnomd343.top/v2ray-rules-dat/geoip.dat.xz",
-		"geosite.dat": "https://cdn.dnomd343.top/v2ray-rules-dat/geosite.dat.xz",
+var update UpdateSettings
+
+func assetsClone(raw map[string]string) map[string]string {
+	assets := make(map[string]string, len(raw))
+	for file, url := range raw {
+		assets[file] = strings.Clone(url)
 	}
+	return assets
+}
 
-	//updateLocalAssets(buildinAssets, true)
-	//updateLocalAssets(buildinAssets, false)
+func SetCron(cron string) error {
+	// TODO: setting up crond service
+	return nil
+}
 
-	updateRemoteAssets(remoteAssets, "", true)
-	//updateRemoteAssets(remoteAssets, "", false)
-	//updateRemoteAssets(remoteAssets, "socks5://192.168.2.2:1084", true)
-	//updateRemoteAssets(remoteAssets, "socks5://192.168.2.2:1084", false)
+func GetProxy() string {
+	update.mutex.Lock()
+	proxy := update.proxy.String()
+	update.mutex.Unlock()
+	return proxy
+}
 
-	//time.Sleep(10 * time.Second)
+func SetProxy(proxy string) error {
+	var proxyUrl *urlpkg.URL // clear proxy by empty string
+	if proxy != "" {
+		url, err := urlpkg.Parse(proxy)
+		if err != nil {
+			logger.Errorf("Invalid proxy url `%s` -> %v", proxy, err)
+			return err
+		}
+		proxyUrl = url
+	}
+	update.mutex.Lock()
+	update.proxy = proxyUrl
+	update.mutex.Unlock()
+	return nil
+}
 
-	//updateRemoteAsset("geosite.dat", "http://cdn.dnomd343.top/v2ray-rules-dat/geosite.dat.xz", "")
-	//updateRemoteAsset("geosite.dat", "http://cdn.dnomd343.top/v2ray-rules-dat/geosite.dat.xz", "socks5://192.168.2.2:1084")
-	//updateLocalAsset("geosite.dat", "geosite.dat.xz")
+func SetAssets(assets map[string]string) {
+	update.mutex.Lock()
+	update.assets = assetsClone(assets)
+	update.mutex.Unlock()
+}
 
+func GetAssets() map[string]string {
+	update.mutex.Lock()
+	assets := assetsClone(update.assets)
+	update.mutex.Unlock()
+	return assets
+}
+
+func LoadBuildin() {
+	updateLocalAssets(buildinAssets, true)
 }

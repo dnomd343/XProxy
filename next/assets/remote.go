@@ -11,7 +11,7 @@ import (
 	"github.com/klauspost/compress/gzip"
 	"io"
 	"net/http"
-	"net/url"
+	urlpkg "net/url"
 	"time"
 )
 
@@ -69,25 +69,21 @@ func nonDecode(stream io.Reader) ([]byte, error) {
 }
 
 // createClient build http client based on http or socks proxy url.
-func createClient(remoteUrl string, proxyUrl string) (http.Client, error) {
-	if proxyUrl == "" {
-		logger.Infof("Downloading `%s` without proxy", remoteUrl)
+func createClient(remote string, proxy *urlpkg.URL) http.Client {
+	timeout := DownloadTimeout * time.Second
+	if proxy == nil {
+		logger.Infof("Downloading `%s` without proxy", remote)
 		return http.Client{
-			Timeout: DownloadTimeout * time.Second,
-		}, nil
+			Timeout: timeout,
+		}
 	}
-	logger.Infof("Downloading `%s` via `%s`", remoteUrl, proxyUrl)
-	proxy, err := url.Parse(proxyUrl)
-	if err != nil {
-		logger.Errorf("Invalid proxy url `%s` -> %v", proxyUrl, err)
-		return http.Client{}, err
-	}
+	logger.Infof("Downloading `%s` via `%s`", remote, proxy)
 	return http.Client{
 		Transport: &http.Transport{
 			Proxy: http.ProxyURL(proxy),
 		},
-		Timeout: DownloadTimeout * time.Second,
-	}, nil
+		Timeout: timeout,
+	}
 }
 
 // doRequest initiates http request and allows retries.
@@ -130,12 +126,7 @@ func assetDate(resp *http.Response) *time.Time {
 
 // downloadAsset obtains resource file from the remote server, gets its
 // modification time, and supports proxy acquisition.
-func downloadAsset(url string, proxy string) ([]byte, *time.Time, error) {
-	client, err := createClient(url, proxy)
-	if err != nil {
-		return nil, nil, err
-	}
-
+func downloadAsset(url string, proxy *urlpkg.URL) ([]byte, *time.Time, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		logger.Errorf("Failed to create http request -> %v", err)
@@ -143,7 +134,7 @@ func downloadAsset(url string, proxy string) ([]byte, *time.Time, error) {
 	}
 	req.Header.Set(headers.AcceptEncoding, "gzip, deflate, br")
 
-	resp, err := doRequest(client, req)
+	resp, err := doRequest(createClient(url, proxy), req)
 	if err != nil {
 		return nil, nil, err
 	}

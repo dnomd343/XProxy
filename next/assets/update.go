@@ -2,6 +2,7 @@ package assets
 
 import (
 	"XProxy/next/logger"
+	urlpkg "net/url"
 	"os"
 	"sync"
 	"time"
@@ -36,7 +37,7 @@ func saveAsset(file string, content []byte, date *time.Time) error {
 
 // updateRemoteAsset will download remote asset via the optional proxy and
 // save them locally. Local files will be overwritten if they exist.
-func updateRemoteAsset(file string, url string, proxy string) error {
+func updateRemoteAsset(file string, url string, proxy *urlpkg.URL) error {
 	logger.Debugf("Start downloading remote asset `%s` to `%s`", url, file)
 	asset, date, err := downloadAsset(url, proxy)
 	if err != nil {
@@ -104,7 +105,7 @@ func updateMultiple(updates []func(), parallel bool) {
 }
 
 // updateRemoteAssets will update multiple remote assets in batches.
-func updateRemoteAssets(assets map[string]string, proxy string, parallel bool) {
+func updateRemoteAssets(assets map[string]string, proxy *urlpkg.URL, parallel bool) {
 	var tasks []func()
 	for file, url := range assets {
 		file_, url_ := file, url
