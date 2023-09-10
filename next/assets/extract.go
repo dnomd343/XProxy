@@ -28,7 +28,7 @@ func gzipExtract(data []byte) ([]byte, error) {
 	defer reader.Close()
 
 	var buffer bytes.Buffer
-	size, err := io.Copy(&buffer, reader)
+	size, err := reader.WriteTo(&buffer)
 	if err != nil {
 		logger.Errorf("Failed to handle gzip archive -> %v", err)
 		return nil, err
