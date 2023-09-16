@@ -4,13 +4,20 @@ import (
 	"XProxy/next/logger"
 	"github.com/robfig/cron"
 	urlpkg "net/url"
+	"os"
+	"os/signal"
 	"strings"
 	"sync"
+	"syscall"
 )
 
 var buildinAssets = map[string]string{
 	"geoip.dat":   "/geoip.dat.xz",
 	"geosite.dat": "/geosite.dat.xz",
+}
+
+func LoadBuildin() {
+	updateLocalAssets(buildinAssets, true)
 }
 
 type updateConfig struct {
@@ -24,13 +31,76 @@ type updateConfig struct {
 
 var update updateConfig
 
-//func assetsClone(raw map[string]string) map[string]string {
-//	assets := make(map[string]string, len(raw))
-//	for file, url := range raw {
-//		assets[file] = strings.Clone(url)
-//	}
-//	return assets
-//}
+func init() {
+	updateChan := make(chan os.Signal, 1)
+	go func() {
+		for {
+			<-updateChan
+			logger.Debugf("Trigger assets update due to receiving SIGALRM")
+			Update()
+		}
+	}()
+	signal.Notify(updateChan, syscall.SIGALRM)
+}
+
+func mapClone(raw map[string]string) map[string]string {
+	assets := make(map[string]string, len(raw))
+	for file, url := range raw {
+		assets[file] = strings.Clone(url)
+	}
+	return assets
+}
+
+func Update() {
+	update.renew.Lock()
+	proxy := update.proxy
+	assets := mapClone(update.assets)
+	update.renew.Unlock()
+
+	if !update.running.TryLock() {
+		logger.Infof("Another assets update is in progress, skip it")
+		return
+	}
+	logger.Infof("Start remote assets update process")
+	updateRemoteAssets(assets, proxy, false)
+	update.running.Unlock()
+}
+
+func GetAssets() map[string]string {
+	update.renew.Lock()
+	assets := mapClone(update.assets)
+	update.renew.Unlock()
+	return assets
+}
+
+func SetAssets(assets map[string]string) {
+	update.renew.Lock()
+	update.assets = mapClone(assets)
+	update.renew.Unlock()
+}
+
+func GetProxy() string {
+	update.renew.Lock()
+	proxy := update.proxy.String()
+	update.renew.Unlock()
+	return proxy
+}
+
+func SetProxy(proxy string) error {
+	var proxyUrl *urlpkg.URL
+	if proxy != "" {
+		url, err := urlpkg.Parse(proxy)
+		if err != nil {
+			logger.Errorf("Invalid proxy url `%s` -> %v", proxy, err)
+			return err
+		}
+		proxyUrl = url
+	}
+	update.renew.Lock()
+	update.proxy = proxyUrl
+	update.renew.Unlock()
+	return nil
+}
 
 // GetCron is used to obtain cron service specification.
 func GetCron() string {
@@ -79,44 +149,4 @@ func SetCron(spec string) error {
 	}
 	update.renew.Unlock()
 	return nil
-}
-
-//func GetProxy() string {
-//	update.mutex.Lock()
-//	proxy := update.proxy.String()
-//	update.mutex.Unlock()
-//	return proxy
-//}
-//
-//func SetProxy(proxy string) error {
-//	var proxyUrl *urlpkg.URL // clear proxy by empty string
-//	if proxy != "" {
-//		url, err := urlpkg.Parse(proxy)
-//		if err != nil {
-//			logger.Errorf("Invalid proxy url `%s` -> %v", proxy, err)
-//			return err
-//		}
-//		proxyUrl = url
-//	}
-//	update.mutex.Lock()
-//	update.proxy = proxyUrl
-//	update.mutex.Unlock()
-//	return nil
-//}
-//
-//func SetAssets(assets map[string]string) {
-//	update.mutex.Lock()
-//	update.assets = assetsClone(assets)
-//	update.mutex.Unlock()
-//}
-//
-//func GetAssets() map[string]string {
-//	update.mutex.Lock()
-//	assets := assetsClone(update.assets)
-//	update.mutex.Unlock()
-//	return assets
-//}
-
-func LoadBuildin() {
-	updateLocalAssets(buildinAssets, true)
 }
