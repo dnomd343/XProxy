@@ -4,17 +4,22 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"os"
+	"path"
+	"runtime"
 )
 
-type Logger struct {
+type logger struct {
 	logger  *zap.Logger
 	level   *zap.AtomicLevel
 	sugar   *zap.SugaredLogger
 	writers []zapcore.WriteSyncer
-	stdCore zapcore.Core
+	stderr  zapcore.Core // fixed stderr output
+	prefix  string       // custom output prefix
+	path    string       // project absolute path
+	verbose bool         // show goroutine id and caller line
 }
 
-var handle Logger
+var logHandle *logger // singleton logger handle
 
 // logConfig generates log config for XProxy.
 func logConfig(colored bool) zapcore.EncoderConfig {
@@ -37,32 +42,37 @@ func logConfig(colored bool) zapcore.EncoderConfig {
 }
 
 func init() {
-	level := zap.NewAtomicLevelAt(DebugLevel)
-	core := zapcore.NewCore(
-		zapcore.NewConsoleEncoder(logConfig(true)),
-		zapcore.Lock(os.Stderr), level,
+	zapLevel := zap.NewAtomicLevelAt(InfoLevel) // using info level in default
+	zapCore := zapcore.NewCore(
+		zapcore.NewConsoleEncoder(logConfig(true)), // colorful output
+		zapcore.Lock(os.Stderr),
+		zapLevel,
 	)
-	logger := zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
-	handle = Logger{
-		logger:  logger,
-		level:   &level,
-		sugar:   logger.Sugar(),
+	zapLogger := zap.New(zapCore, zap.AddCaller(), zap.AddCallerSkip(1))
+	_, src, _, _ := runtime.Caller(0) // absolute path of current code
+	logHandle = &logger{
+		logger:  zapLogger,
+		level:   &zapLevel,
+		stderr:  zapCore,
+		sugar:   zapLogger.Sugar(),
 		writers: []zapcore.WriteSyncer{},
-		stdCore: core,
+		path:    path.Join(path.Dir(src), "../"),
+		prefix:  "[XProxy]",
+		verbose: false,
 	}
 }
 
 // addWrites adds more plain log writers.
 func addWrites(writers ...zapcore.WriteSyncer) {
-	handle.writers = append(handle.writers, writers...)
+	logHandle.writers = append(logHandle.writers, writers...)
 	plainCore := zapcore.NewCore(
-		zapcore.NewConsoleEncoder(logConfig(false)),
-		zap.CombineWriteSyncers(handle.writers...),
-		handle.level,
+		zapcore.NewConsoleEncoder(logConfig(false)), // without colored
+		zap.CombineWriteSyncers(logHandle.writers...),
+		logHandle.level,
 	)
-	handle.logger = zap.New(
-		zapcore.NewTee(handle.stdCore, plainCore),
+	logHandle.logger = zap.New(
+		zapcore.NewTee(logHandle.stderr, plainCore),
 		zap.AddCaller(), zap.AddCallerSkip(1),
 	)
-	handle.sugar = handle.logger.Sugar()
+	logHandle.sugar = logHandle.logger.Sugar()
 }
