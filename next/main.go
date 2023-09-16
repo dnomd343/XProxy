@@ -6,7 +6,6 @@ import (
 )
 
 func main() {
-
 	//logger.Debugf("here is %s level", "debug")
 	//logger.Infof("here is %s level", "info")
 	//logger.Warnf("here is %s level", "warn")
@@ -30,4 +29,8 @@ func main() {
 	logger.Debugf("output msg 3 at debug")
 	logger.Infof("output msg 3 at info")
 	logger.Warnf("output msg 3 at warn")
+	logger.SetLevel(logger.DebugLevel)
+	logger.Debugf("output msg 4 at debug")
+	logger.Infof("output msg 4 at info")
+	logger.Warnf("output msg 4 at warn")
 }

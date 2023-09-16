@@ -13,35 +13,43 @@ const (
 	PanicLevel = zapcore.PanicLevel
 )
 
-func GetLevel() zapcore.Level {
-	return handle.level.Level()
-}
-
-func SetLevel(level zapcore.Level) {
-	handle.level.SetLevel(level)
-}
-
 func Debugf(template string, args ...interface{}) {
-	handle.sugar.Debugf(template, args...)
+	logHandle.sugar.Debugf(template, args...)
 }
 
 func Infof(template string, args ...interface{}) {
-	handle.sugar.Infof(template, args...)
+	logHandle.sugar.Infof(template, args...)
 }
 
 func Warnf(template string, args ...interface{}) {
-	handle.sugar.Warnf(template, args...)
+	logHandle.sugar.Warnf(template, args...)
 }
 
 func Errorf(template string, args ...interface{}) {
-	handle.sugar.Errorf(template, args...)
+	logHandle.sugar.Errorf(template, args...)
 }
 
 func Panicf(template string, args ...interface{}) {
-	handle.sugar.Panicf(template, args...)
+	logHandle.sugar.Panicf(template, args...)
 }
 
-// AddOutputs adds more plain log outputs.
+// GetLevel return the current logger level.
+func GetLevel() zapcore.Level {
+	return logHandle.level.Level()
+}
+
+// SetLevel configure logger output level. Note that debug level
+// will output more information and reduce performance.
+func SetLevel(level zapcore.Level) {
+	logHandle.level.SetLevel(level)
+	if level == DebugLevel {
+		logHandle.verbose = true
+	} else {
+		logHandle.verbose = false
+	}
+}
+
+// AddOutputs adds more plain output channel to the logger module.
 func AddOutputs(outputs ...io.Writer) {
 	var writers []zapcore.WriteSyncer
 	for _, output := range outputs {

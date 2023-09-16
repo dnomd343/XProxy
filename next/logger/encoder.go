@@ -5,14 +5,16 @@ import (
 	"fmt"
 	"github.com/gookit/color"
 	"go.uber.org/zap/zapcore"
+	"path/filepath"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 )
 
-// getGID get goroutine ID only for debugging.
+// getGid get goroutine ID only for debugging.
 // -> https://blog.sgmansfield.com/2015/12/goroutine-ids/
-func getGID() uint64 {
+func getGid() uint64 {
 	b := make([]byte, 64)
 	b = b[:runtime.Stack(b, false)]
 	b = bytes.TrimPrefix(b, []byte("goroutine "))
@@ -21,41 +23,54 @@ func getGID() uint64 {
 	return n
 }
 
+// getCaller calculate relative source path of caller.
+func getCaller(ec zapcore.EntryCaller, verbose bool) string {
+	file, err := filepath.Rel(logHandle.path, ec.File)
+	if err != nil {
+		return "undefined"
+	}
+	if verbose {
+		return file + ":" + strconv.Itoa(ec.Line)
+	}
+	file, _ = strings.CutSuffix(file, ".go") // remove `.go` suffix
+	return file
+}
+
 // timeEncoder formats the time as a string.
 func timeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 	enc.AppendString(t.Format("2006-01-02 15:04:05.000"))
 }
 
 // timeColoredEncoder formats the time as a colored string
-// with `[XProxy]` prefix.
+// with custom prefix.
 func timeColoredEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 	enc.AppendString(fmt.Sprintf(
 		"%s %s",
-		color.Cyan.Render("[XProxy]"),
+		color.Cyan.Render(logHandle.prefix), // colored prefix
 		color.Gray.Render(t.Format("2006-01-02 15:04:05.000")),
 	))
 }
 
 // callerEncoder formats caller in square brackets.
-func callerEncoder(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
-	if !handle.gid {
-		enc.AppendString("[" + caller.TrimmedPath() + "]")
-	} else {
-		enc.AppendString(fmt.Sprintf("[%s] [%d]", caller.TrimmedPath(), getGID()))
+func callerEncoder(ec zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
+	if !logHandle.verbose {
+		enc.AppendString("[" + getCaller(ec, false) + "]")
+		return
 	}
+	enc.AppendString(fmt.Sprintf("[%d] [%s]", getGid(), getCaller(ec, true)))
 }
 
-// callerColoredEncoder formats caller in square brackets
-// with magenta color.
-func callerColoredEncoder(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
-	if !handle.gid {
-		enc.AppendString(color.Magenta.Render("[" + caller.TrimmedPath() + "]"))
+// callerColoredEncoder formats caller in square brackets with
+// magenta color.
+func callerColoredEncoder(ec zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
+	if !logHandle.verbose {
+		enc.AppendString(color.Magenta.Render("[" + getCaller(ec, false) + "]"))
 		return
 	}
 	enc.AppendString(fmt.Sprintf(
 		"%s %s",
-		color.Magenta.Render("["+caller.TrimmedPath()+"]"),
-		color.Blue.Render(fmt.Sprintf("[%d]", getGID())),
+		color.Blue.Render(fmt.Sprintf("[%d]", getGid())),
+		color.Magenta.Render("["+getCaller(ec, true)+"]"),
 	))
 }
 
