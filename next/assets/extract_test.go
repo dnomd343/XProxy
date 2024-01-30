@@ -11,9 +11,10 @@ import (
 	"testing"
 )
 
-const testMin = 1024 * 1024 // 1MiB
-const testMax = 4096 * 1024 // 4Mib
+const testMinSize = 16 * 1024 // 16MiB
+const testMaxSize = 64 * 1024 // 64MiB
 
+// randBytes generates a specified number of random bytes.
 func randBytes(size int) []byte {
 	tmp := make([]byte, size)
 	_, _ = rand.Read(tmp)
@@ -22,6 +23,16 @@ func randBytes(size int) []byte {
 
 func randInt(min int, max int) int {
 	return min + int(mrand.Float64()*float64(max-min))
+}
+
+func randData() []byte {
+	raw := randBytes(1024)
+	size := randInt(testMinSize, testMaxSize)
+	var buffer bytes.Buffer
+	for i := 0; i < size; i++ {
+		buffer.Write(raw)
+	}
+	return buffer.Bytes()
 }
 
 func gzipCompress(data []byte) []byte {
@@ -51,7 +62,7 @@ func xzCompress(data []byte) []byte {
 }
 
 func TestGzipExtract(t *testing.T) {
-	raw := randBytes(randInt(testMin, testMax))
+	raw := randData()
 	gzOk := gzipCompress(raw)
 	gzErr := append(gzOk, randBytes(randInt(1, 16))...)
 
@@ -63,7 +74,7 @@ func TestGzipExtract(t *testing.T) {
 }
 
 func TestBzip2Extract(t *testing.T) {
-	raw := randBytes(randInt(testMin, testMax))
+	raw := randData()
 	bz2Ok := bzip2Compress(raw)
 	bz2Err := append(bz2Ok, randBytes(randInt(1, 16))...)
 
@@ -75,7 +86,7 @@ func TestBzip2Extract(t *testing.T) {
 }
 
 func TestXzExtract(t *testing.T) {
-	raw := randBytes(randInt(testMin, testMax))
+	raw := randData()
 	xzOk := xzCompress(raw)
 	xzErr := append(xzOk, randBytes(randInt(1, 16))...)
 
@@ -87,7 +98,7 @@ func TestXzExtract(t *testing.T) {
 }
 
 func TestExtract(t *testing.T) {
-	raw := randBytes(randInt(testMin, testMax))
+	raw := randData()
 
 	ret, err := tryExtract(raw)
 	assert.Nil(t, err)
