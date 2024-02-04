@@ -1,7 +1,7 @@
 package main
 
 import (
-	"XProxy/next/logger"
+	"XProxy/logger"
 	"os"
 )
 
