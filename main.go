@@ -6,6 +6,8 @@ import (
 )
 
 func main() {
+	//logger.SetLevel(zap.DebugLevel)
+
 	//logger.Debugf("here is %s level", "debug")
 	//logger.Infof("here is %s level", "info")
 	//logger.Warnf("here is %s level", "warn")
@@ -19,13 +21,13 @@ func main() {
 	logger.Debugf("output msg 1 at debug")
 	logger.Infof("output msg 1 at info")
 	logger.Warnf("output msg 1 at warn")
-	logger.AddOutputs(fp1, fp2)
+	logger.AddWriters(false, fp1, fp2)
 	logger.SetLevel(logger.InfoLevel)
 	logger.Debugf("output msg 2 at debug")
 	logger.Infof("output msg 2 at info")
 	logger.Warnf("output msg 2 at warn")
 	logger.SetLevel(logger.WarnLevel)
-	logger.AddOutputs(fp3)
+	logger.AddWriters(true, fp3)
 	logger.Debugf("output msg 3 at debug")
 	logger.Infof("output msg 3 at info")
 	logger.Warnf("output msg 3 at warn")
