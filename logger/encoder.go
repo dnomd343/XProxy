@@ -1,27 +1,15 @@
 package logger
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/gookit/color"
+	"github.com/petermattis/goid"
 	"go.uber.org/zap/zapcore"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 	"time"
 )
-
-// getGid get goroutine ID only for debugging.
-// -> https://blog.sgmansfield.com/2015/12/goroutine-ids/
-func getGid() uint64 {
-	b := make([]byte, 64)
-	b = b[:runtime.Stack(b, false)]
-	b = bytes.TrimPrefix(b, []byte("goroutine "))
-	b = b[:bytes.IndexByte(b, ' ')]
-	n, _ := strconv.ParseUint(string(b), 10, 64)
-	return n
-}
 
 // getCaller calculate relative source path of caller.
 func getCaller(ec zapcore.EntryCaller, verbose bool) string {
@@ -57,7 +45,7 @@ func callerEncoder(ec zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
 		enc.AppendString("[" + getCaller(ec, false) + "]")
 		return
 	}
-	enc.AppendString(fmt.Sprintf("[%d] [%s]", getGid(), getCaller(ec, true)))
+	enc.AppendString(fmt.Sprintf("[%d] [%s]", goid.Get(), getCaller(ec, true)))
 }
 
 // callerColoredEncoder formats caller in square brackets with magenta color.
@@ -68,7 +56,7 @@ func callerColoredEncoder(ec zapcore.EntryCaller, enc zapcore.PrimitiveArrayEnco
 	}
 	enc.AppendString(fmt.Sprintf(
 		"%s %s",
-		color.Blue.Render(fmt.Sprintf("[%d]", getGid())),
+		color.Blue.Render(fmt.Sprintf("[%d]", goid.Get())),
 		color.Magenta.Render("["+getCaller(ec, true)+"]"),
 	))
 }
