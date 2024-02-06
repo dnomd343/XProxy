@@ -79,7 +79,7 @@ func (handle *logCore) update() {
 	handle.entry = zap.New(
 		zapcore.NewTee(buildCore(&handle.plain), buildCore(&handle.colored)),
 		zap.AddCaller(), zap.AddCallerSkip(1),
-	).Sugar()
+	).Named("xproxy").Sugar()
 }
 
 // addPlainWrites adds plain text writers to the logCore.
