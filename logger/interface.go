@@ -5,6 +5,8 @@ import (
 	"io"
 )
 
+type Level = zapcore.Level
+
 const (
 	DebugLevel = zapcore.DebugLevel
 	InfoLevel  = zapcore.InfoLevel
@@ -34,13 +36,13 @@ func Panicf(template string, args ...interface{}) {
 }
 
 // GetLevel return the current logger level.
-func GetLevel() zapcore.Level {
+func GetLevel() Level {
 	return logger.level.Level()
 }
 
 // SetLevel configure logger output level. Note that debug level will output
 // more information and reduce performance.
-func SetLevel(level zapcore.Level) {
+func SetLevel(level Level) {
 	logger.level.SetLevel(level)
 	if level == DebugLevel {
 		logger.verbose = true
