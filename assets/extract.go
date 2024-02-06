@@ -1,7 +1,7 @@
 package assets
 
 import (
-	"XProxy/next/logger"
+	"XProxy/logger"
 	"bytes"
 	"compress/bzip2"
 	"github.com/gabriel-vasile/mimetype"

@@ -1,6 +1,6 @@
 package main
 
-import "XProxy/next/assets"
+import "XProxy/assets"
 
 func main() {
 	remoteAssets := map[string]string{

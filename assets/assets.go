@@ -1,7 +1,7 @@
 package assets
 
 import (
-	"XProxy/next/logger"
+	"XProxy/logger"
 	"github.com/robfig/cron"
 	urlpkg "net/url"
 	"os"

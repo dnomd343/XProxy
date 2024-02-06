@@ -1,7 +1,7 @@
 package assets
 
 import (
-	"XProxy/next/logger"
+	"XProxy/logger"
 	urlpkg "net/url"
 	"os"
 	"path"
