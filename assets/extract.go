@@ -1,7 +1,6 @@
 package assets
 
 import (
-	"XProxy/logger"
 	"bytes"
 	"compress/bzip2"
 	"github.com/gabriel-vasile/mimetype"
@@ -17,90 +16,65 @@ const (
 	xzArchive
 )
 
-// gzipExtract use to extract independent gzip archive data.
-func gzipExtract(data []byte) ([]byte, error) {
-	logger.Debugf("Start extracting gzip archive -> %d bytes", len(data))
-	reader, err := gzip.NewReader(bytes.NewReader(data))
+// gzipExtract use to extract independent gzip format stream.
+func gzipExtract(a *asset) error {
+	a.debug("Start extracting gzip archive stream")
+	reader, err := gzip.NewReader(a.stream)
 	if err != nil {
-		logger.Errorf("Failed to extract gzip archive -> %v", err)
-		return nil, err
+		a.error("Failed to extract gzip archive -> %v", err)
+		return err
 	}
-	defer reader.Close()
-
-	var buffer bytes.Buffer
-	size, err := reader.WriteTo(&buffer)
-	if err != nil {
-		logger.Errorf("Failed to handle gzip archive -> %v", err)
-		return nil, err
-	}
-	logger.Debugf("Extracted gzip archive successfully -> %d bytes", size)
-	return buffer.Bytes(), nil
+	a.stream, a.archive = reader, gzipArchive
+	return nil
 }
 
-// bzip2Extract use to extract independent bzip2 archive data.
-func bzip2Extract(data []byte) ([]byte, error) {
-	logger.Debugf("Start extracting bzip2 archive -> %d bytes", len(data))
-	reader := bzip2.NewReader(bytes.NewReader(data))
-
-	var buffer bytes.Buffer
-	size, err := io.Copy(&buffer, reader)
-	if err != nil {
-		logger.Errorf("Failed to extract bzip2 archive -> %v", err)
-		return nil, err
-	}
-	logger.Debugf("Extracted bzip2 archive successfully -> %d bytes", size)
-	return buffer.Bytes(), nil
+// bzip2Extract use to extract independent bzip2 format stream.
+func bzip2Extract(a *asset) error {
+	a.debug("Start extracting bzip2 archive stream")
+	a.stream = bzip2.NewReader(a.stream)
+	a.archive = bzip2Archive
+	return nil
 }
 
-// xzExtract use to extract independent xz archive data.
-func xzExtract(data []byte) ([]byte, error) {
-	logger.Debugf("Start extracting xz archive -> %d bytes", len(data))
-	reader, err := xz.NewReader(bytes.NewReader(data))
+// xzExtract use to extract independent xz format stream.
+func xzExtract(a *asset) error {
+	a.debug("Start extracting xz archive stream")
+	reader, err := xz.NewReader(a.stream)
 	if err != nil {
-		logger.Errorf("Failed to extract xz archive -> %v", err)
-		return nil, err
+		a.error("Failed to extract xz archive -> %v", err)
+		return err
 	}
-
-	var buffer bytes.Buffer
-	size, err := io.Copy(&buffer, reader)
-	if err != nil {
-		logger.Errorf("Failed to handle xz archive -> %v", err)
-		return nil, err
-	}
-	logger.Debugf("Extracted xz archive successfully -> %d bytes", size)
-	return buffer.Bytes(), nil
+	a.stream, a.archive = reader, xzArchive
+	return nil
 }
 
-// archiveType use to determine the type of archive file.
-func archiveType(data []byte) uint {
-	mime := mimetype.Detect(data)
-	switch mime.String() {
-	case "application/gzip":
-		logger.Debugf("Data detected as gzip format")
-		return gzipArchive
-	case "application/x-bzip2":
-		logger.Debugf("Data detected as bzip2 format")
-		return bzip2Archive
-	case "application/x-xz":
-		logger.Debugf("Data detected as xz format")
-		return xzArchive
-	default:
-		logger.Debugf("Data detected as non-archive format -> `%s`", mime)
-		return notArchive
-	}
-}
-
-// tryExtract will try to extract the data as a compressed format, and will
+// tryExtract try to extract the data stream as a compressed format, and will
 // return the original data if it cannot be determined.
-func tryExtract(data []byte) ([]byte, error) {
-	switch archiveType(data) {
-	case gzipArchive:
-		return gzipExtract(data)
-	case bzip2Archive:
-		return bzip2Extract(data)
-	case xzArchive:
-		return xzExtract(data)
+func (a *asset) tryExtract() error {
+	if a.archive != notArchive {
+		return nil // already extracted
+	}
+
+	header := bytes.NewBuffer(nil)
+	mime, err := mimetype.DetectReader(io.TeeReader(a.stream, header))
+	if err != nil {
+		a.error("Failed to detect data stream -> %v", err)
+		return err
+	}
+	a.stream = io.MultiReader(header, a.stream) // recycle reader
+
+	switch mime.String() { // extract with detected mime type
+	case "application/gzip":
+		a.debug("Data detected as gzip format")
+		return gzipExtract(a)
+	case "application/x-bzip2":
+		a.debug("Data detected as bzip2 format")
+		return bzip2Extract(a)
+	case "application/x-xz":
+		a.debug("Data detected as xz format")
+		return xzExtract(a)
 	default:
-		return data, nil
+		a.debug("Data detected as non-archive format -> `%s`", mime)
+		return nil
 	}
 }

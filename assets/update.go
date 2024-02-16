@@ -49,9 +49,9 @@ func updateRemoteAsset(file string, url string, proxy *urlpkg.URL) error {
 		logger.Errorf("Failed to download remote asset `%s`", url)
 		return err
 	}
-	if asset, err = tryExtract(asset); err != nil {
-		return err
-	}
+	//if asset, err = tryExtract(asset); err != nil {
+	//	return err
+	//}
 	if err := saveAsset(file, asset, date); err != nil {
 		return err
 	}
@@ -79,9 +79,9 @@ func updateLocalAsset(file string, src string) error {
 		logger.Errorf("Failed to read local asset -> %v", err)
 		return err
 	}
-	if asset, err = tryExtract(asset); err != nil {
-		return err
-	}
+	//if asset, err = tryExtract(asset); err != nil {
+	//	return err
+	//}
 	if err := saveAsset(file, asset, &date); err != nil {
 		return err
 	}
