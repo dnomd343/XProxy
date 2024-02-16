@@ -44,17 +44,17 @@ func saveAsset(file string, content []byte, date *time.Time) error {
 // save them locally. Local files will be overwritten if they exist.
 func updateRemoteAsset(file string, url string, proxy *urlpkg.URL) error {
 	logger.Debugf("Start downloading remote asset `%s` to `%s`", url, file)
-	asset, date, err := downloadAsset(url, proxy)
-	if err != nil {
-		logger.Errorf("Failed to download remote asset `%s`", url)
-		return err
-	}
+	//asset, date, err := downloadAsset(url, proxy)
+	//if err != nil {
+	//	logger.Errorf("Failed to download remote asset `%s`", url)
+	//	return err
+	//}
 	//if asset, err = tryExtract(asset); err != nil {
 	//	return err
 	//}
-	if err := saveAsset(file, asset, date); err != nil {
-		return err
-	}
+	//if err := saveAsset(file, asset, date); err != nil {
+	//	return err
+	//}
 	logger.Infof("Successfully obtained remote asset `%s`", file)
 	return nil
 }

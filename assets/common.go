@@ -3,14 +3,7 @@ package assets
 import (
 	"XProxy/logger"
 	"io"
-	"time"
 )
-
-type upstream interface {
-	getTag() string
-	doRequest() io.Reader
-	lastModify() time.Time
-}
 
 type asset struct {
 	tag     string

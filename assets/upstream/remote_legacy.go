@@ -1,4 +1,4 @@
-package assets
+package upstream
 
 import (
 	"XProxy/logger"
