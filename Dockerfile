@@ -1,5 +1,5 @@
-ARG ALPINE="alpine:3.19"
-ARG GOLANG="golang:1.22-alpine3.19"
+ARG ALPINE="alpine:3.20"
+ARG GOLANG="golang:1.22-alpine3.20"
 
 FROM ${GOLANG} AS xray
 ENV XRAY="1.8.16"
