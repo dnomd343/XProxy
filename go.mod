@@ -1,10 +1,10 @@
 module XProxy
 
-go 1.24.2
+go 1.24.5
 
 require (
 	github.com/BurntSushi/toml v1.5.0
-	github.com/andybalholm/brotli v1.1.1
+	github.com/andybalholm/brotli v1.2.0
 	github.com/go-http-utils/headers v0.0.0-20181008091004-fed159eddc2a
 	github.com/klauspost/compress v1.18.0
 	github.com/robfig/cron v1.2.0
