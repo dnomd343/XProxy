@@ -2,7 +2,7 @@ ARG ALPINE="alpine:3.20"
 ARG GOLANG="golang:1.24-alpine3.22"
 
 FROM ${GOLANG} AS xray
-ENV XRAY="25.3.6"
+ENV XRAY="25.7.26"
 RUN wget https://github.com/XTLS/Xray-core/archive/v${XRAY}.tar.gz -O- | tar xz
 WORKDIR ./Xray-core-${XRAY}/main/
 RUN go get
